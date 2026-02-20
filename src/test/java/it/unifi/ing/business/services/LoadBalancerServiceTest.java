@@ -56,7 +56,7 @@ class LoadBalancerServiceTest {
 	void testOnTemperatureAlertWithActiveSession() {
 		gpu.setStatus(GpuStatus.INACTIVE);
 		Session session = new Session(1, developer, model, gpu);
-		session.addTokens(100);
+		session.addUsedTokens(100);
 		sessionDao.save(session);
 
 		loadBalancerService.update(gpu, "TEMPERATURE_ALERT");
@@ -72,16 +72,4 @@ class LoadBalancerServiceTest {
 		assertEquals(GpuStatus.ACTIVE, gpu.getStatus());
 	}
 
-	@Test
-	void testOnTemperatureAlertChargesCost() {
-		gpu.setStatus(GpuStatus.INACTIVE);
-		Session session = new Session(1, developer, model, gpu);
-		session.addTokens(500);
-		sessionDao.save(session);
-
-		double balanceBefore = developer.getWallet().getBalance();
-		loadBalancerService.update(gpu, "TEMPERATURE_ALERT");
-
-		assertEquals(balanceBefore - 5.0, developer.getWallet().getBalance(), 0.001);
-	}
 }

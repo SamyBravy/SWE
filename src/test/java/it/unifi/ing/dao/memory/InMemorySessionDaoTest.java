@@ -51,7 +51,7 @@ class InMemorySessionDaoTest {
 	void testUpdate() {
 		Session s = new Session(1, dev, model, gpu);
 		dao.save(s);
-		s.addTokens(100);
+		s.addUsedTokens(100);
 		dao.update(s);
 		assertEquals(100, dao.findById(1).getTotalTokensUsed());
 	}

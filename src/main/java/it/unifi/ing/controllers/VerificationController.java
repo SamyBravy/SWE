@@ -41,10 +41,16 @@ public class VerificationController {
 			String choice = scanner.nextLine().trim();
 
 			switch (choice) {
-				case "1": verifyPendingModels(supervisor); break;
-				case "2": viewAllModels(); break;
-				case "0": return;
-				default: System.out.println("Invalid choice.");
+				case "1":
+					verifyPendingModels(supervisor);
+					break;
+				case "2":
+					viewAllModels();
+					break;
+				case "0":
+					return;
+				default:
+					System.out.println("Invalid choice.");
 			}
 		}
 	}
@@ -72,7 +78,8 @@ public class VerificationController {
 			System.out.println("Invalid ID.");
 			return;
 		}
-		if (id == 0) return;
+		if (id == 0)
+			return;
 
 		AiModel model = modelService.findById(id);
 		if (model == null) {
@@ -124,9 +131,9 @@ public class VerificationController {
 				System.out.println("❌ Invalid cost.");
 			}
 		} else if ("2".equals(decision)) {
-			System.out.print("Rejection reasons: ");
-			String reasons = scanner.nextLine().trim();
-			verificationService.rejectModel(model, reasons);
+			System.out.print("Rejection reason: ");
+			String reason = scanner.nextLine().trim();
+			verificationService.rejectModel(model, reason);
 			System.out.println("❌ Model '" + model.getName() + "' rejected.");
 		}
 

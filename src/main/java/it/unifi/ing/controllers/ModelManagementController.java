@@ -35,10 +35,16 @@ public class ModelManagementController {
 			String choice = scanner.nextLine().trim();
 
 			switch (choice) {
-				case "1": publishModel(provider); break;
-				case "2": viewModels(); break;
-				case "0": return;
-				default: System.out.println("Invalid choice.");
+				case "1":
+					publishModel(provider);
+					break;
+				case "2":
+					viewModels();
+					break;
+				case "0":
+					return;
+				default:
+					System.out.println("Invalid choice.");
 			}
 		}
 	}

@@ -40,7 +40,7 @@ public class Main {
 		AuthService authService = new AuthService(userDao);
 		modelService = new ModelService(modelDao);
 		BillingStrategy billingStrategy = new StandardBillingStrategy();
-		BillingService billingService = new BillingService(billingStrategy, sessionDao);
+		BillingService billingService = new BillingService(billingStrategy);
 		sessionService = new SessionService(sessionDao, cluster, billingService);
 		VerificationService verificationService = new VerificationService(modelDao, cluster);
 		complaintService = new ComplaintService(complaintDao, userDao);
@@ -58,8 +58,10 @@ public class Main {
 		AuthController authController = new AuthController(authService, scanner);
 		SessionController sessionController = new SessionController(sessionService, modelService, scanner);
 		ModelManagementController modelController = new ModelManagementController(modelService, scanner);
-		VerificationController verificationController = new VerificationController(verificationService, modelService, scanner);
-		ComplaintManagementController complaintController = new ComplaintManagementController(complaintService, scanner);
+		VerificationController verificationController = new VerificationController(verificationService, modelService,
+				scanner);
+		ComplaintManagementController complaintController = new ComplaintManagementController(complaintService,
+				scanner);
 		UserController userController = new UserController(sessionDao, complaintDao, scanner);
 
 		// ===== 6. MAIN LOOP =====
@@ -94,12 +96,22 @@ public class Main {
 			String choice = scanner.nextLine().trim();
 
 			switch (choice) {
-				case "1": sessionController.startSession(developer); break;
-				case "2": userController.topUpCredit(developer); break;
-				case "3": userController.viewStats(developer); break;
-				case "4": fileComplaint(developer); break;
-				case "0": return;
-				default: System.out.println("Invalid choice.");
+				case "1":
+					sessionController.startSession(developer);
+					break;
+				case "2":
+					userController.topUpCredit(developer);
+					break;
+				case "3":
+					userController.viewStats(developer);
+					break;
+				case "4":
+					fileComplaint(developer);
+					break;
+				case "0":
+					return;
+				default:
+					System.out.println("Invalid choice.");
 			}
 		}
 	}
@@ -119,10 +131,16 @@ public class Main {
 			String choice = scanner.nextLine().trim();
 
 			switch (choice) {
-				case "1": verificationController.showMenu(supervisor); break;
-				case "2": complaintController.showDashboard(supervisor); break;
-				case "0": return;
-				default: System.out.println("Invalid choice.");
+				case "1":
+					verificationController.showMenu(supervisor);
+					break;
+				case "2":
+					complaintController.showDashboard(supervisor);
+					break;
+				case "0":
+					return;
+				default:
+					System.out.println("Invalid choice.");
 			}
 		}
 	}

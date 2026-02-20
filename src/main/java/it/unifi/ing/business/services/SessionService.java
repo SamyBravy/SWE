@@ -31,7 +31,6 @@ public class SessionService {
 			return null;
 		}
 
-		gpu.setLoadedModel(model);
 		Session session = new Session(nextId++, developer, model, gpu);
 		sessionDao.save(session);
 		return session;
@@ -48,7 +47,7 @@ public class SessionService {
 
 		int tokensConsumed = Math.max(5, (int) Math.ceil(prompt.length()));
 
-		double promptCost = tokensConsumed * session.getModel().getCostPerToken();
+		double promptCost = billingService.calculateCost(session, tokensConsumed);
 		double availableBalance = session.getDeveloper().getWallet().getBalance();
 		if (promptCost > availableBalance) {
 			closeSession(session);
@@ -62,8 +61,7 @@ public class SessionService {
 			return "❌ Error during charge. Session terminated.";
 		}
 
-		session.addTokens(tokensConsumed);
-		session.addTotalCost(promptCost);
+		session.addUsedTokens(tokensConsumed);
 		sessionDao.update(session);
 
 		String response = session.getModel().generateResponse(prompt)
@@ -81,7 +79,7 @@ public class SessionService {
 			return 0;
 		}
 
-		double totalCost = billingService.calculateCost(session);
+		double totalCost = billingService.calculateCost(session, session.getTotalTokensUsed());
 
 		session.close();
 		sessionDao.update(session);

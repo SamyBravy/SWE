@@ -47,7 +47,8 @@ public class SessionController {
 			System.out.println("Invalid ID.");
 			return;
 		}
-		if (id == 0) return;
+		if (id == 0)
+			return;
 
 		AiModel model = modelService.findById(id);
 		if (model == null || model.getStatus() != ModelStatus.APPROVED) {
@@ -76,8 +77,9 @@ public class SessionController {
 				double totalCost = sessionService.closeSession(session);
 				System.out.println("\n🔚 Session ended.");
 				System.out.println("   Total tokens used: " + session.getTotalTokensUsed());
-				System.out.println("   Total cost: €" + String.format("%.4f", session.getTotalCost()));
-				System.out.println("   Remaining balance: €" + String.format("%.2f", developer.getWallet().getBalance()));
+				System.out.println("   Total cost: €" + String.format("%.4f", totalCost));
+				System.out
+						.println("   Remaining balance: €" + String.format("%.2f", developer.getWallet().getBalance()));
 				return;
 			}
 

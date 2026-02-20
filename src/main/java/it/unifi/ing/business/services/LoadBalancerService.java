@@ -6,6 +6,7 @@ import it.unifi.ing.domain.GpuCluster;
 import it.unifi.ing.domain.GpuStatus;
 import it.unifi.ing.domain.Observer;
 import it.unifi.ing.domain.Session;
+import it.unifi.ing.domain.Subject;
 
 import java.util.List;
 
@@ -27,7 +28,7 @@ public class LoadBalancerService implements Observer {
 	}
 
 	@Override
-	public void update(Object subject, Object event) {
+	public void update(Subject subject, Object event) {
 		if (subject instanceof GPU) {
 			GPU gpu = (GPU) subject;
 			onTemperatureAlert(gpu);
@@ -43,8 +44,6 @@ public class LoadBalancerService implements Observer {
 			if (session.isActive() && session.getGpu().getId() == gpu.getId()) {
 				System.out.println("🔴 Forced termination of session " + session.getId()
 						+ " for safety (developer: " + session.getDeveloper().getName() + ")");
-
-				billingService.chargeCost(session);
 
 				session.close();
 				sessionDao.update(session);

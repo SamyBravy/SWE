@@ -70,7 +70,7 @@ public class UserController {
 			}
 		}
 
-		// Show rejected complaints with reasons
+		// Show rejected complaints with reason
 		List<Complaint> allComplaints = complaintDao.findAll();
 		List<Complaint> devComplaints = allComplaints.stream()
 				.filter(c -> c.getDeveloper().getId() == developer.getId())

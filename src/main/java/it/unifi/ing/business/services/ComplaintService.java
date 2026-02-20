@@ -16,57 +16,57 @@ import java.util.List;
  */
 public class ComplaintService {
 
-    private final ComplaintDao complaintDao;
-    private final UserDao userDao;
+	private final ComplaintDao complaintDao;
+	private final UserDao userDao;
 
-    public ComplaintService(ComplaintDao complaintDao, UserDao userDao) {
-        this.complaintDao = complaintDao;
-        this.userDao = userDao;
-    }
+	public ComplaintService(ComplaintDao complaintDao, UserDao userDao) {
+		this.complaintDao = complaintDao;
+		this.userDao = userDao;
+	}
 
-    public List<Complaint> getPendingComplaints() {
-        return complaintDao.findByStatus(ComplaintStatus.PENDING_REVIEW);
-    }
+	public List<Complaint> getPendingComplaints() {
+		return complaintDao.findByStatus(ComplaintStatus.PENDING_REVIEW);
+	}
 
-    public List<Complaint> getAllComplaints() {
-        return complaintDao.findAll();
-    }
+	public List<Complaint> getAllComplaints() {
+		return complaintDao.findAll();
+	}
 
-    public Complaint findById(int id) {
-        return complaintDao.findById(id);
-    }
+	public Complaint findById(int id) {
+		return complaintDao.findById(id);
+	}
 
-    /**
-     * Accepts a complaint, refunding tokens and optionally blocking the model.
-     */
-    public void acceptComplaint(Complaint complaint, int refundedTokens, double blockHours) {
-        complaint.setStatus(ComplaintStatus.ACCEPTED);
+	/**
+	 * Accepts a complaint, refunding tokens and optionally blocking the model.
+	 */
+	public void acceptComplaint(Complaint complaint, int refundedTokens, double blockHours) {
+		complaint.setStatus(ComplaintStatus.ACCEPTED);
 
-        if (refundedTokens > 0) {
-            double refund = refundedTokens * complaint.getModel().getCostPerToken();
-            complaint.getDeveloper().getWallet().addFundsWithReason(refund,
-                    "REFUND complaint #" + complaint.getId() + ": " + refundedTokens + " tokens");
-        }
+		if (refundedTokens > 0) {
+			double refund = refundedTokens * complaint.getModel().getCostPerToken();
+			complaint.getDeveloper().getWallet().addFunds(refund,
+					"REFUND complaint #" + complaint.getId() + ": " + refundedTokens + " tokens");
+		}
 
-        if (blockHours > 0) {
-            AiModel model = complaint.getModel();
-            model.setStatus(ModelStatus.BLOCKED);
-            System.out.println("🔒 Model '" + model.getName() + "' blocked for " + blockHours + " hours.");
-        }
+		if (blockHours > 0) {
+			AiModel model = complaint.getModel();
+			model.setStatus(ModelStatus.BLOCKED);
+			System.out.println("🔒 Model '" + model.getName() + "' blocked for " + blockHours + " hours.");
+		}
 
-        complaintDao.update(complaint);
-    }
+		complaintDao.update(complaint);
+	}
 
-    /**
-     * Rejects a complaint with the provided reasons.
-     */
-    public void rejectComplaint(Complaint complaint, String reasons) {
-        complaint.setStatus(ComplaintStatus.REJECTED);
-        complaint.setRejectionReasons(reasons);
-        complaintDao.update(complaint);
-    }
+	/**
+	 * Rejects a complaint with the provided reason.
+	 */
+	public void rejectComplaint(Complaint complaint, String reason) {
+		complaint.setStatus(ComplaintStatus.REJECTED);
+		complaint.setRejectionReasons(reason);
+		complaintDao.update(complaint);
+	}
 
-    public void saveComplaint(Complaint complaint) {
-        complaintDao.save(complaint);
-    }
+	public void saveComplaint(Complaint complaint) {
+		complaintDao.save(complaint);
+	}
 }

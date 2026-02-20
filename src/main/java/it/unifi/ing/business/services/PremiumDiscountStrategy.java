@@ -17,8 +17,8 @@ public class PremiumDiscountStrategy implements BillingStrategy {
 	}
 
 	@Override
-	public double calculateCost(Session session) {
-		double standardCost = session.getUnbilledUsedTokens() * session.getModel().getCostPerToken();
+	public double calculateCost(Session session, int tokensConsumed) {
+		double standardCost = tokensConsumed * session.getModel().getCostPerToken();
 		return standardCost * (1.0 - discountPercentage);
 	}
 

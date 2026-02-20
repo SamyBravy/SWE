@@ -16,7 +16,6 @@ public class GPU implements Subject {
     private double loadPercentage;
     private GpuStatus status;
     private double vramCapacity;
-    private AiModel loadedModel;
     private final List<Observer> observers;
 
     public GPU(int id) {
@@ -25,7 +24,6 @@ public class GPU implements Subject {
         this.loadPercentage = 0.0;
         this.status = GpuStatus.ACTIVE;
         this.vramCapacity = 24.0;
-        this.loadedModel = null;
         this.observers = new ArrayList<>();
     }
 
@@ -98,14 +96,6 @@ public class GPU implements Subject {
 
     public void setVramCapacity(double vramCapacity) {
         this.vramCapacity = vramCapacity;
-    }
-
-    public AiModel getLoadedModel() {
-        return loadedModel;
-    }
-
-    public void setLoadedModel(AiModel loadedModel) {
-        this.loadedModel = loadedModel;
     }
 
     public boolean isAvailable() {

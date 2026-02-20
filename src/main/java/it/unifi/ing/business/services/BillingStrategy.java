@@ -7,5 +7,5 @@ import it.unifi.ing.domain.Session;
  * UML: BillingStrategy
  */
 public interface BillingStrategy {
-	double calculateCost(Session session);
+	double calculateCost(Session session, int tokensConsumed);
 }

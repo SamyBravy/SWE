@@ -10,7 +10,7 @@ class WalletTest {
 
 	@BeforeEach
 	void setUp() {
-		wallet = new Wallet();
+		wallet = new Wallet(1);
 	}
 
 	@Test
@@ -65,7 +65,7 @@ class WalletTest {
 
 	@Test
 	void testAddFundsWithReason() {
-		wallet.addFundsWithReason(25.0, "REFUND");
+		wallet.addFunds(25.0, "REFUND");
 		assertEquals(25.0, wallet.getBalance());
 		assertEquals(1, wallet.getTransactionHistory().size());
 	}

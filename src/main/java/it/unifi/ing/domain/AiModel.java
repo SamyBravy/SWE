@@ -2,7 +2,8 @@ package it.unifi.ing.domain;
 
 /**
  * AI Model published by a ModelProvider.
- * UML: AiModel (id, name, description, costPerToken, status, safetensorsFile, jsonFile, provider)
+ * UML: AiModel (id, name, description, costPerToken, status, safetensorsFile,
+ * jsonFile, provider)
  */
 public class AiModel {
 

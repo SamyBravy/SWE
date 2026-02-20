@@ -44,7 +44,6 @@ class GpuClusterTest {
 		GPU gpu = cluster.getAvailableGpu();
 		cluster.releaseGpu(gpu);
 		assertEquals(GpuStatus.ACTIVE, gpu.getStatus());
-		assertNull(gpu.getLoadedModel());
 	}
 
 	@Test
@@ -66,9 +65,4 @@ class GpuClusterTest {
 		assertEquals(2, cluster.getAvailableGpus().size());
 	}
 
-	@Test
-	void testGetAvailableGpuSetsModel() {
-		GPU gpu = cluster.getAvailableGpu();
-		assertNull(gpu.getLoadedModel());
-	}
 }

@@ -8,7 +8,7 @@ import it.unifi.ing.domain.Session;
 public class StandardBillingStrategy implements BillingStrategy {
 
 	@Override
-	public double calculateCost(Session session) {
-		return session.getUnbilledUsedTokens() * session.getModel().getCostPerToken();
+	public double calculateCost(Session session, int tokensConsumed) {
+		return tokensConsumed * session.getModel().getCostPerToken();
 	}
 }

@@ -7,12 +7,18 @@ import it.unifi.ing.domain.Observer;
 import java.util.ArrayList;
 import java.util.List;
 
+import it.unifi.ing.domain.Observer;
+import it.unifi.ing.domain.Subject;
+
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Timer: Singleton that simulates a background thread
  * for periodic GPU temperature updates, token billing, and load balancing.
  * UML: instance, observers. Methods: getInstance(), tick()
  */
-public class Timer {
+public class Timer implements Subject {
 
 	private static Timer instance;
 
@@ -36,13 +42,15 @@ public class Timer {
 		return instance;
 	}
 
-	public void addObserver(Observer observer) {
+	@Override
+	public void attach(Observer observer) {
 		if (!observers.contains(observer)) {
 			observers.add(observer);
 		}
 	}
 
-	public void removeObserver(Observer observer) {
+	@Override
+	public void detach(Observer observer) {
 		observers.remove(observer);
 	}
 
@@ -51,10 +59,10 @@ public class Timer {
 	 */
 	public void configureServices(Object billingService, Object loadBalancerService) {
 		if (billingService instanceof Observer) {
-			addObserver((Observer) billingService);
+			attach((Observer) billingService);
 		}
 		if (loadBalancerService instanceof Observer) {
-			addObserver((Observer) loadBalancerService);
+			attach((Observer) loadBalancerService);
 		}
 	}
 
@@ -82,9 +90,13 @@ public class Timer {
 		for (GPU gpu : cluster.getAllGpus()) {
 			gpu.simulateTick();
 		}
+		notifyObservers("TICK");
+	}
 
+	@Override
+	public void notifyObservers(Object event) {
 		for (Observer observer : observers) {
-			observer.update(this, "TICK");
+			observer.update(this, event);
 		}
 	}
 

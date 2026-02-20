@@ -28,21 +28,12 @@ class SessionTest {
 		assertEquals(model, session.getModel());
 		assertEquals(gpu, session.getGpu());
 		assertTrue(session.isActive());
-		assertEquals(0, session.getUnbilledUsedTokens());
+		assertEquals(0, session.getTotalTokensUsed());
 	}
 
 	@Test
 	void testAddTokens() {
-		session.addTokens(50);
-		assertEquals(50, session.getUnbilledUsedTokens());
-		assertEquals(50, session.getTotalTokensUsed());
-	}
-
-	@Test
-	void testResetTokens() {
-		session.addTokens(50);
-		session.resetTokens();
-		assertEquals(0, session.getUnbilledUsedTokens());
+		session.addUsedTokens(50);
 		assertEquals(50, session.getTotalTokensUsed());
 	}
 
@@ -50,7 +41,6 @@ class SessionTest {
 	void testCloseSession() {
 		session.close();
 		assertFalse(session.isActive());
-		assertNotNull(session.getEndTimestamp());
 	}
 
 	@Test
@@ -61,17 +51,9 @@ class SessionTest {
 
 	@Test
 	void testMultipleTokenAdditions() {
-		session.addTokens(10);
-		session.addTokens(20);
-		assertEquals(30, session.getUnbilledUsedTokens());
+		session.addUsedTokens(10);
+		session.addUsedTokens(20);
 		assertEquals(30, session.getTotalTokensUsed());
-	}
-
-	@Test
-	void testAddTotalCost() {
-		session.addTotalCost(1.5);
-		session.addTotalCost(2.0);
-		assertEquals(3.5, session.getTotalCost(), 0.001);
 	}
 
 	@Test

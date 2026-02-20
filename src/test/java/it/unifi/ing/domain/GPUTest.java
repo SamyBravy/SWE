@@ -22,7 +22,6 @@ class GPUTest {
 		assertEquals(1, gpu.getId());
 		assertEquals(30.0, gpu.getTemperature());
 		assertEquals(GpuStatus.ACTIVE, gpu.getStatus());
-		assertNull(gpu.getLoadedModel());
 		assertTrue(gpu.isAvailable());
 	}
 

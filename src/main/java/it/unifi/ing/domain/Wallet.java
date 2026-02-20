@@ -11,78 +11,77 @@ import java.util.List;
  */
 public class Wallet {
 
-    private String id;
-    private double balance;
-    private final List<Transaction> transactionHistory;
-    private int nextTransactionId;
+	private int id;
+	private double balance;
+	private final List<Transaction> transactionHistory;
+	private int nextTransactionId;
 
-    public Wallet() {
-        this.id = java.util.UUID.randomUUID().toString();
-        this.balance = 0.0;
-        this.transactionHistory = new ArrayList<>();
-        this.nextTransactionId = 1;
-    }
+	public Wallet(int id) {
+		this.id = id;
+		this.balance = 0.0;
+		this.transactionHistory = new ArrayList<>();
+		this.nextTransactionId = 1;
+	}
 
-    public String getId() {
-        return id;
-    }
+	public int getId() {
+		return id;
+	}
 
-    public void setId(String id) {
-        this.id = id;
-    }
+	public void setId(int id) {
+		this.id = id;
+	}
 
-    public double getBalance() {
-        return balance;
-    }
+	public double getBalance() {
+		return balance;
+	}
 
-    /**
-     * Adds funds to the wallet.
-     * UML: addFunds(amount)
-     */
-    public void addFunds(double amount) {
-        if (amount <= 0) {
-            throw new IllegalArgumentException("Amount must be positive");
-        }
-        this.balance += amount;
-        transactionHistory.add(new Transaction(
-                nextTransactionId++, amount, LocalDateTime.now(),
-                "TOP-UP: +" + String.format("%.2f", amount)));
-    }
+	/**
+	 * Adds funds to the wallet.
+	 * UML: addFunds(amount)
+	 */
+	public void addFunds(double amount, String... optionalReason) {
+		if (amount <= 0) {
+			throw new IllegalArgumentException("Amount must be positive");
+		}
 
-    /**
-     * Charges the wallet.
-     * UML: charge(amount)
-     * @return true if the charge was successful
-     */
-    public boolean charge(double amount) {
-        if (amount <= 0) {
-            throw new IllegalArgumentException("Amount must be positive");
-        }
-        if (amount > balance) {
-            return false;
-        }
-        this.balance -= amount;
-        transactionHistory.add(new Transaction(
-                nextTransactionId++, -amount, LocalDateTime.now(),
-                "CHARGE: -" + String.format("%.2f", amount)));
-        return true;
-    }
+		String reason = (optionalReason != null && optionalReason.length > 0)
+				? optionalReason[0]
+				: "TOP-UP";
 
-    /**
-     * Adds credit with a specific reason (e.g. refund).
-     */
-    public void addFundsWithReason(double amount, String reason) {
-        this.balance += amount;
-        transactionHistory.add(new Transaction(
-                nextTransactionId++, amount, LocalDateTime.now(), reason));
-    }
+		this.balance += amount;
+		transactionHistory.add(new Transaction(
+				nextTransactionId++, amount, LocalDateTime.now(), reason));
+	}
 
-    public List<Transaction> getTransactionHistory() {
-        return Collections.unmodifiableList(transactionHistory);
-    }
+	/**
+	 * Charges the wallet.
+	 * UML: charge(amount)
+	 * 
+	 * @return true if the charge was successful
+	 */
+	public boolean charge(double amount) {
+		if (amount < 0) {
+			throw new IllegalArgumentException("Amount cannot be negative");
+		}
+		if (amount == 0) {
+			return true;
+		}
+		if (amount > balance) {
+			return false;
+		}
+		this.balance -= amount;
+		transactionHistory.add(new Transaction(
+				nextTransactionId++, -amount, LocalDateTime.now(),
+				"CHARGE: -" + String.format("%.2f", amount)));
+		return true;
+	}
 
-    @Override
-    public String toString() {
-        return "Wallet [id=" + id + ", balance=" + String.format("%.2f", balance) + "]";
-    }
+	public List<Transaction> getTransactionHistory() {
+		return Collections.unmodifiableList(transactionHistory);
+	}
+
+	@Override
+	public String toString() {
+		return "Wallet [id=" + id + ", balance=" + String.format("%.2f", balance) + "]";
+	}
 }

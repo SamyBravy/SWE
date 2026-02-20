@@ -42,7 +42,6 @@ class VerificationServiceTest {
 	void testLoadOnGpu() {
 		GPU gpu = verificationService.loadOnGpu(model);
 		assertNotNull(gpu);
-		assertEquals(model, gpu.getLoadedModel());
 	}
 
 	@Test

@@ -5,23 +5,23 @@ package it.unifi.ing.domain;
  */
 public class Developer extends User {
 
-    private Wallet wallet;
+	private Wallet wallet;
 
-    public Developer(int id, String name, String email, String password) {
-        super(id, name, email, password);
-        this.wallet = new Wallet();
-    }
+	public Developer(int id, String name, String email, String password) {
+		super(id, name, email, password);
+		this.wallet = new Wallet(id);
+	}
 
-    public Wallet getWallet() {
-        return wallet;
-    }
+	public Wallet getWallet() {
+		return wallet;
+	}
 
-    public void setWallet(Wallet wallet) {
-        this.wallet = wallet;
-    }
+	public void setWallet(Wallet wallet) {
+		this.wallet = wallet;
+	}
 
-    @Override
-    public String getRole() {
-        return "Developer";
-    }
+	@Override
+	public String getRole() {
+		return "Developer";
+	}
 }

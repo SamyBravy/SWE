@@ -47,7 +47,6 @@ public class GpuCluster {
      */
     public void releaseGpu(GPU gpu) {
         gpu.setStatus(GpuStatus.ACTIVE);
-        gpu.setLoadedModel(null);
     }
 
     /**

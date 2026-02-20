@@ -5,5 +5,5 @@ package it.unifi.ing.domain;
  * UML: update(subject: Subject, event: Object) : void
  */
 public interface Observer {
-	void update(Object subject, Object event);
+	void update(Subject subject, Object event);
 }
