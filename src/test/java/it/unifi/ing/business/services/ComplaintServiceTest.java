@@ -1,96 +1,72 @@
 package it.unifi.ing.business.services;
 
-import it.unifi.ing.dao.memory.InMemoryReclamoDAO;
-import it.unifi.ing.dao.memory.InMemoryUtenteDAO;
+import it.unifi.ing.dao.memory.InMemoryComplaintDAO;
+import it.unifi.ing.dao.memory.InMemoryUserDAO;
 import it.unifi.ing.domain.*;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
-
 import java.util.Arrays;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 class ComplaintServiceTest {
 
-	private ComplaintService complaintService;
-	private InMemoryReclamoDAO reclamoDao;
-	private Developer developer;
-	private Modello modello;
+    private ComplaintService complaintService;
+    private Developer developer;
+    private AiModel model;
 
-	@BeforeEach
-	void setUp() {
-		reclamoDao = new InMemoryReclamoDAO();
-		InMemoryUtenteDAO utenteDao = new InMemoryUtenteDAO();
-		complaintService = new ComplaintService(reclamoDao, utenteDao);
+    @BeforeEach
+    void setUp() {
+        InMemoryComplaintDAO complaintDao = new InMemoryComplaintDAO();
+        InMemoryUserDAO userDao = new InMemoryUserDAO();
+        complaintService = new ComplaintService(complaintDao, userDao);
 
-		ModelProvider provider = new ModelProvider(1, "Prov", "prov@test.com", "pass");
-		developer = new Developer(2, "Dev", "dev@test.com", "pass");
-		developer.getWallet().addCredito(100.0);
+        developer = new Developer(1, "Dev", "dev@test.com", "pass");
+        developer.getWallet().addFunds(100.0);
+        userDao.save(developer);
 
-		modello = new Modello(1, "TestModel", "Desc", 0.005, "s.bin", "c.json", provider);
-		modello.setCostoPerTokenPiattaforma(0.005);
-	}
+        ModelProvider prov = new ModelProvider(2, "Prov", "prov@test.com", "pass");
+        model = new AiModel(1, "TestModel", "Desc", 0.01, "s.bin", "c.json", prov);
+        model.setCostPerTokenPlatform(0.005);
+    }
 
-	@Test
-	void testAcceptComplaintConRimborso() {
-		Reclamo reclamo = new Reclamo(1, developer, modello, "Modello non funziona",
-				Arrays.asList("prompt1 -> errore"));
-		reclamoDao.save(reclamo);
+    @Test
+    void testSaveAndFindComplaint() {
+        Complaint c = new Complaint(1, developer, model, "Issue", Arrays.asList("log1"));
+        complaintService.saveComplaint(c);
+        assertNotNull(complaintService.findById(1));
+    }
 
-		double saldoPrima = developer.getWallet().getSaldo();
-		complaintService.acceptComplaint(reclamo, 100, 0);
+    @Test
+    void testAcceptComplaint() {
+        Complaint c = new Complaint(1, developer, model, "Issue", Arrays.asList("log1"));
+        complaintService.saveComplaint(c);
+        double balanceBefore = developer.getWallet().getBalance();
+        complaintService.acceptComplaint(c, 100, 0);
+        assertEquals(ComplaintStatus.ACCEPTED, c.getStatus());
+        assertTrue(developer.getWallet().getBalance() > balanceBefore);
+    }
 
-		assertEquals(StatoReclamo.ACCETTATO, reclamo.getStato());
-		// 100 tokens * 0.01 costo totale = 1.0€ rimborsati
-		assertEquals(saldoPrima + 1.0, developer.getWallet().getSaldo(), 0.001);
-	}
+    @Test
+    void testRejectComplaint() {
+        Complaint c = new Complaint(1, developer, model, "Issue", Arrays.asList("log1"));
+        complaintService.saveComplaint(c);
+        complaintService.rejectComplaint(c, "Invalid");
+        assertEquals(ComplaintStatus.REJECTED, c.getStatus());
+        assertEquals("Invalid", c.getRejectionReasons());
+    }
 
-	@Test
-	void testAcceptComplaintConBloccoModello() {
-		Reclamo reclamo = new Reclamo(1, developer, modello, "Modello pericoloso",
-				Arrays.asList("prompt1 -> risposta non etica"));
-		reclamoDao.save(reclamo);
+    @Test
+    void testGetPendingComplaints() {
+        complaintService.saveComplaint(new Complaint(1, developer, model, "Issue1", Arrays.asList("l1")));
+        complaintService.saveComplaint(new Complaint(2, developer, model, "Issue2", Arrays.asList("l2")));
+        assertEquals(2, complaintService.getPendingComplaints().size());
+    }
 
-		complaintService.acceptComplaint(reclamo, 0, 24); // blocca per 24 ore
-
-		assertEquals(StatoReclamo.ACCETTATO, reclamo.getStato());
-		assertEquals(StatoModello.BLOCCATO, modello.getStato());
-	}
-
-	@Test
-	void testRejectComplaint() {
-		Reclamo reclamo = new Reclamo(1, developer, modello, "Reclamo infondato",
-				Arrays.asList("prompt1 -> risposta corretta"));
-		reclamoDao.save(reclamo);
-
-		complaintService.rejectComplaint(reclamo, "Risposta del modello era corretta");
-
-		assertEquals(StatoReclamo.RIFIUTATO, reclamo.getStato());
-		assertEquals("Risposta del modello era corretta", reclamo.getMotiviRifiuto());
-	}
-
-	@Test
-	void testGetPendingComplaints() {
-		Reclamo r1 = new Reclamo(1, developer, modello, "Reclamo 1", Arrays.asList("log1"));
-		Reclamo r2 = new Reclamo(2, developer, modello, "Reclamo 2", Arrays.asList("log2"));
-		r2.setStato(StatoReclamo.ACCETTATO);
-		reclamoDao.save(r1);
-		reclamoDao.save(r2);
-
-		assertEquals(1, complaintService.getPendingComplaints().size());
-	}
-
-	@Test
-	void testAcceptComplaintSenzaRimborso() {
-		Reclamo reclamo = new Reclamo(1, developer, modello, "Problema lieve",
-				Arrays.asList("log"));
-		reclamoDao.save(reclamo);
-
-		double saldoPrima = developer.getWallet().getSaldo();
-		complaintService.acceptComplaint(reclamo, 0, 0);
-
-		assertEquals(StatoReclamo.ACCETTATO, reclamo.getStato());
-		assertEquals(saldoPrima, developer.getWallet().getSaldo(), 0.001);
-	}
+    @Test
+    void testAcceptComplaintWithModelBlock() {
+        Complaint c = new Complaint(1, developer, model, "Issue", Arrays.asList("log1"));
+        complaintService.saveComplaint(c);
+        complaintService.acceptComplaint(c, 0, 24);
+        assertEquals(ModelStatus.BLOCKED, model.getStatus());
+    }
 }

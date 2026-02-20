@@ -1,15 +1,16 @@
 package it.unifi.ing.business;
 
-import it.unifi.ing.business.services.BillingService;
-import it.unifi.ing.business.services.LoadBalancerService;
-import it.unifi.ing.domain.ClusterGPU;
 import it.unifi.ing.domain.GPU;
+import it.unifi.ing.domain.GpuCluster;
+import it.unifi.ing.domain.Observer;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * Timer: Singleton che simula un thread di background
- * per aggiornare periodicamente la temperatura delle GPU,
- * addebitare i token e bilanciare il carico.
- * Attore di sistema che gestisce il monitoraggio in tempo reale.
+ * Timer: Singleton that simulates a background thread
+ * for periodic GPU temperature updates, token billing, and load balancing.
+ * UML: instance, observers. Methods: getInstance(), tick()
  */
 public class Timer {
 
@@ -17,39 +18,47 @@ public class Timer {
 
 	private Thread timerThread;
 	private volatile boolean running;
-	private final ClusterGPU cluster;
-	private BillingService billingService;
-	private LoadBalancerService loadBalancerService;
-	private int intervalloMs;
+	private final GpuCluster cluster;
+	private final List<Observer> observers;
+	private int intervalMs;
 
-	private Timer(ClusterGPU cluster) {
+	private Timer(GpuCluster cluster) {
 		this.cluster = cluster;
 		this.running = false;
-		this.intervalloMs = 5000; // 5 secondi di default
+		this.observers = new ArrayList<>();
+		this.intervalMs = 5000;
 	}
 
-	/**
-	 * Restituisce l'unica istanza del Timer.
-	 */
-	public static synchronized Timer getInstance(ClusterGPU cluster) {
+	public static synchronized Timer getInstance(GpuCluster cluster) {
 		if (instance == null) {
 			instance = new Timer(cluster);
 		}
 		return instance;
 	}
 
-	/**
-	 * Configura i servizi di billing e load balancing da invocare ad ogni tick.
-	 */
-	public void configuraServizi(BillingService billingService, LoadBalancerService loadBalancerService) {
-		this.billingService = billingService;
-		this.loadBalancerService = loadBalancerService;
+	public void addObserver(Observer observer) {
+		if (!observers.contains(observer)) {
+			observers.add(observer);
+		}
+	}
+
+	public void removeObserver(Observer observer) {
+		observers.remove(observer);
 	}
 
 	/**
-	 * Avvia il timer in background.
+	 * Backward-compatible service configuration.
 	 */
-	public void avvia() {
+	public void configureServices(Object billingService, Object loadBalancerService) {
+		if (billingService instanceof Observer) {
+			addObserver((Observer) billingService);
+		}
+		if (loadBalancerService instanceof Observer) {
+			addObserver((Observer) loadBalancerService);
+		}
+	}
+
+	public void start() {
 		if (running) {
 			return;
 		}
@@ -57,7 +66,7 @@ public class Timer {
 		timerThread = new Thread(() -> {
 			while (running) {
 				try {
-					Thread.sleep(intervalloMs);
+					Thread.sleep(intervalMs);
 					tick();
 				} catch (InterruptedException e) {
 					Thread.currentThread().interrupt();
@@ -69,30 +78,17 @@ public class Timer {
 		timerThread.start();
 	}
 
-	/**
-	 * Esegue un tick: aggiorna temperature, addebita token e bilancia il carico.
-	 */
-	private void tick() {
-		// 1. Simula aggiornamento temperatura GPU
-		for (GPU gpu : cluster.getTutteLeGpu()) {
-			gpu.simulaTick();
+	public void tick() {
+		for (GPU gpu : cluster.getAllGpus()) {
+			gpu.simulateTick();
 		}
 
-		// 2. Addebito periodico token (Use Case 6)
-		if (billingService != null) {
-			billingService.billActiveSessions();
-		}
-
-		// 3. Bilanciamento del carico (Use Case 5)
-		if (loadBalancerService != null) {
-			loadBalancerService.balanceLoad();
+		for (Observer observer : observers) {
+			observer.update(this, "TICK");
 		}
 	}
 
-	/**
-	 * Ferma il timer.
-	 */
-	public void ferma() {
+	public void stop() {
 		running = false;
 		if (timerThread != null) {
 			timerThread.interrupt();
@@ -103,16 +99,13 @@ public class Timer {
 		return running;
 	}
 
-	public void setIntervalloMs(int intervalloMs) {
-		this.intervalloMs = intervalloMs;
+	public void setIntervalMs(int intervalMs) {
+		this.intervalMs = intervalMs;
 	}
 
-	/**
-	 * Reset per i test.
-	 */
 	public static synchronized void resetInstance() {
 		if (instance != null) {
-			instance.ferma();
+			instance.stop();
 		}
 		instance = null;
 	}

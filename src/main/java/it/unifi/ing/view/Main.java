@@ -7,217 +7,165 @@ import it.unifi.ing.dao.interfaces.*;
 import it.unifi.ing.dao.memory.*;
 import it.unifi.ing.domain.*;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-/**
- * Main: entry point dell'applicazione CLI.
- * Gestisce il bootstrapping e il routing basato sul ruolo dell'utente.
- */
 public class Main {
 
+	private static SessionService sessionService;
+	private static ModelService modelService;
+	private static ComplaintService complaintService;
+	private static ComplaintDAO complaintDao;
+	private static Scanner scanner;
+
 	public static void main(String[] args) {
-		Scanner scanner = new Scanner(System.in);
+		scanner = new Scanner(System.in);
 
-		// ===== 1. BOOTSTRAPPING: Istanzia i DAO in memoria =====
-		UtenteDAO utenteDao = new InMemoryUtenteDAO();
-		ModelloDAO modelloDao = new InMemoryModelloDAO();
-		SessioneDAO sessioneDao = new InMemorySessioneDAO();
+		// ===== 1. INITIALIZE DAOs =====
+		UserDAO userDao = new InMemoryUserDAO();
+		AiModelDAO modelDao = new InMemoryAiModelDAO();
+		SessionDAO sessionDao = new InMemorySessionDAO();
 		GpuDAO gpuDao = new InMemoryGpuDAO();
-		ReclamoDAO reclamoDao = new InMemoryReclamoDAO();
+		complaintDao = new InMemoryComplaintDAO();
 
-		// ===== 2. INIZIALIZZA IL CLUSTER GPU =====
-		// Crea e registra le GPU disponibili
+		// ===== 2. INITIALIZE GPU CLUSTER =====
 		for (int i = 1; i <= 4; i++) {
 			gpuDao.save(new GPU(i));
 		}
 
-		ClusterGPU cluster = ClusterGPU.getInstance();
+		GpuCluster cluster = GpuCluster.getInstance();
 		cluster.init(gpuDao);
 
-		// ===== 3. CREA I SERVIZI =====
-		AuthService authService = new AuthService(utenteDao);
-		ModelService modelService = new ModelService(modelloDao);
+		// ===== 3. CREATE SERVICES =====
+		AuthService authService = new AuthService(userDao);
+		modelService = new ModelService(modelDao);
 		BillingStrategy billingStrategy = new StandardBillingStrategy();
-		BillingService billingService = new BillingService(billingStrategy, sessioneDao);
-		SessionService sessionService = new SessionService(sessioneDao, cluster, billingService);
-		VerificationService verificationService = new VerificationService(modelloDao, cluster);
-		ComplaintService complaintService = new ComplaintService(reclamoDao, utenteDao);
+		BillingService billingService = new BillingService(billingStrategy, sessionDao);
+		sessionService = new SessionService(sessionDao, cluster, billingService);
+		VerificationService verificationService = new VerificationService(modelDao, cluster);
+		complaintService = new ComplaintService(complaintDao, userDao);
 
-		// LoadBalancerService (Observer) — registra su tutte le GPU
-		LoadBalancerService loadBalancer = new LoadBalancerService(sessioneDao, cluster, billingService);
-		loadBalancer.registraSuTutteLeGpu();
+		// LoadBalancerService (Observer) — register on all GPUs
+		LoadBalancerService loadBalancer = new LoadBalancerService(sessionDao, cluster, billingService);
+		loadBalancer.registerOnAllGpus();
 
-		// ===== 4. AVVIA IL TIMER =====
+		// ===== 4. START TIMER =====
 		Timer timer = Timer.getInstance(cluster);
+		timer.configureServices(null, loadBalancer);
+		timer.start();
 
-		// Disabilita il billing periodico (passando null) per usare il billing real-time
-		timer.configuraServizi(null, loadBalancer);
-		timer.avvia();
-
-		// ===== 5. CREA I CONTROLLER =====
+		// ===== 5. CREATE CONTROLLERS =====
 		AuthController authController = new AuthController(authService, scanner);
-		GestioneModelliController gestioneModelliController = new GestioneModelliController(modelService, scanner);
-		VerificaController verificaController = new VerificaController(verificationService, modelService, scanner);
-		SessioneController sessioneController = new SessioneController(sessionService, modelService, scanner);
-		GestioneUtenteController gestioneUtenteController = new GestioneUtenteController(sessioneDao, scanner);
-		ReclamoController reclamoController = new ReclamoController(complaintService, scanner);
+		SessionController sessionController = new SessionController(sessionService, modelService, scanner);
+		ModelController modelController = new ModelController(modelService, scanner);
+		VerificationController verificationController = new VerificationController(verificationService, modelService, scanner);
+		ComplaintController complaintController = new ComplaintController(complaintService, scanner);
+		UserController userController = new UserController(sessionDao, complaintDao, scanner);
 
-		// ===== 6. LOOP PRINCIPALE =====
-		System.out.println("═══════════════════════════════════════");
-		System.out.println("  GESTIONE CLUSTER GPU v1.0");
-		System.out.println("  Sistema di gestione risorse GPU");
-		System.out.println("═══════════════════════════════════════");
-
+		// ===== 6. MAIN LOOP =====
 		while (true) {
-			// Autenticazione
-			Utente utente = authController.mostraMenu();
+			User user = authController.showMenu();
 
-			// Routing basato sul ruolo
-			if (utente instanceof Developer) {
-				menuDeveloper((Developer) utente, sessioneController, gestioneUtenteController,
-						reclamoDao, modelService, sessionService, scanner);
-			} else if (utente instanceof ModelProvider) {
-				gestioneModelliController.mostraMenu((ModelProvider) utente);
-			} else if (utente instanceof Supervisor) {
-				menuSupervisor((Supervisor) utente, verificaController, reclamoController, scanner);
+			if (user instanceof Developer) {
+				developerMenu((Developer) user, sessionController, userController);
+			} else if (user instanceof ModelProvider) {
+				modelController.showMenu((ModelProvider) user);
+			} else if (user instanceof Supervisor) {
+				supervisorMenu((Supervisor) user, verificationController, complaintController);
 			}
 		}
 	}
 
-	/**
-	 * Menu principale per il Developer.
-	 */
-	private static void menuDeveloper(Developer developer,
-			SessioneController sessioneController,
-			GestioneUtenteController gestioneUtenteController,
-			ReclamoDAO reclamoDao,
-			ModelService modelService,
-			SessionService sessionService,
-			Scanner scanner) {
+	private static void developerMenu(Developer developer, SessionController sessionController,
+			UserController userController) {
 		while (true) {
 			System.out.println("\n╔══════════════════════════════════════╗");
-			System.out.println("║   MENU DEVELOPER                     ║");
+			System.out.println("║   DEVELOPER MENU                     ║");
 			System.out.println("╠══════════════════════════════════════╣");
-			System.out.println("║  1. Chat con Modello                 ║");
-			System.out.println("║  2. Ricarica Credito                 ║");
-			System.out.println("║  3. Visualizza Statistiche           ║");
-			System.out.println("║  4. Invia Reclamo                    ║");
+			System.out.println("║  1. Start session (AI Chat)          ║");
+			System.out.println("║  2. Top-up credit                    ║");
+			System.out.println("║  3. Stats                            ║");
+			System.out.println("║  4. File complaint                   ║");
 			System.out.println("║  0. Logout                           ║");
 			System.out.println("╚══════════════════════════════════════╝");
-			System.out.println("  Saldo: €" + String.format("%.2f", developer.getWallet().getSaldo()));
-			System.out.print("Scelta: ");
+			System.out.println("  Balance: €" + String.format("%.2f", developer.getWallet().getBalance()));
+			System.out.print("Choice: ");
 
-			String scelta = scanner.nextLine().trim();
+			String choice = scanner.nextLine().trim();
 
-			switch (scelta) {
-				case "1":
-					sessioneController.avviaSessione(developer);
-					break;
-				case "2":
-					gestioneUtenteController.ricaricaCredito(developer);
-					break;
-				case "3":
-					gestioneUtenteController.visualizzaStatistiche(developer);
-					break;
-				case "4":
-					inviaReclamo(developer, reclamoDao, modelService, sessionService, scanner);
-					break;
-				case "0":
-					return;
-				default:
-					System.out.println("Scelta non valida.");
+			switch (choice) {
+				case "1": sessionController.startSession(developer); break;
+				case "2": userController.topUpCredit(developer); break;
+				case "3": userController.viewStats(developer); break;
+				case "4": fileComplaint(developer); break;
+				case "0": return;
+				default: System.out.println("Invalid choice.");
 			}
 		}
 	}
 
-	/**
-	 * Funzionalità per l'invio di un reclamo da parte del Developer.
-	 */
-	private static void inviaReclamo(Developer developer, ReclamoDAO reclamoDao,
-			ModelService modelService, SessionService sessionService, Scanner scanner) {
-		List<Modello> modelli = modelService.getApprovedModels();
-		if (modelli.isEmpty()) {
-			System.out.println("Nessun modello disponibile.");
+	private static void supervisorMenu(Supervisor supervisor,
+			VerificationController verificationController, ComplaintController complaintController) {
+		while (true) {
+			System.out.println("\n╔══════════════════════════════════════╗");
+			System.out.println("║   SUPERVISOR MENU                    ║");
+			System.out.println("╠══════════════════════════════════════╣");
+			System.out.println("║  1. Verify models                    ║");
+			System.out.println("║  2. Manage complaints                ║");
+			System.out.println("║  0. Logout                           ║");
+			System.out.println("╚══════════════════════════════════════╝");
+			System.out.print("Choice: ");
+
+			String choice = scanner.nextLine().trim();
+
+			switch (choice) {
+				case "1": verificationController.showMenu(supervisor); break;
+				case "2": complaintController.showDashboard(supervisor); break;
+				case "0": return;
+				default: System.out.println("Invalid choice.");
+			}
+		}
+	}
+
+	private static void fileComplaint(Developer developer) {
+		List<AiModel> models = modelService.getApprovedModels();
+		if (models.isEmpty()) {
+			System.out.println("No models available for complaint.");
 			return;
 		}
 
-		System.out.println("\n--- INVIA RECLAMO ---");
-		System.out.println("Seleziona il modello oggetto del reclamo:");
-		for (Modello m : modelli) {
-			System.out.println("  ID: " + m.getId() + " | " + m.getNome());
+		System.out.println("\n--- FILE COMPLAINT ---");
+		for (AiModel m : models) {
+			System.out.println("  ID: " + m.getId() + " | " + m.getName());
 		}
 
-		System.out.print("ID modello: ");
+		System.out.print("Model ID: ");
 		int id;
 		try {
 			id = Integer.parseInt(scanner.nextLine().trim());
 		} catch (NumberFormatException e) {
-			System.out.println("ID non valido.");
+			System.out.println("Invalid ID.");
 			return;
 		}
 
-		Modello modello = modelService.findById(id);
-		if (modello == null) {
-			System.out.println("Modello non trovato.");
+		AiModel model = modelService.findById(id);
+		if (model == null) {
+			System.out.println("❌ Model not found.");
 			return;
 		}
 
-		System.out.print("Descrizione del reclamo: ");
-		String descrizione = scanner.nextLine().trim();
+		System.out.print("Describe the issue: ");
+		String description = scanner.nextLine().trim();
 
-		// Recupera i log dell'ultima sessione
-		List<String> promptLogs = sessionService.getRecentLogs(developer, modello);
-		if (promptLogs.isEmpty()) {
-			System.out.println("⚠️  Nessuna sessione recente trovata con questo modello. I log saranno vuoti.");
-			promptLogs = new ArrayList<>();
-		} else {
-			System.out.println("✅ Log dell'ultima sessione allegati (" + promptLogs.size() + " interazioni).");
+		List<String> promptLogs = sessionService.getRecentLogs(developer, model);
+		if (!promptLogs.isEmpty()) {
+			System.out.println("✅ Logs from last session attached (" + promptLogs.size() + " interactions).");
 		}
 
-		int nextReclamoId = reclamoDao.findAll().size() + 1;
-		Reclamo reclamo = new Reclamo(nextReclamoId, developer, modello, descrizione, promptLogs);
-		reclamoDao.save(reclamo);
+		int nextId = complaintDao.findAll().size() + 1;
+		Complaint complaint = new Complaint(nextId, developer, model, description, promptLogs);
+		complaintDao.save(complaint);
 
-		System.out.println("✅ Reclamo #" + reclamo.getId() + " inviato con successo.");
-	}
-
-	/**
-	 * Menu principale per il Supervisor.
-	 */
-	private static void menuSupervisor(Supervisor supervisor,
-			VerificaController verificaController,
-			ReclamoController reclamoController,
-			Scanner scanner) {
-		while (true) {
-			System.out.println("\n╔══════════════════════════════════════╗");
-			System.out.println("║   MENU SUPERVISOR                    ║");
-			System.out.println("╠══════════════════════════════════════╣");
-			System.out.println("║  1. Verifica Modelli in Attesa       ║");
-			System.out.println("║  2. Gestisci Reclami                 ║");
-			System.out.println("║  3. Visualizza tutti i Modelli       ║");
-			System.out.println("║  0. Logout                           ║");
-			System.out.println("╚══════════════════════════════════════╝");
-			System.out.print("Scelta: ");
-
-			String scelta = scanner.nextLine().trim();
-
-			switch (scelta) {
-				case "1":
-					verificaController.verificaModelli();
-					break;
-				case "2":
-					reclamoController.mostraDashboard(supervisor);
-					break;
-				case "3":
-					verificaController.visualizzaTuttiModelli();
-					break;
-				case "0":
-					return;
-				default:
-					System.out.println("Scelta non valida.");
-			}
-		}
+		System.out.println("✅ Complaint #" + complaint.getId() + " filed. Pending review.");
 	}
 }

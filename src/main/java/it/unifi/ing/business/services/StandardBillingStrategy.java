@@ -1,15 +1,14 @@
 package it.unifi.ing.business.services;
 
-import it.unifi.ing.domain.Sessione;
+import it.unifi.ing.domain.Session;
 
 /**
- * Strategia di billing standard: costo = token * costoTotalePerToken del
- * modello.
+ * Standard billing strategy: cost = unbilledTokens * costPerToken.
  */
 public class StandardBillingStrategy implements BillingStrategy {
 
 	@Override
-	public double calculateCost(Sessione session) {
-		return session.getTokensUsed() * session.getModello().getCostoTotalePerToken();
+	public double calculateCost(Session session) {
+		return session.getUnbilledUsedTokens() * session.getModel().getCostPerToken();
 	}
 }

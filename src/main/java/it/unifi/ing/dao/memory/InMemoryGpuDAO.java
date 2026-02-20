@@ -8,10 +8,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Implementazione in memoria del DAO GPU.
- * Usa una Map<Integer, GPU> come storage.
- */
 public class InMemoryGpuDAO implements GpuDAO {
 
 	private final Map<Integer, GPU> storage = new HashMap<>();

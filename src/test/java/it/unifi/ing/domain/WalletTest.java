@@ -2,7 +2,6 @@ package it.unifi.ing.domain;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 class WalletTest {
@@ -15,61 +14,59 @@ class WalletTest {
 	}
 
 	@Test
-	void testSaldoIniziale() {
-		assertEquals(0.0, wallet.getSaldo());
+	void testInitialBalance() {
+		assertEquals(0.0, wallet.getBalance());
+		assertNotNull(wallet.getId());
 	}
 
 	@Test
-	void testAddCredito() {
-		wallet.addCredito(100.0);
-		assertEquals(100.0, wallet.getSaldo());
+	void testAddFunds() {
+		wallet.addFunds(50.0);
+		assertEquals(50.0, wallet.getBalance());
 	}
 
 	@Test
-	void testAddCreditoMultiplo() {
-		wallet.addCredito(50.0);
-		wallet.addCredito(30.0);
-		assertEquals(80.0, wallet.getSaldo());
+	void testCharge() {
+		wallet.addFunds(100.0);
+		assertTrue(wallet.charge(30.0));
+		assertEquals(70.0, wallet.getBalance(), 0.001);
 	}
 
 	@Test
-	void testAddCreditoNegativo() {
-		assertThrows(IllegalArgumentException.class, () -> wallet.addCredito(-10.0));
+	void testChargeInsufficientFunds() {
+		wallet.addFunds(10.0);
+		assertFalse(wallet.charge(20.0));
+		assertEquals(10.0, wallet.getBalance());
 	}
 
 	@Test
-	void testDeduciCredito() {
-		wallet.addCredito(100.0);
-		assertTrue(wallet.deduciCredito(40.0));
-		assertEquals(60.0, wallet.getSaldo(), 0.001);
+	void testAddFundsNegativeThrows() {
+		assertThrows(IllegalArgumentException.class, () -> wallet.addFunds(-5.0));
 	}
 
 	@Test
-	void testDeduciCreditoInsufficiente() {
-		wallet.addCredito(10.0);
-		assertFalse(wallet.deduciCredito(50.0));
-		assertEquals(10.0, wallet.getSaldo());
+	void testChargeNegativeThrows() {
+		assertThrows(IllegalArgumentException.class, () -> wallet.charge(-5.0));
 	}
 
 	@Test
-	void testDeduciCreditoNegativo() {
-		assertThrows(IllegalArgumentException.class, () -> wallet.deduciCredito(-5.0));
+	void testTransactionHistory() {
+		wallet.addFunds(100.0);
+		wallet.charge(30.0);
+		assertEquals(2, wallet.getTransactionHistory().size());
 	}
 
 	@Test
-	void testStoricoTransazioni() {
-		wallet.addCredito(100.0);
-		wallet.deduciCredito(30.0);
-		assertEquals(2, wallet.getStoricoTransazioni().size());
-		assertTrue(wallet.getStoricoTransazioni().get(0).getMotivo().contains("RICARICA"));
-		assertTrue(wallet.getStoricoTransazioni().get(1).getMotivo().contains("ADDEBITO"));
+	void testTransactionHistoryImmutable() {
+		wallet.addFunds(10.0);
+		assertThrows(UnsupportedOperationException.class, () -> wallet.getTransactionHistory().add(
+				new Transaction(99, 1.0, java.time.LocalDateTime.now(), "hack")));
 	}
 
 	@Test
-	void testStoricoTransazioniImmutabile() {
-		wallet.addCredito(50.0);
-		assertThrows(UnsupportedOperationException.class,
-				() -> wallet.getStoricoTransazioni().add(
-						new Transaction(99, 0, java.time.LocalDateTime.now(), "test")));
+	void testAddFundsWithReason() {
+		wallet.addFundsWithReason(25.0, "REFUND");
+		assertEquals(25.0, wallet.getBalance());
+		assertEquals(1, wallet.getTransactionHistory().size());
 	}
 }

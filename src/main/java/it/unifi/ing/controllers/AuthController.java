@@ -1,13 +1,12 @@
 package it.unifi.ing.controllers;
 
 import it.unifi.ing.business.services.AuthService;
-import it.unifi.ing.domain.Utente;
+import it.unifi.ing.domain.User;
 
 import java.util.Scanner;
 
 /**
- * Controller per l'autenticazione: gestisce il menu iniziale di
- * Login/Registrazione via CLI.
+ * Controller for authentication: login/registration via CLI.
  */
 public class AuthController {
 
@@ -19,102 +18,91 @@ public class AuthController {
 		this.scanner = scanner;
 	}
 
-	/**
-	 * Mostra il menu iniziale e gestisce login/registrazione.
-	 * 
-	 * @return l'utente autenticato
-	 */
-	public Utente mostraMenu() {
+	public User showMenu() {
 		while (true) {
 			System.out.println("\n╔══════════════════════════════════════╗");
-			System.out.println("║   GESTIONE CLUSTER GPU - Benvenuto   ║");
+			System.out.println("║   GPU CLUSTER MANAGEMENT - Welcome   ║");
 			System.out.println("╠══════════════════════════════════════╣");
 			System.out.println("║  1. Login                            ║");
-			System.out.println("║  2. Registrazione                    ║");
-			System.out.println("║  0. Esci                             ║");
+			System.out.println("║  2. Register                         ║");
+			System.out.println("║  0. Exit                             ║");
 			System.out.println("╚══════════════════════════════════════╝");
-			System.out.print("Scelta: ");
+			System.out.print("Choice: ");
 
-			String scelta = scanner.nextLine().trim();
+			String choice = scanner.nextLine().trim();
 
-			switch (scelta) {
+			switch (choice) {
 				case "1":
-					Utente utenteLogin = gestisciLogin();
-					if (utenteLogin != null)
-						return utenteLogin;
+					User loginUser = handleLogin();
+					if (loginUser != null)
+						return loginUser;
 					break;
 				case "2":
-					Utente utenteReg = gestisciRegistrazione();
-					if (utenteReg != null)
-						return utenteReg;
+					User regUser = handleRegistration();
+					if (regUser != null)
+						return regUser;
 					break;
 				case "0":
-					System.out.println("Arrivederci!");
+					System.out.println("Goodbye!");
 					System.exit(0);
 					break;
 				default:
-					System.out.println("Scelta non valida.");
+					System.out.println("Invalid choice.");
 			}
 		}
 	}
 
-	private Utente gestisciLogin() {
+	private User handleLogin() {
 		System.out.println("\n--- LOGIN ---");
 		System.out.print("Email: ");
 		String email = scanner.nextLine().trim();
 		System.out.print("Password: ");
 		String password = scanner.nextLine().trim();
 
-		Utente utente = authService.login(email, password);
-		if (utente != null) {
-			System.out.println("✅ Login riuscito! Benvenuto, " + utente.getNome()
-					+ " (" + utente.getRuolo() + ")");
-			return utente;
+		User user = authService.login(email, password);
+		if (user != null) {
+			System.out.println("✅ Login successful! Welcome, " + user.getName()
+					+ " (" + user.getRole() + ")");
+			return user;
 		} else {
-			System.out.println("❌ Credenziali non valide.");
+			System.out.println("❌ Invalid credentials.");
 			return null;
 		}
 	}
 
-	private Utente gestisciRegistrazione() {
-		System.out.println("\n--- REGISTRAZIONE ---");
-		System.out.print("Nome: ");
-		String nome = scanner.nextLine().trim();
+	private User handleRegistration() {
+		System.out.println("\n--- REGISTRATION ---");
+		System.out.print("Name: ");
+		String name = scanner.nextLine().trim();
 		System.out.print("Email: ");
 		String email = scanner.nextLine().trim();
 		System.out.print("Password: ");
 		String password = scanner.nextLine().trim();
 
-		System.out.println("Seleziona ruolo:");
+		System.out.println("Select role:");
 		System.out.println("  1. Developer");
 		System.out.println("  2. ModelProvider");
 		System.out.println("  3. Supervisor");
-		System.out.print("Scelta: ");
-		String sceltaRuolo = scanner.nextLine().trim();
+		System.out.print("Choice: ");
+		String roleChoice = scanner.nextLine().trim();
 
-		String ruolo;
-		switch (sceltaRuolo) {
-			case "1":
-				ruolo = "developer";
-				break;
-			case "2":
-				ruolo = "modelprovider";
-				break;
-			case "3":
-				ruolo = "supervisor";
-				break;
+		String role;
+		switch (roleChoice) {
+			case "1": role = "developer"; break;
+			case "2": role = "modelprovider"; break;
+			case "3": role = "supervisor"; break;
 			default:
-				System.out.println("Ruolo non valido.");
+				System.out.println("Invalid role.");
 				return null;
 		}
 
-		Utente utente = authService.registra(nome, email, password, ruolo);
-		if (utente != null) {
-			System.out.println("✅ Registrazione completata! Benvenuto, " + utente.getNome()
-					+ " (" + utente.getRuolo() + ")");
-			return utente;
+		User user = authService.register(name, email, password, role);
+		if (user != null) {
+			System.out.println("✅ Registration complete! Welcome, " + user.getName()
+					+ " (" + user.getRole() + ")");
+			return user;
 		} else {
-			System.out.println("❌ Email già registrata o ruolo non valido.");
+			System.out.println("❌ Email already registered or invalid role.");
 			return null;
 		}
 	}

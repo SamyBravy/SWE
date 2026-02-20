@@ -1,16 +1,16 @@
 package it.unifi.ing.domain;
 
 /**
- * ModelProvider: utente che pubblica modelli AI nel sistema.
+ * ModelProvider: user who publishes AI models in the system.
  */
-public class ModelProvider extends Utente {
+public class ModelProvider extends User {
 
-    public ModelProvider(int id, String nome, String email, String password) {
-        super(id, nome, email, password);
+    public ModelProvider(int id, String name, String email, String password) {
+        super(id, name, email, password);
     }
 
     @Override
-    public String getRuolo() {
+    public String getRole() {
         return "ModelProvider";
     }
 }

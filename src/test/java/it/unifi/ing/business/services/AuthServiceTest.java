@@ -1,14 +1,12 @@
 package it.unifi.ing.business.services;
 
-import it.unifi.ing.dao.memory.InMemoryUtenteDAO;
+import it.unifi.ing.dao.memory.InMemoryUserDAO;
 import it.unifi.ing.domain.Developer;
 import it.unifi.ing.domain.ModelProvider;
 import it.unifi.ing.domain.Supervisor;
-import it.unifi.ing.domain.Utente;
-
+import it.unifi.ing.domain.User;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 class AuthServiceTest {
@@ -17,62 +15,57 @@ class AuthServiceTest {
 
 	@BeforeEach
 	void setUp() {
-		authService = new AuthService(new InMemoryUtenteDAO());
+		authService = new AuthService(new InMemoryUserDAO());
 	}
 
 	@Test
-	void testRegistraDeveloper() {
-		Utente utente = authService.registra("Mario", "mario@test.com", "pass123", "developer");
-		assertNotNull(utente);
-		assertInstanceOf(Developer.class, utente);
-		assertEquals("Mario", utente.getNome());
+	void testRegisterDeveloper() {
+		User user = authService.register("Dev", "dev@test.com", "pass", "developer");
+		assertNotNull(user);
+		assertTrue(user instanceof Developer);
 	}
 
 	@Test
-	void testRegistraModelProvider() {
-		Utente utente = authService.registra("Luca", "luca@test.com", "pass456", "modelprovider");
-		assertNotNull(utente);
-		assertInstanceOf(ModelProvider.class, utente);
+	void testRegisterModelProvider() {
+		User user = authService.register("Prov", "prov@test.com", "pass", "modelprovider");
+		assertNotNull(user);
+		assertTrue(user instanceof ModelProvider);
 	}
 
 	@Test
-	void testRegistraSupervisor() {
-		Utente utente = authService.registra("Anna", "anna@test.com", "pass789", "supervisor");
-		assertNotNull(utente);
-		assertInstanceOf(Supervisor.class, utente);
+	void testRegisterSupervisor() {
+		User user = authService.register("Sup", "sup@test.com", "pass", "supervisor");
+		assertNotNull(user);
+		assertTrue(user instanceof Supervisor);
 	}
 
 	@Test
-	void testRegistraEmailDuplicata() {
-		authService.registra("Mario", "mario@test.com", "pass123", "developer");
-		Utente duplicato = authService.registra("Altro", "mario@test.com", "pass456", "developer");
-		assertNull(duplicato);
+	void testRegisterDuplicateEmail() {
+		authService.register("Dev1", "dev@test.com", "pass", "developer");
+		User dup = authService.register("Dev2", "dev@test.com", "pass", "developer");
+		assertNull(dup);
 	}
 
 	@Test
-	void testRegistraRuoloInvalido() {
-		Utente utente = authService.registra("Mario", "mario@test.com", "pass123", "admin");
-		assertNull(utente);
+	void testRegisterInvalidRole() {
+		assertNull(authService.register("X", "x@test.com", "pass", "invalid"));
 	}
 
 	@Test
-	void testLoginSuccesso() {
-		authService.registra("Mario", "mario@test.com", "pass123", "developer");
-		Utente utente = authService.login("mario@test.com", "pass123");
-		assertNotNull(utente);
-		assertEquals("Mario", utente.getNome());
+	void testLoginSuccess() {
+		authService.register("Dev", "dev@test.com", "pass", "developer");
+		User user = authService.login("dev@test.com", "pass");
+		assertNotNull(user);
 	}
 
 	@Test
-	void testLoginPasswordErrata() {
-		authService.registra("Mario", "mario@test.com", "pass123", "developer");
-		Utente utente = authService.login("mario@test.com", "wrongpass");
-		assertNull(utente);
+	void testLoginWrongPassword() {
+		authService.register("Dev", "dev@test.com", "pass", "developer");
+		assertNull(authService.login("dev@test.com", "wrong"));
 	}
 
 	@Test
-	void testLoginEmailNonEsistente() {
-		Utente utente = authService.login("nope@test.com", "pass");
-		assertNull(utente);
+	void testLoginNonExistent() {
+		assertNull(authService.login("nobody@test.com", "pass"));
 	}
 }

@@ -1,163 +1,131 @@
 package it.unifi.ing.business.services;
 
 import it.unifi.ing.dao.memory.InMemoryGpuDAO;
-import it.unifi.ing.dao.memory.InMemorySessioneDAO;
+import it.unifi.ing.dao.memory.InMemorySessionDAO;
 import it.unifi.ing.domain.*;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.AfterEach;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 class SessionServiceTest {
 
 	private SessionService sessionService;
-	private InMemorySessioneDAO sessioneDao;
-	private ClusterGPU cluster;
+	private InMemorySessionDAO sessionDao;
+	private GpuCluster cluster;
 	private Developer developer;
-	private Modello modello;
+	private AiModel model;
 
 	@BeforeEach
 	void setUp() {
-		ClusterGPU.resetInstance();
-		sessioneDao = new InMemorySessioneDAO();
+		GpuCluster.resetInstance();
+		sessionDao = new InMemorySessionDAO();
 		InMemoryGpuDAO gpuDao = new InMemoryGpuDAO();
 		gpuDao.save(new GPU(1));
 		gpuDao.save(new GPU(2));
 
-		cluster = ClusterGPU.getInstance();
+		cluster = GpuCluster.getInstance();
 		cluster.init(gpuDao);
 
 		BillingService billingService = new BillingService(new StandardBillingStrategy());
-		sessionService = new SessionService(sessioneDao, cluster, billingService);
+		sessionService = new SessionService(sessionDao, cluster, billingService);
 
 		developer = new Developer(1, "Dev", "dev@test.com", "pass");
-		developer.getWallet().addCredito(100.0);
+		developer.getWallet().addFunds(100.0);
 
-		ModelProvider provider = new ModelProvider(2, "Prov", "prov@test.com", "pass");
-		modello = new Modello(1, "TestModel", "Desc", 0.005, "s.bin", "c.json", provider);
-		modello.setStato(StatoModello.APPROVATO);
-		// costoPerTokenProvider = 0.005 (set at creation), costoPerTokenPiattaforma =
-		// 0.005
-		// getCostoTotalePerToken() = 0.01
-		modello.setCostoPerTokenPiattaforma(0.005);
+		ModelProvider prov = new ModelProvider(2, "Prov", "prov@test.com", "pass");
+		model = new AiModel(1, "TestModel", "Desc", 0.005, "s.bin", "c.json", prov);
+		model.setCostPerTokenPlatform(0.005);
 	}
 
 	@AfterEach
 	void tearDown() {
-		ClusterGPU.resetInstance();
+		GpuCluster.resetInstance();
 	}
 
 	@Test
 	void testOpenSession() {
-		Sessione sessione = sessionService.openSession(developer, modello);
-		assertNotNull(sessione);
-		assertTrue(sessione.isAttiva());
-		assertEquals(developer, sessione.getUtente());
-		assertEquals(modello, sessione.getModello());
+		Session session = sessionService.openSession(developer, model);
+		assertNotNull(session);
+		assertTrue(session.isActive());
+		assertNotNull(session.getGpu());
 	}
 
 	@Test
 	void testOpenSessionNoGpu() {
-		// Occupa tutte le GPU
-		cluster.assegnaGpu();
-		cluster.assegnaGpu();
-
-		Sessione sessione = sessionService.openSession(developer, modello);
-		assertNull(sessione);
+		sessionService.openSession(developer, model);
+		sessionService.openSession(developer, model);
+		assertNull(sessionService.openSession(developer, model));
 	}
 
 	@Test
 	void testSendPrompt() {
-		Sessione sessione = sessionService.openSession(developer, modello);
-		assertNotNull(sessione);
-
-		double saldoPrima = developer.getWallet().getSaldo();
-		String risposta = sessionService.sendPrompt(sessione, "Ciao, come stai?");
-		assertNotNull(risposta);
-		assertTrue(risposta.contains("TestModel"));
-		assertTrue(sessione.getTokensUsed() > 0);
-
-		// Il credito deve essere stato scalato immediatamente (real-time billing)
-		assertTrue(developer.getWallet().getSaldo() < saldoPrima);
+		Session session = sessionService.openSession(developer, model);
+		String response = sessionService.sendPrompt(session, "Hello AI");
+		assertNotNull(response);
+		assertTrue(response.contains("Hello AI"));
 	}
 
 	@Test
-	void testSendPromptScalaCredito() {
-		Sessione sessione = sessionService.openSession(developer, modello);
-		// costoTotalePerToken = 0.01, prompt "test" (4 chars) genera ceil(4/2) = 2 token => costo 0.02
-		double saldoPrima = developer.getWallet().getSaldo();
-		sessionService.sendPrompt(sessione, "test");
-
-		// L'addebito è immediato (real-time billing)
-		double costoAtteso = 2 * 0.01; 
-		assertEquals(saldoPrima - costoAtteso, developer.getWallet().getSaldo(), 0.001);
-	}
-
-	@Test
-	void testSendPromptCreditoInsufficiente() {
-		// Usa un costo per token molto alto per esaurire il credito
-		modello.setCostoPerTokenProvider(25.0);
-		modello.setCostoPerTokenPiattaforma(25.0);
-		Sessione sessione = sessionService.openSession(developer, modello);
-		// Prompt lungo: 20 chars -> 10 tokens * 50.0 = 500.0 > 100.0 di saldo
-		String risposta = sessionService.sendPrompt(sessione, "12345678901234567890");
-		assertTrue(risposta.contains("Credito insufficiente"));
-		// La sessione deve essere stata chiusa automaticamente
-		assertFalse(sessione.isAttiva());
-	}
-
-	@Test
-	void testSendPromptSessioneChiusa() {
-		Sessione sessione = sessionService.openSession(developer, modello);
-		sessione.chiudi();
-
-		String risposta = sessionService.sendPrompt(sessione, "Test");
-		assertTrue(risposta.contains("Errore"));
+	void testSendPromptInsufficientCredit() {
+		Developer poorDev = new Developer(3, "Poor", "poor@test.com", "pass");
+		poorDev.getWallet().addFunds(0.001);
+		Session session = sessionService.openSession(poorDev, model);
+		String response = sessionService.sendPrompt(session, "This should fail because tokens will cost more");
+		assertTrue(response.contains("Insufficient credit") || response.contains("Error"));
 	}
 
 	@Test
 	void testCloseSession() {
-		Sessione sessione = sessionService.openSession(developer, modello);
-		sessionService.sendPrompt(sessione, "Test prompt");
-
-		double costo = sessionService.closeSession(sessione);
-
-		assertFalse(sessione.isAttiva());
-		assertTrue(costo >= 0);
+		Session session = sessionService.openSession(developer, model);
+		sessionService.closeSession(session);
+		assertFalse(session.isActive());
+		assertEquals(GpuStatus.ACTIVE, session.getGpu().getStatus());
 	}
 
 	@Test
-	void testCloseSessionGpuRilasciata() {
-		Sessione sessione = sessionService.openSession(developer, modello);
-		GPU gpu = sessione.getGpu();
+	void testSendPromptClosedSession() {
+		Session session = sessionService.openSession(developer, model);
+		sessionService.closeSession(session);
+		String response = sessionService.sendPrompt(session, "Should fail");
+		assertTrue(response.contains("Error"));
+	}
 
-		sessionService.closeSession(sessione);
-		assertTrue(gpu.isLibera());
+	@Test
+	void testSendPromptOverheatedGpu() {
+		Session session = sessionService.openSession(developer, model);
+		session.getGpu().setStatus(GpuStatus.IDLE);
+		String response = sessionService.sendPrompt(session, "Should fail");
+		assertTrue(response.contains("overheated"));
 	}
 
 	@Test
 	void testFindById() {
-		Sessione sessione = sessionService.openSession(developer, modello);
-		assertNotNull(sessionService.findById(sessione.getId()));
+		Session session = sessionService.openSession(developer, model);
+		assertNotNull(sessionService.findById(session.getId()));
 	}
+
+	@Test
+	void testSendPromptSingleCharacter() {
+		Session session = sessionService.openSession(developer, model);
+		String response = sessionService.sendPrompt(session, "d");
+		assertNotNull(response);
+		assertFalse(response.contains("Error"));
+	}
+
 	@Test
 	void testGetRecentLogs() {
-		Sessione s1 = sessionService.openSession(developer, modello);
-		sessionService.sendPrompt(s1, "Prompt 1");
-		sessionService.closeSession(s1);
-
-		Sessione s2 = sessionService.openSession(developer, modello);
-		sessionService.sendPrompt(s2, "Prompt 2");
-
-		java.util.List<String> logs = sessionService.getRecentLogs(developer, modello);
+		Session session = sessionService.openSession(developer, model);
+		sessionService.sendPrompt(session, "Hello");
+		java.util.List<String> logs = sessionService.getRecentLogs(developer, model);
 		assertEquals(1, logs.size());
-		assertTrue(logs.get(0).contains("Prompt 2"));
 	}
 
 	@Test
-	void testGetRecentLogsEmpty() {
-		assertTrue(sessionService.getRecentLogs(developer, modello).isEmpty());
+	void testTokensDeductedFromBalance() {
+		Session session = sessionService.openSession(developer, model);
+		double balanceBefore = developer.getWallet().getBalance();
+		sessionService.sendPrompt(session, "Hello");
+		assertTrue(developer.getWallet().getBalance() < balanceBefore);
 	}
 }

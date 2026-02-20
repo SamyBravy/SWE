@@ -1,90 +1,72 @@
 package it.unifi.ing.business.services;
 
-import it.unifi.ing.dao.interfaces.ReclamoDAO;
-import it.unifi.ing.dao.interfaces.UtenteDAO;
-import it.unifi.ing.domain.Modello;
-import it.unifi.ing.domain.Reclamo;
-import it.unifi.ing.domain.StatoModello;
-import it.unifi.ing.domain.StatoReclamo;
+import it.unifi.ing.dao.interfaces.ComplaintDAO;
+import it.unifi.ing.dao.interfaces.UserDAO;
+import it.unifi.ing.domain.AiModel;
+import it.unifi.ing.domain.Complaint;
+import it.unifi.ing.domain.ComplaintStatus;
+import it.unifi.ing.domain.ModelStatus;
 
 import java.util.List;
 
 /**
- * Service per la gestione dei reclami.
- * Permette al Supervisor di accettare o rifiutare reclami,
- * con possibilità di rimborso token e blocco modello.
+ * Service for complaint management.
+ * Allows the Supervisor to accept or reject complaints,
+ * with token refund and model blocking options.
  */
 public class ComplaintService {
 
-    private final ReclamoDAO reclamoDao;
-    private final UtenteDAO utenteDao;
+    private final ComplaintDAO complaintDao;
+    private final UserDAO userDao;
 
-    public ComplaintService(ReclamoDAO reclamoDao, UtenteDAO utenteDao) {
-        this.reclamoDao = reclamoDao;
-        this.utenteDao = utenteDao;
+    public ComplaintService(ComplaintDAO complaintDao, UserDAO userDao) {
+        this.complaintDao = complaintDao;
+        this.userDao = userDao;
+    }
+
+    public List<Complaint> getPendingComplaints() {
+        return complaintDao.findByStatus(ComplaintStatus.PENDING_REVIEW);
+    }
+
+    public List<Complaint> getAllComplaints() {
+        return complaintDao.findAll();
+    }
+
+    public Complaint findById(int id) {
+        return complaintDao.findById(id);
     }
 
     /**
-     * Restituisce i reclami in attesa di revisione.
+     * Accepts a complaint, refunding tokens and optionally blocking the model.
      */
-    public List<Reclamo> getPendingComplaints() {
-        return reclamoDao.findByStato(StatoReclamo.IN_ATTESA);
-    }
+    public void acceptComplaint(Complaint complaint, int refundedTokens, int blockHours) {
+        complaint.setStatus(ComplaintStatus.ACCEPTED);
 
-    /**
-     * Restituisce tutti i reclami.
-     */
-    public List<Reclamo> getAllComplaints() {
-        return reclamoDao.findAll();
-    }
-
-    /**
-     * Trova un reclamo per ID.
-     */
-    public Reclamo findById(int id) {
-        return reclamoDao.findById(id);
-    }
-
-    /**
-     * Accetta un reclamo, rimborsando token all'utente e opzionalmente bloccando il modello.
-     *
-     * @param reclamo          il reclamo da accettare
-     * @param tokenRimborsati  numero di token da rimborsare all'utente
-     * @param bloccoOre        durata del blocco del modello in ore (0 = nessun blocco)
-     */
-    public void acceptComplaint(Reclamo reclamo, int tokenRimborsati, int bloccoOre) {
-        reclamo.setStato(StatoReclamo.ACCETTATO);
-
-        // Rimborsa i token al developer
-        if (tokenRimborsati > 0) {
-            double rimborso = tokenRimborsati * reclamo.getModello().getCostoTotalePerToken();
-            reclamo.getDeveloper().getWallet().addCreditoConMotivo(rimborso,
-                    "RIMBORSO reclamo #" + reclamo.getId() + ": " + tokenRimborsati + " token");
+        if (refundedTokens > 0) {
+            double refund = refundedTokens * complaint.getModel().getCostPerToken();
+            complaint.getDeveloper().getWallet().addFundsWithReason(refund,
+                    "REFUND complaint #" + complaint.getId() + ": " + refundedTokens + " tokens");
         }
 
-        // Blocca il modello se richiesto
-        if (bloccoOre > 0) {
-            Modello modello = reclamo.getModello();
-            modello.setStato(StatoModello.BLOCCATO);
-            System.out.println("🔒 Modello '" + modello.getNome() + "' bloccato per " + bloccoOre + " ore.");
+        if (blockHours > 0) {
+            AiModel model = complaint.getModel();
+            model.setStatus(ModelStatus.BLOCKED);
+            System.out.println("🔒 Model '" + model.getName() + "' blocked for " + blockHours + " hours.");
         }
 
-        reclamoDao.update(reclamo);
+        complaintDao.update(complaint);
     }
 
     /**
-     * Rifiuta un reclamo con le motivazioni fornite.
+     * Rejects a complaint with the provided reasons.
      */
-    public void rejectComplaint(Reclamo reclamo, String motivi) {
-        reclamo.setStato(StatoReclamo.RIFIUTATO);
-        reclamo.setMotiviRifiuto(motivi);
-        reclamoDao.update(reclamo);
+    public void rejectComplaint(Complaint complaint, String reasons) {
+        complaint.setStatus(ComplaintStatus.REJECTED);
+        complaint.setRejectionReasons(reasons);
+        complaintDao.update(complaint);
     }
 
-    /**
-     * Salva un nuovo reclamo nel sistema.
-     */
-    public void salvaReclamo(Reclamo reclamo) {
-        reclamoDao.save(reclamo);
+    public void saveComplaint(Complaint complaint) {
+        complaintDao.save(complaint);
     }
 }

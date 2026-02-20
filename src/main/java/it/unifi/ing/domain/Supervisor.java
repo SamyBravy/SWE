@@ -1,16 +1,16 @@
 package it.unifi.ing.domain;
 
 /**
- * Supervisor: utente che verifica, approva o rifiuta i modelli AI.
+ * Supervisor: user who verifies, approves, or rejects AI models.
  */
-public class Supervisor extends Utente {
+public class Supervisor extends User {
 
-    public Supervisor(int id, String nome, String email, String password) {
-        super(id, nome, email, password);
+    public Supervisor(int id, String name, String email, String password) {
+        super(id, name, email, password);
     }
 
     @Override
-    public String getRuolo() {
+    public String getRole() {
         return "Supervisor";
     }
 }

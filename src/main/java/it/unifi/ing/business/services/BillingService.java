@@ -1,31 +1,28 @@
 package it.unifi.ing.business.services;
 
-import it.unifi.ing.dao.interfaces.SessioneDAO;
-import it.unifi.ing.domain.Sessione;
+import it.unifi.ing.dao.interfaces.SessionDAO;
+import it.unifi.ing.domain.Session;
 
 import java.util.List;
 
 /**
- * Service per il calcolo e l'addebito dei costi di sessione.
- * Utilizza il pattern Strategy per selezionare la logica di billing.
+ * Service for billing calculation and cost charging.
+ * Uses the Strategy pattern for billing logic.
  */
 public class BillingService {
 
 	private BillingStrategy billingStrategy;
-	private SessioneDAO sessioneDao;
+	private SessionDAO sessionDao;
 
 	public BillingService(BillingStrategy billingStrategy) {
 		this.billingStrategy = billingStrategy;
 	}
 
-	public BillingService(BillingStrategy billingStrategy, SessioneDAO sessioneDao) {
+	public BillingService(BillingStrategy billingStrategy, SessionDAO sessionDao) {
 		this.billingStrategy = billingStrategy;
-		this.sessioneDao = sessioneDao;
+		this.sessionDao = sessionDao;
 	}
 
-	/**
-	 * Cambia la strategia di billing a runtime.
-	 */
 	public void setBillingStrategy(BillingStrategy billingStrategy) {
 		this.billingStrategy = billingStrategy;
 	}
@@ -34,59 +31,48 @@ public class BillingService {
 		return billingStrategy;
 	}
 
-	/**
-	 * Calcola il costo di una sessione.
-	 */
-	public double calcolaCosto(Sessione sessione) {
-		return billingStrategy.calculateCost(sessione);
+	public double calculateCost(Session session) {
+		return billingStrategy.calculateCost(session);
 	}
 
 	/**
-	 * Addebita il costo della sessione al wallet del developer.
-	 * 
-	 * @return true se l'addebito è avvenuto con successo, false se fondi
-	 *         insufficienti
+	 * Charges the session cost to the developer's wallet.
 	 */
-	public boolean addebitaCosto(Sessione sessione) {
-		double costo = calcolaCosto(sessione);
-		if (costo <= 0) {
-			return true; // nulla da addebitare
+	public boolean chargeCost(Session session) {
+		double cost = calculateCost(session);
+		if (cost <= 0) {
+			return true;
 		}
-		sessione.addTotalCost(costo);
-		return sessione.getUtente().getWallet().deduciCredito(costo);
+		session.addTotalCost(cost);
+		return session.getDeveloper().getWallet().charge(cost);
 	}
 
 	/**
-	 * Addebita i costi per tutte le sessioni attive (Use Case 6 - Addebito Token).
-	 * Per ogni sessione attiva, calcola il costo dei token non ancora addebitati,
-	 * scala dal wallet e azzera il contatore.
-	 * Se il wallet va in negativo, chiude la sessione.
+	 * Bills all active sessions (periodic billing).
 	 */
 	public void billActiveSessions() {
-		if (sessioneDao == null) {
+		if (sessionDao == null) {
 			return;
 		}
 
-		List<Sessione> sessioniAttive = sessioneDao.findActiveSessions();
-		for (Sessione sessione : sessioniAttive) {
-			if (sessione.getTokensUsed() <= 0) {
+		List<Session> activeSessions = sessionDao.findActiveSessions();
+		for (Session session : activeSessions) {
+			if (session.getUnbilledUsedTokens() <= 0) {
 				continue;
 			}
 
-			double costo = calcolaCosto(sessione);
-			boolean addebitato = sessione.getUtente().getWallet().deduciCredito(costo);
-			sessione.addTotalCost(costo);
+			double cost = calculateCost(session);
+			boolean charged = session.getDeveloper().getWallet().charge(cost);
+			session.addTotalCost(cost);
 
-			// Azzera il contatore dei token non addebitati
-			sessione.setTokensUsed(0);
-			sessioneDao.update(sessione);
+			session.resetTokens();
+			sessionDao.update(session);
 
-			if (!addebitato) {
-				// Credito esaurito: chiudi la sessione
-				System.out.println("⚠️  Credito esaurito per " + sessione.getUtente().getNome()
-						+ ". Sessione " + sessione.getId() + " chiusa automaticamente.");
-				sessione.chiudi();
-				sessioneDao.update(sessione);
+			if (!charged) {
+				System.out.println("⚠️  Credit exhausted for " + session.getDeveloper().getName()
+						+ ". Session " + session.getId() + " closed automatically.");
+				session.close();
+				sessionDao.update(session);
 			}
 		}
 	}

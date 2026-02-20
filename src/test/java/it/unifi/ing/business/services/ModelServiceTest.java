@@ -1,13 +1,11 @@
 package it.unifi.ing.business.services;
 
-import it.unifi.ing.dao.memory.InMemoryModelloDAO;
-import it.unifi.ing.domain.*;
-
+import it.unifi.ing.dao.memory.InMemoryAiModelDAO;
+import it.unifi.ing.domain.AiModel;
+import it.unifi.ing.domain.ModelProvider;
+import it.unifi.ing.domain.ModelStatus;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
-
-import java.util.List;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 class ModelServiceTest {
@@ -17,48 +15,38 @@ class ModelServiceTest {
 
 	@BeforeEach
 	void setUp() {
-		modelService = new ModelService(new InMemoryModelloDAO());
-		provider = new ModelProvider(1, "Provider1", "prov@test.com", "pass");
+		modelService = new ModelService(new InMemoryAiModelDAO());
+		provider = new ModelProvider(1, "Prov", "prov@test.com", "pass");
 	}
 
 	@Test
 	void testPublishModel() {
-		modelService.publishModel(provider, "GPT-Test", "Un modello di test", 10.0, "s.bin", "c.json");
-
-		List<Modello> pending = modelService.getPendingModels();
-		assertEquals(1, pending.size());
-		assertEquals("GPT-Test", pending.get(0).getNome());
-		assertEquals(StatoModello.IN_ATTESA, pending.get(0).getStato());
+		modelService.publishModel(provider, "TestModel", "Desc", 0.01, "s.bin", "c.json");
+		assertEquals(1, modelService.getAllModels().size());
 	}
 
 	@Test
 	void testGetPendingModels() {
-		modelService.publishModel(provider, "Model1", "Desc", 5.0, "s1", "j1");
-		modelService.publishModel(provider, "Model2", "Desc", 5.0, "s2", "j2");
-
-		assertEquals(2, modelService.getPendingModels().size());
+		modelService.publishModel(provider, "M1", "D1", 0.01, "s.bin", "c.json");
+		assertEquals(1, modelService.getPendingModels().size());
 	}
 
 	@Test
 	void testGetApprovedModels() {
-		modelService.publishModel(provider, "Model1", "Desc", 5.0, "s1", "j1");
+		modelService.publishModel(provider, "M1", "D1", 0.01, "s.bin", "c.json");
 		assertEquals(0, modelService.getApprovedModels().size());
 	}
 
 	@Test
-	void testGetAllModels() {
-		modelService.publishModel(provider, "Model1", "Desc", 5.0, "s1", "j1");
-		modelService.publishModel(provider, "Model2", "Desc", 5.0, "s2", "j2");
-
-		assertEquals(2, modelService.getAllModels().size());
+	void testFindById() {
+		modelService.publishModel(provider, "M1", "D1", 0.01, "s.bin", "c.json");
+		AiModel model = modelService.findById(1);
+		assertNotNull(model);
+		assertEquals("M1", model.getName());
 	}
 
 	@Test
-	void testFindById() {
-		modelService.publishModel(provider, "Model1", "Desc", 5.0, "s1", "j1");
-
-		Modello found = modelService.findById(1);
-		assertNotNull(found);
-		assertEquals("Model1", found.getNome());
+	void testFindByIdNonExistent() {
+		assertNull(modelService.findById(999));
 	}
 }

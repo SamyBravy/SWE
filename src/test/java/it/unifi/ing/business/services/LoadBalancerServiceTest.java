@@ -1,100 +1,87 @@
 package it.unifi.ing.business.services;
 
 import it.unifi.ing.dao.memory.InMemoryGpuDAO;
-import it.unifi.ing.dao.memory.InMemorySessioneDAO;
+import it.unifi.ing.dao.memory.InMemorySessionDAO;
 import it.unifi.ing.domain.*;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.AfterEach;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 class LoadBalancerServiceTest {
 
 	private LoadBalancerService loadBalancerService;
-	private InMemorySessioneDAO sessioneDao;
-	private ClusterGPU cluster;
+	private InMemorySessionDAO sessionDao;
+	private GpuCluster cluster;
 	private GPU gpu;
 	private Developer developer;
-	private Modello modello;
+	private AiModel model;
 
 	@BeforeEach
 	void setUp() {
-		ClusterGPU.resetInstance();
-		sessioneDao = new InMemorySessioneDAO();
+		GpuCluster.resetInstance();
+		sessionDao = new InMemorySessionDAO();
 		InMemoryGpuDAO gpuDao = new InMemoryGpuDAO();
 		gpu = new GPU(1);
 		gpuDao.save(gpu);
 
-		cluster = ClusterGPU.getInstance();
+		cluster = GpuCluster.getInstance();
 		cluster.init(gpuDao);
 
 		BillingService billingService = new BillingService(new StandardBillingStrategy());
-		loadBalancerService = new LoadBalancerService(sessioneDao, cluster, billingService);
+		loadBalancerService = new LoadBalancerService(sessionDao, cluster, billingService);
 
 		developer = new Developer(1, "Dev", "dev@test.com", "pass");
-		developer.getWallet().addCredito(100.0);
+		developer.getWallet().addFunds(100.0);
 
 		ModelProvider provider = new ModelProvider(2, "Prov", "prov@test.com", "pass");
-		modello = new Modello(1, "TestModel", "Desc", 0.005, "s.bin", "c.json", provider);
-		modello.setCostoPerTokenPiattaforma(0.005);
-		// getCostoTotalePerToken() = 0.01
+		model = new AiModel(1, "TestModel", "Desc", 0.005, "s.bin", "c.json", provider);
+		model.setCostPerTokenPlatform(0.005);
 	}
 
 	@AfterEach
 	void tearDown() {
-		ClusterGPU.resetInstance();
+		GpuCluster.resetInstance();
 	}
 
 	@Test
-	void testRegistraSuTutteLeGpu() {
-		loadBalancerService.registraSuTutteLeGpu();
-		// Triggera allarme — se l'observer è registrato, il codice deve eseguire senza
-		// errori
-		gpu.setStato(StatoGPU.OCCUPATA);
-		// Nessuna sessione attiva su questa GPU, quindi l'observer non dovrebbe
-		// crashare
-		gpu.setTemperatura(95.0);
-		assertEquals(StatoGPU.LIBERA, gpu.getStato()); // GPU rilasciata dal LoadBalancer
+	void testRegisterOnAllGpus() {
+		loadBalancerService.registerOnAllGpus();
+		gpu.setStatus(GpuStatus.INACTIVE);
+		gpu.setTemperature(95.0);
+		assertEquals(GpuStatus.ACTIVE, gpu.getStatus());
 	}
 
 	@Test
-	void testOnTemperatureAlertConSessioneAttiva() {
-		// Crea una sessione attiva sulla GPU
-		gpu.setStato(StatoGPU.OCCUPATA);
-		Sessione sessione = new Sessione(1, developer, modello, gpu);
-		sessione.addTokens(100);
-		sessioneDao.save(sessione);
+	void testOnTemperatureAlertWithActiveSession() {
+		gpu.setStatus(GpuStatus.INACTIVE);
+		Session session = new Session(1, developer, model, gpu);
+		session.addTokens(100);
+		sessionDao.save(session);
 
-		// Simula l'allarme
-		loadBalancerService.onTemperatureAlert(gpu);
+		loadBalancerService.update(gpu, "TEMPERATURE_ALERT");
 
-		// La sessione deve essere chiusa
-		assertFalse(sessione.isAttiva());
-		// La GPU deve essere rilasciata
-		assertEquals(StatoGPU.LIBERA, gpu.getStato());
+		assertFalse(session.isActive());
+		assertEquals(GpuStatus.ACTIVE, gpu.getStatus());
 	}
 
 	@Test
-	void testOnTemperatureAlertSenzaSessione() {
-		gpu.setStato(StatoGPU.OCCUPATA);
-		// Nessuna sessione — non deve crashare
-		loadBalancerService.onTemperatureAlert(gpu);
-		assertEquals(StatoGPU.LIBERA, gpu.getStato());
+	void testOnTemperatureAlertWithoutSession() {
+		gpu.setStatus(GpuStatus.INACTIVE);
+		loadBalancerService.update(gpu, "TEMPERATURE_ALERT");
+		assertEquals(GpuStatus.ACTIVE, gpu.getStatus());
 	}
 
 	@Test
-	void testOnTemperatureAlertAddebitaCosto() {
-		gpu.setStato(StatoGPU.OCCUPATA);
-		Sessione sessione = new Sessione(1, developer, modello, gpu);
-		sessione.addTokens(500);
-		sessioneDao.save(sessione);
+	void testOnTemperatureAlertChargesCost() {
+		gpu.setStatus(GpuStatus.INACTIVE);
+		Session session = new Session(1, developer, model, gpu);
+		session.addTokens(500);
+		sessionDao.save(session);
 
-		double saldoPrima = developer.getWallet().getSaldo();
-		loadBalancerService.onTemperatureAlert(gpu);
+		double balanceBefore = developer.getWallet().getBalance();
+		loadBalancerService.update(gpu, "TEMPERATURE_ALERT");
 
-		// Il costo deve essere stato addebitato: 500 * 0.01 = 5.0
-		assertEquals(saldoPrima - 5.0, developer.getWallet().getSaldo(), 0.001);
+		assertEquals(balanceBefore - 5.0, developer.getWallet().getBalance(), 0.001);
 	}
 }

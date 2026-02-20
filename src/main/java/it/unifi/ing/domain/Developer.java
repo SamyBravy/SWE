@@ -1,14 +1,14 @@
 package it.unifi.ing.domain;
 
 /**
- * Developer: utente che utilizza i modelli AI e gestisce crediti tramite Wallet.
+ * Developer: user who uses AI models and manages credits via Wallet.
  */
-public class Developer extends Utente {
+public class Developer extends User {
 
     private Wallet wallet;
 
-    public Developer(int id, String nome, String email, String password) {
-        super(id, nome, email, password);
+    public Developer(int id, String name, String email, String password) {
+        super(id, name, email, password);
         this.wallet = new Wallet();
     }
 
@@ -21,7 +21,7 @@ public class Developer extends Utente {
     }
 
     @Override
-    public String getRuolo() {
+    public String getRole() {
         return "Developer";
     }
 }

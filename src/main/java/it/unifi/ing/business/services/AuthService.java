@@ -1,68 +1,53 @@
 package it.unifi.ing.business.services;
 
-import it.unifi.ing.dao.interfaces.UtenteDAO;
+import it.unifi.ing.dao.interfaces.UserDAO;
 import it.unifi.ing.domain.Developer;
 import it.unifi.ing.domain.ModelProvider;
 import it.unifi.ing.domain.Supervisor;
-import it.unifi.ing.domain.Utente;
+import it.unifi.ing.domain.User;
 
 /**
- * Service per la gestione dell'autenticazione: login e registrazione.
+ * Service for user authentication and registration.
  */
 public class AuthService {
 
-	private final UtenteDAO utenteDao;
+	private final UserDAO userDao;
 	private int nextId;
 
-	public AuthService(UtenteDAO utenteDao) {
-		this.utenteDao = utenteDao;
+	public AuthService(UserDAO userDao) {
+		this.userDao = userDao;
 		this.nextId = 1;
 	}
 
-	/**
-	 * Registra un nuovo utente nel sistema.
-	 * 
-	 * @param nome     nome dell'utente
-	 * @param email    email (deve essere unica)
-	 * @param password password
-	 * @param ruolo    ruolo: "developer", "modelprovider", "supervisor"
-	 * @return l'utente creato, oppure null se l'email è già registrata
-	 */
-	public Utente registra(String nome, String email, String password, String ruolo) {
-		// Verifica unicità email
-		if (utenteDao.findByEmail(email) != null) {
+	public User login(String email, String password) {
+		User user = userDao.findByEmail(email);
+		if (user != null && user.login(email, password)) {
+			return user;
+		}
+		return null;
+	}
+
+	public User register(String name, String email, String password, String role) {
+		if (userDao.findByEmail(email) != null) {
 			return null;
 		}
 
-		Utente utente;
-		switch (ruolo.toLowerCase()) {
+		User user;
+		switch (role.toLowerCase()) {
 			case "developer":
-				utente = new Developer(nextId++, nome, email, password);
+				user = new Developer(nextId++, name, email, password);
 				break;
 			case "modelprovider":
-				utente = new ModelProvider(nextId++, nome, email, password);
+				user = new ModelProvider(nextId++, name, email, password);
 				break;
 			case "supervisor":
-				utente = new Supervisor(nextId++, nome, email, password);
+				user = new Supervisor(nextId++, name, email, password);
 				break;
 			default:
 				return null;
 		}
 
-		utenteDao.save(utente);
-		return utente;
-	}
-
-	/**
-	 * Effettua il login con email e password.
-	 * 
-	 * @return l'utente se le credenziali sono corrette, null altrimenti
-	 */
-	public Utente login(String email, String password) {
-		Utente utente = utenteDao.findByEmail(email);
-		if (utente != null && utente.getPassword().equals(password)) {
-			return utente;
-		}
-		return null;
+		userDao.save(user);
+		return user;
 	}
 }

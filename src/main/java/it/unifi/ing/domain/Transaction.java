@@ -3,41 +3,42 @@ package it.unifi.ing.domain;
 import java.time.LocalDateTime;
 
 /**
- * Transaction: registra una singola transazione nel Wallet.
+ * Transaction: records a single financial transaction in a Wallet.
+ * UML: id, amount, timestamp, reason
  */
 public class Transaction {
 
     private final int id;
-    private final double importo;
+    private final double amount;
     private final LocalDateTime timestamp;
-    private final String motivo;
+    private final String reason;
 
-    public Transaction(int id, double importo, LocalDateTime timestamp, String motivo) {
+    public Transaction(int id, double amount, LocalDateTime timestamp, String reason) {
         this.id = id;
-        this.importo = importo;
+        this.amount = amount;
         this.timestamp = timestamp;
-        this.motivo = motivo;
+        this.reason = reason;
     }
 
     public int getId() {
         return id;
     }
 
-    public double getImporto() {
-        return importo;
+    public double getAmount() {
+        return amount;
     }
 
     public LocalDateTime getTimestamp() {
         return timestamp;
     }
 
-    public String getMotivo() {
-        return motivo;
+    public String getReason() {
+        return reason;
     }
 
     @Override
     public String toString() {
-        String segno = importo >= 0 ? "+" : "";
-        return timestamp.toString() + " | " + segno + String.format("%.2f", importo) + " | " + motivo;
+        String sign = amount >= 0 ? "+" : "";
+        return timestamp.toString() + " | " + sign + String.format("%.2f", amount) + " | " + reason;
     }
 }

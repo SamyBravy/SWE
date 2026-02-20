@@ -1,28 +1,24 @@
 package it.unifi.ing.business.services;
 
-import it.unifi.ing.domain.Sessione;
+import it.unifi.ing.domain.Session;
 
 /**
- * Strategia di billing premium: applica uno sconto percentuale al costo
- * standard.
+ * Premium billing strategy: applies a discount to the standard cost.
  */
 public class PremiumDiscountStrategy implements BillingStrategy {
 
 	private final double discountPercentage;
 
-	/**
-	 * @param discountPercentage percentuale di sconto (es. 0.20 per 20%)
-	 */
 	public PremiumDiscountStrategy(double discountPercentage) {
 		if (discountPercentage < 0 || discountPercentage > 1) {
-			throw new IllegalArgumentException("Lo sconto deve essere tra 0 e 1");
+			throw new IllegalArgumentException("Discount must be between 0 and 1");
 		}
 		this.discountPercentage = discountPercentage;
 	}
 
 	@Override
-	public double calculateCost(Sessione session) {
-		double standardCost = session.getTokensUsed() * session.getModello().getCostoTotalePerToken();
+	public double calculateCost(Session session) {
+		double standardCost = session.getUnbilledUsedTokens() * session.getModel().getCostPerToken();
 		return standardCost * (1.0 - discountPercentage);
 	}
 

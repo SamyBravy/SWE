@@ -4,46 +4,49 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * GPU: scheda grafica nel cluster. Funge da Subject nel pattern Observer.
- * Quando la temperatura supera 90°C, notifica tutti gli observer registrati.
+ * GPU: graphics card in the cluster. Implements Subject in the Observer pattern.
+ * When temperature exceeds 90°C, notifies all registered observers.
  */
-public class GPU {
+public class GPU implements Subject {
 
-    private static final double SOGLIA_TEMPERATURA = 90.0;
+    private static final double TEMPERATURE_THRESHOLD = 90.0;
 
     private int id;
-    private double temperatura;
+    private double temperature;
     private double loadPercentage;
-    private StatoGPU stato;
+    private GpuStatus status;
     private double vramCapacity;
-    private Modello modelloCaricato;
-    private final List<GpuObserver> observers;
+    private AiModel loadedModel;
+    private final List<Observer> observers;
 
     public GPU(int id) {
         this.id = id;
-        this.temperatura = 30.0; // temperatura iniziale a riposo
+        this.temperature = 30.0;
         this.loadPercentage = 0.0;
-        this.stato = StatoGPU.LIBERA;
-        this.vramCapacity = 24.0; // 24 GB di VRAM di default
-        this.modelloCaricato = null;
+        this.status = GpuStatus.ACTIVE;
+        this.vramCapacity = 24.0;
+        this.loadedModel = null;
         this.observers = new ArrayList<>();
     }
 
-    // --- Observer pattern ---
+    // --- Observer pattern (Subject interface) ---
 
-    public void addObserver(GpuObserver observer) {
-        if (!observers.contains(observer)) {
-            observers.add(observer);
+    @Override
+    public void attach(Observer o) {
+        if (!observers.contains(o)) {
+            observers.add(o);
         }
     }
 
-    public void removeObserver(GpuObserver observer) {
-        observers.remove(observer);
+    @Override
+    public void detach(Observer o) {
+        observers.remove(o);
     }
 
-    private void notifyObservers() {
-        for (GpuObserver observer : observers) {
-            observer.onTemperatureAlert(this);
+    @Override
+    public void notifyObservers(Object event) {
+        for (Observer observer : observers) {
+            observer.update(this, event);
         }
     }
 
@@ -57,19 +60,19 @@ public class GPU {
         this.id = id;
     }
 
-    public double getTemperatura() {
-        return temperatura;
+    public double getTemperature() {
+        return temperature;
     }
 
     /**
-     * Imposta la temperatura della GPU. Se supera la soglia (90°C),
-     * lo stato diventa SURRISCALDATA e vengono notificati gli observer.
+     * Sets GPU temperature. If it exceeds the threshold (90°C),
+     * status becomes IDLE and observers are notified.
      */
-    public void setTemperatura(double temperatura) {
-        this.temperatura = temperatura;
-        if (temperatura > SOGLIA_TEMPERATURA) {
-            this.stato = StatoGPU.SURRISCALDATA;
-            notifyObservers();
+    public void setTemperature(double temperature) {
+        this.temperature = temperature;
+        if (temperature > TEMPERATURE_THRESHOLD) {
+            this.status = GpuStatus.IDLE;
+            notifyObservers("TEMPERATURE_ALERT");
         }
     }
 
@@ -81,12 +84,12 @@ public class GPU {
         this.loadPercentage = loadPercentage;
     }
 
-    public StatoGPU getStato() {
-        return stato;
+    public GpuStatus getStatus() {
+        return status;
     }
 
-    public void setStato(StatoGPU stato) {
-        this.stato = stato;
+    public void setStatus(GpuStatus status) {
+        this.status = status;
     }
 
     public double getVramCapacity() {
@@ -97,43 +100,39 @@ public class GPU {
         this.vramCapacity = vramCapacity;
     }
 
-    public Modello getModelloCaricato() {
-        return modelloCaricato;
+    public AiModel getLoadedModel() {
+        return loadedModel;
     }
 
-    public void setModelloCaricato(Modello modelloCaricato) {
-        this.modelloCaricato = modelloCaricato;
+    public void setLoadedModel(AiModel loadedModel) {
+        this.loadedModel = loadedModel;
     }
 
-    public boolean isLibera() {
-        return stato == StatoGPU.LIBERA;
+    public boolean isAvailable() {
+        return status == GpuStatus.ACTIVE;
     }
 
     /**
-     * Simula un incremento di temperatura per tick del Timer.
+     * Simulates a temperature tick for the Timer.
      */
-    public void simulaTick() {
-        if (stato == StatoGPU.OCCUPATA) {
-            // GPU sotto carico: temperatura sale casualmente
-            double incremento = 1.0 + Math.random() * 3.0;
-            setTemperatura(temperatura + incremento);
-            // Simula carico proporzionale
+    public void simulateTick() {
+        if (status == GpuStatus.INACTIVE) {
+            double increment = 1.0 + Math.random() * 3.0;
+            setTemperature(temperature + increment);
             loadPercentage = Math.min(100.0, loadPercentage + Math.random() * 5.0);
-        } else if (stato == StatoGPU.LIBERA) {
-            // GPU a riposo: temperatura scende verso 30°C
-            if (temperatura > 30.0) {
-                double decremento = 0.5 + Math.random() * 1.5;
-                this.temperatura = Math.max(30.0, temperatura - decremento);
+        } else if (status == GpuStatus.ACTIVE) {
+            if (temperature > 30.0) {
+                double decrement = 0.5 + Math.random() * 1.5;
+                this.temperature = Math.max(30.0, temperature - decrement);
             }
-            // Carico scende verso 0
             loadPercentage = Math.max(0.0, loadPercentage - 5.0);
         }
     }
 
     @Override
     public String toString() {
-        return "GPU [id=" + id + ", temp=" + String.format("%.1f", temperatura)
+        return "GPU [id=" + id + ", temp=" + String.format("%.1f", temperature)
                 + "°C, load=" + String.format("%.1f", loadPercentage)
-                + "%, stato=" + stato + "]";
+                + "%, status=" + status + "]";
     }
 }

@@ -6,85 +6,83 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Wallet: gestisce il saldo crediti e lo storico transazioni di un Developer.
+ * Wallet: manages a developer's credit balance and transaction history.
+ * UML: id, balance, transactionHistory
  */
 public class Wallet {
 
-    private double saldo;
-    private final List<Transaction> storicoTransazioni;
+    private String id;
+    private double balance;
+    private final List<Transaction> transactionHistory;
     private int nextTransactionId;
 
     public Wallet() {
-        this.saldo = 0.0;
-        this.storicoTransazioni = new ArrayList<>();
+        this.id = java.util.UUID.randomUUID().toString();
+        this.balance = 0.0;
+        this.transactionHistory = new ArrayList<>();
         this.nextTransactionId = 1;
     }
 
-    public double getSaldo() {
-        return saldo;
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public double getBalance() {
+        return balance;
     }
 
     /**
-     * Aggiunge credito al wallet.
-     * @param importo importo da aggiungere (deve essere > 0)
+     * Adds funds to the wallet.
+     * UML: addFunds(amount)
      */
-    public void addCredito(double importo) {
-        if (importo <= 0) {
-            throw new IllegalArgumentException("L'importo deve essere positivo");
+    public void addFunds(double amount) {
+        if (amount <= 0) {
+            throw new IllegalArgumentException("Amount must be positive");
         }
-        this.saldo += importo;
-        storicoTransazioni.add(new Transaction(
-                nextTransactionId++, importo, LocalDateTime.now(),
-                "RICARICA: +" + String.format("%.2f", importo)));
+        this.balance += amount;
+        transactionHistory.add(new Transaction(
+                nextTransactionId++, amount, LocalDateTime.now(),
+                "TOP-UP: +" + String.format("%.2f", amount)));
     }
 
     /**
-     * Deduce credito dal wallet.
-     * @param importo importo da detrarre (deve essere > 0 e <= saldo)
-     * @return true se la deduzione è riuscita
+     * Charges the wallet.
+     * UML: charge(amount)
+     * @return true if the charge was successful
      */
-    public boolean deduciCredito(double importo) {
-        if (importo <= 0) {
-            throw new IllegalArgumentException("L'importo deve essere positivo");
+    public boolean charge(double amount) {
+        if (amount <= 0) {
+            throw new IllegalArgumentException("Amount must be positive");
         }
-        if (importo > saldo) {
+        if (amount > balance) {
             return false;
         }
-        this.saldo -= importo;
-        storicoTransazioni.add(new Transaction(
-                nextTransactionId++, -importo, LocalDateTime.now(),
-                "ADDEBITO: -" + String.format("%.2f", importo)));
+        this.balance -= amount;
+        transactionHistory.add(new Transaction(
+                nextTransactionId++, -amount, LocalDateTime.now(),
+                "CHARGE: -" + String.format("%.2f", amount)));
         return true;
     }
 
     /**
-     * Aggiunge credito forzatamente (es. rimborso), anche se risulta in saldo negativo.
-     * @param importo importo da aggiungere
-     * @param motivo motivo della transazione
+     * Adds credit with a specific reason (e.g. refund).
      */
-    public void addCreditoConMotivo(double importo, String motivo) {
-        this.saldo += importo;
-        storicoTransazioni.add(new Transaction(
-                nextTransactionId++, importo, LocalDateTime.now(), motivo));
+    public void addFundsWithReason(double amount, String reason) {
+        this.balance += amount;
+        transactionHistory.add(new Transaction(
+                nextTransactionId++, amount, LocalDateTime.now(), reason));
     }
 
-    public List<Transaction> getStoricoTransazioni() {
-        return Collections.unmodifiableList(storicoTransazioni);
-    }
-
-    /**
-     * Restituisce lo storico come lista di stringhe (backward compatible).
-     */
-    public List<String> getStoricoTransazioniStringhe() {
-        List<String> result = new ArrayList<>();
-        for (Transaction t : storicoTransazioni) {
-            result.add(t.toString());
-        }
-        return Collections.unmodifiableList(result);
+    public List<Transaction> getTransactionHistory() {
+        return Collections.unmodifiableList(transactionHistory);
     }
 
     @Override
     public String toString() {
-        return "Wallet [saldo=" + String.format("%.2f", saldo) + "]";
+        return "Wallet [id=" + id + ", balance=" + String.format("%.2f", balance) + "]";
     }
 }

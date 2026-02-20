@@ -1,91 +1,86 @@
 package it.unifi.ing.business.services;
 
-import it.unifi.ing.dao.interfaces.ModelloDAO;
-import it.unifi.ing.domain.ClusterGPU;
+import it.unifi.ing.dao.interfaces.AiModelDAO;
+import it.unifi.ing.domain.AiModel;
 import it.unifi.ing.domain.GPU;
-import it.unifi.ing.domain.Modello;
-import it.unifi.ing.domain.StatoModello;
+import it.unifi.ing.domain.GpuCluster;
+import it.unifi.ing.domain.ModelStatus;
 
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Service per la verifica dei modelli AI da parte del Supervisor.
- * Supporta: caricamento su GPU, benchmark, test etici, approvazione/rifiuto.
+ * Service for AI model verification by the Supervisor.
+ * Supports: GPU loading, benchmarks, ethics tests, approval/rejection.
  */
 public class VerificationService {
 
-	private final ModelloDAO modelloDao;
-	private final ClusterGPU cluster;
+	private final AiModelDAO modelDao;
+	private final GpuCluster cluster;
 
-	public VerificationService(ModelloDAO modelloDao, ClusterGPU cluster) {
-		this.modelloDao = modelloDao;
+	public VerificationService(AiModelDAO modelDao, GpuCluster cluster) {
+		this.modelDao = modelDao;
 		this.cluster = cluster;
 	}
 
 	/**
-	 * Carica un modello su una GPU per la verifica.
-	 * 
-	 * @return la GPU assegnata, oppure null se non disponibile
+	 * Loads a model on a GPU for verification.
+	 * @return the assigned GPU, or null if none available
 	 */
-	public GPU loadOnGpu(Modello model) {
-		GPU gpu = cluster.assegnaGpu();
+	public GPU loadOnGpu(AiModel model) {
+		GPU gpu = cluster.getAvailableGpu();
 		if (gpu != null) {
-			gpu.setModelloCaricato(model);
+			gpu.setLoadedModel(model);
 		}
 		return gpu;
 	}
 
 	/**
-	 * Esegue i benchmark del modello sulla GPU assegnata.
-	 * 
-	 * @return mappa con i risultati dei benchmark (simulati)
+	 * Runs benchmarks on the model using the assigned GPU.
+	 * @return map with benchmark results (simulated)
 	 */
-	public Map<String, Object> runBenchmarks(Modello model, GPU gpu) {
+	public Map<String, Object> runBenchmarks(AiModel model, GPU gpu) {
 		Map<String, Object> results = new HashMap<>();
-		// Simulazione benchmark
-		results.put("latenza_media_ms", 45 + (int) (Math.random() * 50));
+		results.put("avg_latency_ms", 45 + (int) (Math.random() * 50));
 		results.put("throughput_tokens_sec", 100 + (int) (Math.random() * 200));
-		results.put("memoria_utilizzata_mb", 1024 + (int) (Math.random() * 2048));
-		results.put("accuratezza_percentuale", 85 + Math.random() * 15);
-		results.put("modello", model.getNome());
+		results.put("memory_used_mb", 1024 + (int) (Math.random() * 2048));
+		results.put("accuracy_percent", 85 + Math.random() * 15);
+		results.put("model", model.getName());
 		results.put("gpu_id", gpu.getId());
 		return results;
 	}
 
 	/**
-	 * Esegue un test etico sul modello con un prompt di esempio.
-	 * 
-	 * @return la risposta simulata del modello
+	 * Runs an ethics test on the model with a sample prompt.
+	 * @return simulated model response
 	 */
-	public String runEthicsTest(Modello model, String prompt) {
-		// Simulazione risposta del modello
-		return "[Modello: " + model.getNome() + "] Risposta simulata al prompt: \"" + prompt
-				+ "\" — Il modello ha risposto entro i parametri etici stabiliti.";
+	public String runEthicsTest(AiModel model, String prompt) {
+		return "[Model: " + model.getName() + "] Response to prompt: \"" + prompt
+				+ (Math.random() < 0.5 ? " :)\"" : " :(\"");
 	}
 
 	/**
-	 * Approva il modello, impostando il costo per token della piattaforma.
+	 * Approves the model, setting the platform cost per token.
 	 */
-	public void approveModel(Modello model, double costoPerTokenPiattaforma) {
-		model.setStato(StatoModello.APPROVATO);
-		model.setCostoPerTokenPiattaforma(costoPerTokenPiattaforma);
-		modelloDao.update(model);
+	public void approveModel(AiModel model, double costPerTokenPlatform) {
+		model.setStatus(ModelStatus.APPROVED);
+		model.setCostPerTokenPlatform(costPerTokenPlatform);
+		modelDao.update(model);
 	}
 
 	/**
-	 * Rifiuta il modello con le motivazioni fornite.
+	 * Rejects the model with the provided reasons.
 	 */
-	public void rejectModel(Modello model, String reasons) {
-		model.setStato(StatoModello.RIFIUTATO);
-		modelloDao.update(model);
-		System.out.println("Modello '" + model.getNome() + "' rifiutato. Motivo: " + reasons);
+	public void rejectModel(AiModel model, String reasons) {
+		model.setStatus(ModelStatus.REJECTED);
+		model.setRejectionReasons(reasons);
+		modelDao.update(model);
 	}
 
 	/**
-	 * Rilascia la GPU utilizzata per la verifica.
+	 * Releases a GPU used for verification.
 	 */
 	public void releaseGpu(GPU gpu) {
-		cluster.rilasciaGpu(gpu);
+		cluster.releaseGpu(gpu);
 	}
 }

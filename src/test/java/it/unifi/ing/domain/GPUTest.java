@@ -2,109 +2,105 @@ package it.unifi.ing.domain;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 class GPUTest {
 
 	private GPU gpu;
 	private boolean alertReceived;
-	private GPU alertedGpu;
+	private Object alertedSubject;
 
 	@BeforeEach
 	void setUp() {
 		gpu = new GPU(1);
 		alertReceived = false;
-		alertedGpu = null;
+		alertedSubject = null;
 	}
 
 	@Test
-	void testGpuCreazione() {
+	void testGpuCreation() {
 		assertEquals(1, gpu.getId());
-		assertEquals(30.0, gpu.getTemperatura());
-		assertEquals(StatoGPU.LIBERA, gpu.getStato());
-		assertNull(gpu.getModelloCaricato());
-		assertTrue(gpu.isLibera());
+		assertEquals(30.0, gpu.getTemperature());
+		assertEquals(GpuStatus.ACTIVE, gpu.getStatus());
+		assertNull(gpu.getLoadedModel());
+		assertTrue(gpu.isAvailable());
 	}
 
 	@Test
-	void testSetTemperaturaNormale() {
-		gpu.setTemperatura(50.0);
-		assertEquals(50.0, gpu.getTemperatura());
-		assertNotEquals(StatoGPU.SURRISCALDATA, gpu.getStato());
+	void testSetTemperatureNormal() {
+		gpu.setTemperature(50.0);
+		assertEquals(50.0, gpu.getTemperature());
+		assertNotEquals(GpuStatus.IDLE, gpu.getStatus());
 	}
 
 	@Test
-	void testSetTemperaturaAllarme() {
-		gpu.addObserver(g -> {
+	void testSetTemperatureAlert() {
+		gpu.attach((subject, event) -> {
 			alertReceived = true;
-			alertedGpu = g;
+			alertedSubject = subject;
 		});
-		gpu.setTemperatura(95.0);
+		gpu.setTemperature(95.0);
 		assertTrue(alertReceived);
-		assertEquals(gpu, alertedGpu);
-		assertEquals(StatoGPU.SURRISCALDATA, gpu.getStato());
+		assertEquals(gpu, alertedSubject);
+		assertEquals(GpuStatus.IDLE, gpu.getStatus());
 	}
 
 	@Test
-	void testObserverNonNotificatoSottoSoglia() {
-		gpu.addObserver(g -> alertReceived = true);
-		gpu.setTemperatura(89.0);
+	void testObserverNotNotifiedBelowThreshold() {
+		gpu.attach((subject, event) -> alertReceived = true);
+		gpu.setTemperature(89.0);
 		assertFalse(alertReceived);
 	}
 
 	@Test
 	void testRemoveObserver() {
-		GpuObserver observer = g -> alertReceived = true;
-		gpu.addObserver(observer);
-		gpu.removeObserver(observer);
-		gpu.setTemperatura(95.0);
+		Observer observer = (subject, event) -> alertReceived = true;
+		gpu.attach(observer);
+		gpu.detach(observer);
+		gpu.setTemperature(95.0);
 		assertFalse(alertReceived);
 	}
 
 	@Test
 	void testMultipleObservers() {
 		final int[] count = { 0 };
-		gpu.addObserver(g -> count[0]++);
-		gpu.addObserver(g -> count[0]++);
-		gpu.setTemperatura(95.0);
+		gpu.attach((subject, event) -> count[0]++);
+		gpu.attach((subject, event) -> count[0]++);
+		gpu.setTemperature(95.0);
 		assertEquals(2, count[0]);
 	}
 
 	@Test
-	void testSimulaTickOccupata() {
-		gpu.setStato(StatoGPU.OCCUPATA);
-		double tempIniziale = gpu.getTemperatura();
-		gpu.simulaTick();
-		assertTrue(gpu.getTemperatura() > tempIniziale);
+	void testSimulateTickInactive() {
+		gpu.setStatus(GpuStatus.INACTIVE);
+		double initialTemp = gpu.getTemperature();
+		gpu.simulateTick();
+		assertTrue(gpu.getTemperature() > initialTemp);
 	}
 
 	@Test
-	void testSimulaTickLibera() {
-		gpu.setStato(StatoGPU.LIBERA);
-		// Imposta una temperatura alta senza triggerare l'observer
-		gpu.setStato(StatoGPU.LIBERA);
-		// direttamente modifica la temperatura per testare il cooling
-		gpu.setTemperatura(50.0); // sotto soglia
-		gpu.setStato(StatoGPU.LIBERA); // reset stato
-		gpu.simulaTick();
-		assertTrue(gpu.getTemperatura() < 50.0);
+	void testSimulateTickActive() {
+		gpu.setStatus(GpuStatus.ACTIVE);
+		gpu.setTemperature(50.0);
+		gpu.setStatus(GpuStatus.ACTIVE);
+		gpu.simulateTick();
+		assertTrue(gpu.getTemperature() < 50.0);
 	}
 
 	@Test
-	void testIsLibera() {
-		assertTrue(gpu.isLibera());
-		gpu.setStato(StatoGPU.OCCUPATA);
-		assertFalse(gpu.isLibera());
+	void testIsAvailable() {
+		assertTrue(gpu.isAvailable());
+		gpu.setStatus(GpuStatus.INACTIVE);
+		assertFalse(gpu.isAvailable());
 	}
 
 	@Test
 	void testNoDuplicateObservers() {
 		final int[] count = { 0 };
-		GpuObserver obs = g -> count[0]++;
-		gpu.addObserver(obs);
-		gpu.addObserver(obs); // aggiunta duplicata
-		gpu.setTemperatura(95.0);
+		Observer obs = (subject, event) -> count[0]++;
+		gpu.attach(obs);
+		gpu.attach(obs);
+		gpu.setTemperature(95.0);
 		assertEquals(1, count[0]);
 	}
 }
