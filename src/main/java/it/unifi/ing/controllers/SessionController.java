@@ -62,7 +62,8 @@ public class SessionController {
 			return;
 		}
 
-		System.out.println("✅ Session started! (ID: " + session.getId() + ", GPU: " + session.getGpu().getId() + ")");
+		System.out.println(
+				"✅ Session started! (ID: " + session.getId() + ", GPUs attached: " + session.getGpus().size() + ")");
 		System.out.println("Type your messages. Type '/exit' to end the session.");
 
 		handleChat(developer, session);

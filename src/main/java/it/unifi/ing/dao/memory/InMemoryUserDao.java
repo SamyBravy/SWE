@@ -35,13 +35,13 @@ public class InMemoryUserDao implements UserDao {
 		return new ArrayList<>(storage.values());
 	}
 
-	        @Override
-        public void update(User user) {
-                storage.put(user.getId(), user);
-        }
+	@Override
+	public void update(User user) {
+		storage.put(user.getId(), user);
+	}
 
-        @Override
-        public void delete(int id) {
+	@Override
+	public void delete(int id) {
 		storage.remove(id);
 	}
 }

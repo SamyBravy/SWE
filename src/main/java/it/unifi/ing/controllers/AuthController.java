@@ -32,22 +32,21 @@ public class AuthController {
 			String choice = scanner.nextLine().trim();
 
 			switch (choice) {
-				case "1":
+				case "1" -> {
 					User loginUser = handleLogin();
 					if (loginUser != null)
 						return loginUser;
-					break;
-				case "2":
+				}
+				case "2" -> {
 					User regUser = handleRegistration();
 					if (regUser != null)
 						return regUser;
-					break;
-				case "0":
+				}
+				case "0" -> {
 					System.out.println("Goodbye!");
 					System.exit(0);
-					break;
-				default:
-					System.out.println("Invalid choice.");
+				}
+				default -> System.out.println("Invalid choice.");
 			}
 		}
 	}
@@ -88,9 +87,15 @@ public class AuthController {
 
 		String role;
 		switch (roleChoice) {
-			case "1": role = "developer"; break;
-			case "2": role = "modelprovider"; break;
-			case "3": role = "supervisor"; break;
+			case "1":
+				role = "developer";
+				break;
+			case "2":
+				role = "modelprovider";
+				break;
+			case "3":
+				role = "supervisor";
+				break;
 			default:
 				System.out.println("Invalid role.");
 				return null;

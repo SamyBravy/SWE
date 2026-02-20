@@ -27,13 +27,13 @@ public class InMemoryGpuDao implements GpuDao {
 		return new ArrayList<>(storage.values());
 	}
 
-	        @Override
-        public void update(GPU gpu) {
-                storage.put(gpu.getId(), gpu);
-        }
+	@Override
+	public void update(GPU gpu) {
+		storage.put(gpu.getId(), gpu);
+	}
 
-        @Override
-        public void delete(int id) {
+	@Override
+	public void delete(int id) {
 		storage.remove(id);
 	}
 }

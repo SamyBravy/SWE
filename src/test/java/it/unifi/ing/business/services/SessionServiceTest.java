@@ -27,8 +27,7 @@ class SessionServiceTest {
 		cluster = GpuCluster.getInstance();
 		cluster.init(gpuDao);
 
-		BillingService billingService = new BillingService(new StandardBillingStrategy());
-		sessionService = new SessionService(sessionDao, cluster, billingService);
+		sessionService = new SessionService(sessionDao, cluster);
 
 		developer = new Developer(1, "Dev", "dev@test.com", "pass");
 		developer.getWallet().addFunds(100.0);
@@ -48,7 +47,7 @@ class SessionServiceTest {
 		Session session = sessionService.openSession(developer, model);
 		assertNotNull(session);
 		assertTrue(session.isActive());
-		assertNotNull(session.getGpu());
+		assertFalse(session.getGpus().isEmpty());
 	}
 
 	@Test
@@ -80,7 +79,9 @@ class SessionServiceTest {
 		Session session = sessionService.openSession(developer, model);
 		sessionService.closeSession(session);
 		assertFalse(session.isActive());
-		assertEquals(GpuStatus.ACTIVE, session.getGpu().getStatus());
+		for (GPU g : session.getGpus()) {
+			assertEquals(GpuStatus.ACTIVE, g.getStatus());
+		}
 	}
 
 	@Test
@@ -94,7 +95,7 @@ class SessionServiceTest {
 	@Test
 	void testSendPromptOverheatedGpu() {
 		Session session = sessionService.openSession(developer, model);
-		session.getGpu().setStatus(GpuStatus.IDLE);
+		session.getGpus().get(0).setStatus(GpuStatus.IDLE);
 		String response = sessionService.sendPrompt(session, "Should fail");
 		assertTrue(response.contains("overheated"));
 	}

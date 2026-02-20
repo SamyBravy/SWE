@@ -14,17 +14,20 @@ public class Session {
 	private int id;
 	private Developer developer;
 	private AiModel model;
-	private GPU gpu;
+	private List<GPU> gpus;
 	private LocalDateTime startTimestamp;
 	private boolean active;
 	private int totalTokensUsed;
 	private List<String> interactionLog;
 
-	public Session(int id, Developer developer, AiModel model, GPU gpu) {
+	public Session(int id, Developer developer, AiModel model, GPU initialGpu) {
 		this.id = id;
 		this.developer = developer;
 		this.model = model;
-		this.gpu = gpu;
+		this.gpus = new ArrayList<>();
+		if (initialGpu != null) {
+			this.gpus.add(initialGpu);
+		}
 		this.startTimestamp = LocalDateTime.now();
 		this.active = true;
 		this.totalTokensUsed = 0;
@@ -55,12 +58,18 @@ public class Session {
 		this.model = model;
 	}
 
-	public GPU getGpu() {
-		return gpu;
+	public List<GPU> getGpus() {
+		return Collections.unmodifiableList(gpus);
 	}
 
-	public void setGpu(GPU gpu) {
-		this.gpu = gpu;
+	public void addGpu(GPU gpu) {
+		if (!this.gpus.contains(gpu)) {
+			this.gpus.add(gpu);
+		}
+	}
+
+	public void removeGpu(GPU gpu) {
+		this.gpus.remove(gpu);
 	}
 
 	public LocalDateTime getStartTimestamp() {
@@ -75,8 +84,12 @@ public class Session {
 		return active;
 	}
 
-	public void setActive(boolean active) {
-		this.active = active;
+	public void activate() {
+		this.active = true;
+	}
+
+	public void close() {
+		this.active = false;
 	}
 
 	public int getTotalTokensUsed() {
@@ -87,11 +100,8 @@ public class Session {
 		this.totalTokensUsed += tokens;
 	}
 
-	/**
-	 * UML: close()
-	 */
-	public void close() {
-		this.active = false;
+	public void resetTokens() {
+		this.totalTokensUsed = 0;
 	}
 
 	public void addLog(String log) {
@@ -105,7 +115,7 @@ public class Session {
 	@Override
 	public String toString() {
 		return "Session [id=" + id + ", developer=" + developer.getName()
-				+ ", model=" + model.getName() + ", gpu=" + gpu.getId()
+				+ ", model=" + model.getName() + ", gpus=" + gpus.size()
 				+ ", active=" + active + ", tokens=" + totalTokensUsed + "]";
 	}
 }

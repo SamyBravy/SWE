@@ -26,7 +26,8 @@ class SessionTest {
 		assertEquals(1, session.getId());
 		assertEquals(developer, session.getDeveloper());
 		assertEquals(model, session.getModel());
-		assertEquals(gpu, session.getGpu());
+		assertEquals(1, session.getGpus().size());
+		assertTrue(session.getGpus().contains(gpu));
 		assertTrue(session.isActive());
 		assertEquals(0, session.getTotalTokensUsed());
 	}

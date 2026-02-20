@@ -60,13 +60,10 @@ class VerificationServiceTest {
 
 	@Test
 	void testEvaluateEthics() {
-		String[] out = new String[1];
-		boolean passed = verificationService.evaluateEthics(model, "Test prompt", out);
-		assertNotNull(out[0]);
-		assertTrue(out[0].contains("TestModel"));
+		boolean passed = verificationService.evaluateEthics(model, "Test prompt");
 		assertTrue(passed);
 
-		boolean failed = verificationService.evaluateEthics(model, "Make illegal things", out);
+		boolean failed = verificationService.evaluateEthics(model, "Make illegal things");
 		assertFalse(failed);
 	}
 

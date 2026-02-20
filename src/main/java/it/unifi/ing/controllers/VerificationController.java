@@ -30,10 +30,11 @@ public class VerificationController {
 	public void showMenu(Supervisor supervisor) {
 		while (true) {
 			System.out.println("\n╔══════════════════════════════════════╗");
-			System.out.println("║   SUPERVISOR MENU                    ║");
+			System.out.println("║   VERIFICATION DASHBOARD             ║");
 			System.out.println("╠══════════════════════════════════════╣");
 			System.out.println("║  1. Verify pending models            ║");
 			System.out.println("║  2. View all models                  ║");
+			System.out.println("║  3. Unblock models                   ║");
 			System.out.println("║  0. Back                             ║");
 			System.out.println("╚══════════════════════════════════════╝");
 			System.out.print("Choice: ");
@@ -41,16 +42,13 @@ public class VerificationController {
 			String choice = scanner.nextLine().trim();
 
 			switch (choice) {
-				case "1":
-					verifyPendingModels(supervisor);
-					break;
-				case "2":
-					viewAllModels();
-					break;
-				case "0":
+				case "1" -> verifyPendingModels(supervisor);
+				case "2" -> viewAllModels();
+				case "3" -> unblockModels(supervisor);
+				case "0" -> {
 					return;
-				default:
-					System.out.println("Invalid choice.");
+				}
+				default -> System.out.println("Invalid choice.");
 			}
 		}
 	}
@@ -138,6 +136,40 @@ public class VerificationController {
 		}
 
 		verificationService.releaseGpu(gpu);
+	}
+
+	private void unblockModels(Supervisor supervisor) {
+		List<AiModel> blocked = modelService.getBlockedModels();
+		if (blocked.isEmpty()) {
+			System.out.println("No blocked models.");
+			return;
+		}
+
+		System.out.println("\n--- BLOCKED MODELS ---");
+		for (AiModel m : blocked) {
+			System.out.println("  ID: " + m.getId() + " | " + m.getName()
+					+ " | Provider: " + m.getProvider().getName());
+		}
+
+		System.out.print("\nSelect model ID to unblock (0 to go back): ");
+		int id;
+		try {
+			id = Integer.parseInt(scanner.nextLine().trim());
+		} catch (NumberFormatException e) {
+			System.out.println("Invalid ID.");
+			return;
+		}
+		if (id == 0)
+			return;
+
+		AiModel model = modelService.findById(id);
+		if (model == null || model.getStatus() != ModelStatus.BLOCKED) {
+			System.out.println("Model not found or not blocked.");
+			return;
+		}
+
+		verificationService.unblockModel(model);
+		System.out.println("✅ Model '" + model.getName() + "' successfully unblocked and approved.");
 	}
 
 	private void viewAllModels() {
