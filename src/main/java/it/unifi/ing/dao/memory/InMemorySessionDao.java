@@ -1,6 +1,6 @@
 package it.unifi.ing.dao.memory;
 
-import it.unifi.ing.dao.interfaces.SessionDAO;
+import it.unifi.ing.dao.interfaces.SessionDao;
 import it.unifi.ing.domain.Session;
 
 import java.util.ArrayList;
@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class InMemorySessionDAO implements SessionDAO {
+public class InMemorySessionDao implements SessionDao {
 
 	private final Map<Integer, Session> storage = new HashMap<>();
 

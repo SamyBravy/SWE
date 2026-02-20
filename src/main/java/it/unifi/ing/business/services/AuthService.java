@@ -1,6 +1,6 @@
 package it.unifi.ing.business.services;
 
-import it.unifi.ing.dao.interfaces.UserDAO;
+import it.unifi.ing.dao.interfaces.UserDao;
 import it.unifi.ing.domain.Developer;
 import it.unifi.ing.domain.ModelProvider;
 import it.unifi.ing.domain.Supervisor;
@@ -11,10 +11,10 @@ import it.unifi.ing.domain.User;
  */
 public class AuthService {
 
-	private final UserDAO userDao;
+	private final UserDao userDao;
 	private int nextId;
 
-	public AuthService(UserDAO userDao) {
+	public AuthService(UserDao userDao) {
 		this.userDao = userDao;
 		this.nextId = 1;
 	}

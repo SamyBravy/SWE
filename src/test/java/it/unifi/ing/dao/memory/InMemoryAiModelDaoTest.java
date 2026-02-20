@@ -7,14 +7,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import static org.junit.jupiter.api.Assertions.*;
 
-class InMemoryAiModelDAOTest {
+class InMemoryAiModelDaoTest {
 
-	private InMemoryAiModelDAO dao;
+	private InMemoryAiModelDao dao;
 	private ModelProvider provider;
 
 	@BeforeEach
 	void setUp() {
-		dao = new InMemoryAiModelDAO();
+		dao = new InMemoryAiModelDao();
 		provider = new ModelProvider(1, "Prov", "prov@test.com", "pass");
 	}
 

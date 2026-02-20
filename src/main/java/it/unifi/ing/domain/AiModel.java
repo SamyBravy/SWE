@@ -120,6 +120,11 @@ public class AiModel {
 		this.rejectionReasons = rejectionReasons;
 	}
 
+	public String generateResponse(String prompt) {
+		return "[Model: " + this.name + "] Response to prompt: \"" + prompt
+				+ (Math.random() < 0.5 ? " :)\"" : " :(\"");
+	}
+
 	@Override
 	public String toString() {
 		return "AiModel [id=" + id + ", name=" + name + ", description=" + description

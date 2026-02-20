@@ -1,7 +1,7 @@
 package it.unifi.ing.business.services;
 
-import it.unifi.ing.dao.memory.InMemoryComplaintDAO;
-import it.unifi.ing.dao.memory.InMemoryUserDAO;
+import it.unifi.ing.dao.memory.InMemoryComplaintDao;
+import it.unifi.ing.dao.memory.InMemoryUserDao;
 import it.unifi.ing.domain.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,8 +16,8 @@ class ComplaintServiceTest {
 
     @BeforeEach
     void setUp() {
-        InMemoryComplaintDAO complaintDao = new InMemoryComplaintDAO();
-        InMemoryUserDAO userDao = new InMemoryUserDAO();
+        InMemoryComplaintDao complaintDao = new InMemoryComplaintDao();
+        InMemoryUserDao userDao = new InMemoryUserDao();
         complaintService = new ComplaintService(complaintDao, userDao);
 
         developer = new Developer(1, "Dev", "dev@test.com", "pass");

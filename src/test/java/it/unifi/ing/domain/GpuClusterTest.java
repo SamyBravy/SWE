@@ -1,6 +1,6 @@
 package it.unifi.ing.domain;
 
-import it.unifi.ing.dao.memory.InMemoryGpuDAO;
+import it.unifi.ing.dao.memory.InMemoryGpuDao;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.AfterEach;
@@ -9,12 +9,12 @@ import static org.junit.jupiter.api.Assertions.*;
 class GpuClusterTest {
 
 	private GpuCluster cluster;
-	private InMemoryGpuDAO gpuDao;
+	private InMemoryGpuDao gpuDao;
 
 	@BeforeEach
 	void setUp() {
 		GpuCluster.resetInstance();
-		gpuDao = new InMemoryGpuDAO();
+		gpuDao = new InMemoryGpuDao();
 		gpuDao.save(new GPU(1));
 		gpuDao.save(new GPU(2));
 		gpuDao.save(new GPU(3));

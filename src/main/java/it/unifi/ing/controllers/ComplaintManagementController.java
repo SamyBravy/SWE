@@ -11,12 +11,12 @@ import java.util.Scanner;
 /**
  * Controller for complaint management.
  */
-public class ComplaintController {
+public class ComplaintManagementController {
 
     private final ComplaintService complaintService;
     private final Scanner scanner;
 
-    public ComplaintController(ComplaintService complaintService, Scanner scanner) {
+    public ComplaintManagementController(ComplaintService complaintService, Scanner scanner) {
         this.complaintService = complaintService;
         this.scanner = scanner;
     }
@@ -104,11 +104,11 @@ public class ComplaintController {
 
             System.out.print("Block model? (y/n): ");
             String block = scanner.nextLine().trim().toLowerCase();
-            int blockHours = 0;
+            double blockHours = 0;
             if ("y".equals(block)) {
                 System.out.print("Block duration (hours): ");
                 try {
-                    blockHours = Integer.parseInt(scanner.nextLine().trim());
+                    blockHours = Double.parseDouble(scanner.nextLine().trim());
                 } catch (NumberFormatException e) {
                     System.out.println("Invalid value, block ignored.");
                 }

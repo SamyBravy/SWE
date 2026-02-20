@@ -1,6 +1,6 @@
 package it.unifi.ing.business.services;
 
-import it.unifi.ing.dao.interfaces.AiModelDAO;
+import it.unifi.ing.dao.interfaces.AiModelDao;
 import it.unifi.ing.domain.AiModel;
 import it.unifi.ing.domain.ModelProvider;
 import it.unifi.ing.domain.ModelStatus;
@@ -12,10 +12,10 @@ import java.util.List;
  */
 public class ModelService {
 
-	private final AiModelDAO modelDao;
+	private final AiModelDao modelDao;
 	private int nextId;
 
-	public ModelService(AiModelDAO modelDao) {
+	public ModelService(AiModelDao modelDao) {
 		this.modelDao = modelDao;
 		this.nextId = 1;
 	}

@@ -15,18 +15,18 @@ public class Main {
 	private static SessionService sessionService;
 	private static ModelService modelService;
 	private static ComplaintService complaintService;
-	private static ComplaintDAO complaintDao;
+	private static ComplaintDao complaintDao;
 	private static Scanner scanner;
 
 	public static void main(String[] args) {
 		scanner = new Scanner(System.in);
 
 		// ===== 1. INITIALIZE DAOs =====
-		UserDAO userDao = new InMemoryUserDAO();
-		AiModelDAO modelDao = new InMemoryAiModelDAO();
-		SessionDAO sessionDao = new InMemorySessionDAO();
-		GpuDAO gpuDao = new InMemoryGpuDAO();
-		complaintDao = new InMemoryComplaintDAO();
+		UserDao userDao = new InMemoryUserDao();
+		AiModelDao modelDao = new InMemoryAiModelDao();
+		SessionDao sessionDao = new InMemorySessionDao();
+		GpuDao gpuDao = new InMemoryGpuDao();
+		complaintDao = new InMemoryComplaintDao();
 
 		// ===== 2. INITIALIZE GPU CLUSTER =====
 		for (int i = 1; i <= 4; i++) {
@@ -57,9 +57,9 @@ public class Main {
 		// ===== 5. CREATE CONTROLLERS =====
 		AuthController authController = new AuthController(authService, scanner);
 		SessionController sessionController = new SessionController(sessionService, modelService, scanner);
-		ModelController modelController = new ModelController(modelService, scanner);
+		ModelManagementController modelController = new ModelManagementController(modelService, scanner);
 		VerificationController verificationController = new VerificationController(verificationService, modelService, scanner);
-		ComplaintController complaintController = new ComplaintController(complaintService, scanner);
+		ComplaintManagementController complaintController = new ComplaintManagementController(complaintService, scanner);
 		UserController userController = new UserController(sessionDao, complaintDao, scanner);
 
 		// ===== 6. MAIN LOOP =====
@@ -105,7 +105,7 @@ public class Main {
 	}
 
 	private static void supervisorMenu(Supervisor supervisor,
-			VerificationController verificationController, ComplaintController complaintController) {
+			VerificationController verificationController, ComplaintManagementController complaintController) {
 		while (true) {
 			System.out.println("\n╔══════════════════════════════════════╗");
 			System.out.println("║   SUPERVISOR MENU                    ║");

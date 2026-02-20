@@ -1,5 +1,7 @@
 package it.unifi.ing.domain;
 
+import org.mindrot.jbcrypt.BCrypt;
+
 /**
  * Abstract base class for all system users.
  * UML: User (id, name, email, password)
@@ -15,7 +17,7 @@ public abstract class User {
         this.id = id;
         this.name = name;
         this.email = email;
-        this.password = password;
+        this.password = BCrypt.hashpw(password, BCrypt.gensalt());
     }
 
     public int getId() {
@@ -47,15 +49,15 @@ public abstract class User {
     }
 
     public void setPassword(String password) {
-        this.password = password;
+        this.password = BCrypt.hashpw(password, BCrypt.gensalt());
     }
 
     /**
-     * Verifies user credentials.
+     * Verifies user credentials using BCrypt.
      * UML: login(email, password) : boolean
      */
     public boolean login(String email, String pwd) {
-        return this.email.equals(email) && this.password.equals(pwd);
+        return this.email.equals(email) && BCrypt.checkpw(pwd, this.password);
     }
 
     /**

@@ -6,13 +6,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import static org.junit.jupiter.api.Assertions.*;
 
-class InMemoryUserDAOTest {
+class InMemoryUserDaoTest {
 
-	private InMemoryUserDAO dao;
+	private InMemoryUserDao dao;
 
 	@BeforeEach
 	void setUp() {
-		dao = new InMemoryUserDAO();
+		dao = new InMemoryUserDao();
 	}
 
 	@Test

@@ -1,7 +1,7 @@
 package it.unifi.ing.business.services;
 
-import it.unifi.ing.dao.memory.InMemoryGpuDAO;
-import it.unifi.ing.dao.memory.InMemorySessionDAO;
+import it.unifi.ing.dao.memory.InMemoryGpuDao;
+import it.unifi.ing.dao.memory.InMemorySessionDao;
 import it.unifi.ing.domain.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class SessionServiceTest {
 
 	private SessionService sessionService;
-	private InMemorySessionDAO sessionDao;
+	private InMemorySessionDao sessionDao;
 	private GpuCluster cluster;
 	private Developer developer;
 	private AiModel model;
@@ -19,8 +19,8 @@ class SessionServiceTest {
 	@BeforeEach
 	void setUp() {
 		GpuCluster.resetInstance();
-		sessionDao = new InMemorySessionDAO();
-		InMemoryGpuDAO gpuDao = new InMemoryGpuDAO();
+		sessionDao = new InMemorySessionDao();
+		InMemoryGpuDao gpuDao = new InMemoryGpuDao();
 		gpuDao.save(new GPU(1));
 		gpuDao.save(new GPU(2));
 
@@ -118,7 +118,7 @@ class SessionServiceTest {
 		Session session = sessionService.openSession(developer, model);
 		sessionService.sendPrompt(session, "Hello");
 		java.util.List<String> logs = sessionService.getRecentLogs(developer, model);
-		assertEquals(1, logs.size());
+		assertEquals(2, logs.size());
 	}
 
 	@Test

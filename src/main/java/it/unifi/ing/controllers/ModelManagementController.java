@@ -11,12 +11,12 @@ import java.util.Scanner;
 /**
  * Controller for AI model management (publishing).
  */
-public class ModelController {
+public class ModelManagementController {
 
 	private final ModelService modelService;
 	private final Scanner scanner;
 
-	public ModelController(ModelService modelService, Scanner scanner) {
+	public ModelManagementController(ModelService modelService, Scanner scanner) {
 		this.modelService = modelService;
 		this.scanner = scanner;
 	}

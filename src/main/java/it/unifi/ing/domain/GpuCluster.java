@@ -1,6 +1,6 @@
 package it.unifi.ing.domain;
 
-import it.unifi.ing.dao.interfaces.GpuDAO;
+import it.unifi.ing.dao.interfaces.GpuDao;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 public class GpuCluster {
 
     private static GpuCluster instance;
-    private GpuDAO gpuDao;
+    private GpuDao gpuDao;
 
     private GpuCluster() {
     }
@@ -23,7 +23,7 @@ public class GpuCluster {
         return instance;
     }
 
-    public void init(GpuDAO gpuDao) {
+    public void init(GpuDao gpuDao) {
         this.gpuDao = gpuDao;
     }
 

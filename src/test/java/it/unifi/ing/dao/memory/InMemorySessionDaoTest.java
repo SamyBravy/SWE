@@ -6,16 +6,16 @@ import org.junit.jupiter.api.BeforeEach;
 import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
-class InMemorySessionDAOTest {
+class InMemorySessionDaoTest {
 
-	private InMemorySessionDAO dao;
+	private InMemorySessionDao dao;
 	private Developer dev;
 	private AiModel model;
 	private GPU gpu;
 
 	@BeforeEach
 	void setUp() {
-		dao = new InMemorySessionDAO();
+		dao = new InMemorySessionDao();
 		dev = new Developer(1, "Dev", "dev@test.com", "pass");
 		ModelProvider prov = new ModelProvider(2, "Prov", "prov@test.com", "pass");
 		model = new AiModel(1, "TestModel", "Desc", 5.0, "s.bin", "c.json", prov);

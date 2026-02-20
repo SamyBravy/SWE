@@ -39,6 +39,7 @@ public class Transaction {
     @Override
     public String toString() {
         String sign = amount >= 0 ? "+" : "";
-        return timestamp.toString() + " | " + sign + String.format("%.2f", amount) + " | " + reason;
+        java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        return timestamp.format(formatter) + " | " + sign + String.format("%.2f", amount) + " | " + reason;
     }
 }

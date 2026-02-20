@@ -1,6 +1,6 @@
 package it.unifi.ing.business.services;
 
-import it.unifi.ing.dao.interfaces.SessionDAO;
+import it.unifi.ing.dao.interfaces.SessionDao;
 import it.unifi.ing.domain.Session;
 
 import java.util.List;
@@ -12,13 +12,13 @@ import java.util.List;
 public class BillingService {
 
 	private BillingStrategy billingStrategy;
-	private SessionDAO sessionDao;
+	private SessionDao sessionDao;
 
 	public BillingService(BillingStrategy billingStrategy) {
 		this.billingStrategy = billingStrategy;
 	}
 
-	public BillingService(BillingStrategy billingStrategy, SessionDAO sessionDao) {
+	public BillingService(BillingStrategy billingStrategy, SessionDao sessionDao) {
 		this.billingStrategy = billingStrategy;
 		this.sessionDao = sessionDao;
 	}

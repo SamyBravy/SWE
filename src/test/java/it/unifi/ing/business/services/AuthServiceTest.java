@@ -1,6 +1,6 @@
 package it.unifi.ing.business.services;
 
-import it.unifi.ing.dao.memory.InMemoryUserDAO;
+import it.unifi.ing.dao.memory.InMemoryUserDao;
 import it.unifi.ing.domain.Developer;
 import it.unifi.ing.domain.ModelProvider;
 import it.unifi.ing.domain.Supervisor;
@@ -15,7 +15,7 @@ class AuthServiceTest {
 
 	@BeforeEach
 	void setUp() {
-		authService = new AuthService(new InMemoryUserDAO());
+		authService = new AuthService(new InMemoryUserDao());
 	}
 
 	@Test

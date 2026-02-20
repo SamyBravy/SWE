@@ -1,7 +1,7 @@
 package it.unifi.ing.controllers;
 
-import it.unifi.ing.dao.interfaces.ComplaintDAO;
-import it.unifi.ing.dao.interfaces.SessionDAO;
+import it.unifi.ing.dao.interfaces.ComplaintDao;
+import it.unifi.ing.dao.interfaces.SessionDao;
 import it.unifi.ing.domain.Complaint;
 import it.unifi.ing.domain.ComplaintStatus;
 import it.unifi.ing.domain.Developer;
@@ -16,11 +16,11 @@ import java.util.Scanner;
  */
 public class UserController {
 
-	private final SessionDAO sessionDao;
-	private final ComplaintDAO complaintDao;
+	private final SessionDao sessionDao;
+	private final ComplaintDao complaintDao;
 	private final Scanner scanner;
 
-	public UserController(SessionDAO sessionDao, ComplaintDAO complaintDao, Scanner scanner) {
+	public UserController(SessionDao sessionDao, ComplaintDao complaintDao, Scanner scanner) {
 		this.sessionDao = sessionDao;
 		this.complaintDao = complaintDao;
 		this.scanner = scanner;

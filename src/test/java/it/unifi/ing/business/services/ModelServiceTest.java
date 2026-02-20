@@ -1,6 +1,6 @@
 package it.unifi.ing.business.services;
 
-import it.unifi.ing.dao.memory.InMemoryAiModelDAO;
+import it.unifi.ing.dao.memory.InMemoryAiModelDao;
 import it.unifi.ing.domain.AiModel;
 import it.unifi.ing.domain.ModelProvider;
 import it.unifi.ing.domain.ModelStatus;
@@ -15,7 +15,7 @@ class ModelServiceTest {
 
 	@BeforeEach
 	void setUp() {
-		modelService = new ModelService(new InMemoryAiModelDAO());
+		modelService = new ModelService(new InMemoryAiModelDao());
 		provider = new ModelProvider(1, "Prov", "prov@test.com", "pass");
 	}
 

@@ -1,6 +1,6 @@
 package it.unifi.ing.dao.memory;
 
-import it.unifi.ing.dao.interfaces.UserDAO;
+import it.unifi.ing.dao.interfaces.UserDao;
 import it.unifi.ing.domain.User;
 
 import java.util.ArrayList;
@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class InMemoryUserDAO implements UserDAO {
+public class InMemoryUserDao implements UserDao {
 
 	private final Map<Integer, User> storage = new HashMap<>();
 
@@ -35,8 +35,13 @@ public class InMemoryUserDAO implements UserDAO {
 		return new ArrayList<>(storage.values());
 	}
 
-	@Override
-	public void delete(int id) {
+	        @Override
+        public void update(User user) {
+                storage.put(user.getId(), user);
+        }
+
+        @Override
+        public void delete(int id) {
 		storage.remove(id);
 	}
 }

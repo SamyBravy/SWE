@@ -1,6 +1,6 @@
 package it.unifi.ing.dao.memory;
 
-import it.unifi.ing.dao.interfaces.ComplaintDAO;
+import it.unifi.ing.dao.interfaces.ComplaintDao;
 import it.unifi.ing.domain.Complaint;
 import it.unifi.ing.domain.ComplaintStatus;
 
@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class InMemoryComplaintDAO implements ComplaintDAO {
+public class InMemoryComplaintDao implements ComplaintDao {
 
     private final Map<Integer, Complaint> storage = new HashMap<>();
 

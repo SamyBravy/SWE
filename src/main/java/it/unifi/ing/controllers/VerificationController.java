@@ -93,11 +93,19 @@ public class VerificationController {
 			System.out.println("  - " + entry.getKey() + ": " + entry.getValue());
 		}
 
-		System.out.println("\n🧪 Ethics Test:");
-		System.out.print("Enter test prompt: ");
+		System.out.println("\n🧪 Automated Ethics Tests:");
+		boolean[] ethicsResults = verificationService.runAutomatedEthicsTests(model);
+		for (int i = 0; i < ethicsResults.length; i++) {
+			System.out.println("  - Test " + (i + 1) + ": " + (ethicsResults[i] ? "✅ PASSED" : "❌ FAILED"));
+		}
+
+		System.out.println("\n🧪 Manual Ethics Test:");
+		System.out.print("Enter test prompt (or press enter to skip): ");
 		String testPrompt = scanner.nextLine().trim();
-		String response = verificationService.runEthicsTest(model, testPrompt);
-		System.out.println("  Response: " + response);
+		if (!testPrompt.isEmpty()) {
+			String response = model.generateResponse(testPrompt);
+			System.out.println("  Response: " + response);
+		}
 
 		System.out.println("\nDecision:");
 		System.out.println("  1. Approve");

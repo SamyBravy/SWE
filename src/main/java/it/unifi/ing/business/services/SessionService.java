@@ -1,6 +1,6 @@
 package it.unifi.ing.business.services;
 
-import it.unifi.ing.dao.interfaces.SessionDAO;
+import it.unifi.ing.dao.interfaces.SessionDao;
 import it.unifi.ing.domain.AiModel;
 import it.unifi.ing.domain.Developer;
 import it.unifi.ing.domain.GPU;
@@ -13,12 +13,12 @@ import it.unifi.ing.domain.Session;
  */
 public class SessionService {
 
-	private final SessionDAO sessionDao;
+	private final SessionDao sessionDao;
 	private final GpuCluster cluster;
 	private final BillingService billingService;
 	private int nextId;
 
-	public SessionService(SessionDAO sessionDao, GpuCluster cluster, BillingService billingService) {
+	public SessionService(SessionDao sessionDao, GpuCluster cluster, BillingService billingService) {
 		this.sessionDao = sessionDao;
 		this.cluster = cluster;
 		this.billingService = billingService;
@@ -66,12 +66,12 @@ public class SessionService {
 		session.addTotalCost(promptCost);
 		sessionDao.update(session);
 
-		String response = "[" + session.getModel().getName() + "] Response to prompt: \""
-				+ prompt + (Math.random() < 0.5 ? " :)" : " :(")
-				+ "\" — (tokens used: " + tokensConsumed + ", cost: €" + String.format("%.4f", promptCost)
+		String response = session.getModel().generateResponse(prompt)
+				+ " — (tokens used: " + tokensConsumed + ", cost: €" + String.format("%.4f", promptCost)
 				+ ", balance: €" + String.format("%.2f", session.getDeveloper().getWallet().getBalance()) + ")";
 
-		session.addLog("[" + java.time.LocalDateTime.now() + "] Prompt: " + prompt + " | Response: " + response);
+		session.addLog("You: " + prompt);
+		session.addLog("AI: " + response);
 
 		return response;
 	}

@@ -1,6 +1,6 @@
 package it.unifi.ing.business.services;
 
-import it.unifi.ing.dao.memory.InMemorySessionDAO;
+import it.unifi.ing.dao.memory.InMemorySessionDao;
 import it.unifi.ing.domain.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
@@ -70,7 +70,7 @@ class BillingServiceTest {
 
 	@Test
 	void testBillActiveSessions() {
-		InMemorySessionDAO sessionDao = new InMemorySessionDAO();
+		InMemorySessionDao sessionDao = new InMemorySessionDao();
 		BillingService bs = new BillingService(new StandardBillingStrategy(), sessionDao);
 
 		Session session = new Session(1, developer, model, gpu);

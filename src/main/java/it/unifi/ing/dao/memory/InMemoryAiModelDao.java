@@ -1,6 +1,6 @@
 package it.unifi.ing.dao.memory;
 
-import it.unifi.ing.dao.interfaces.AiModelDAO;
+import it.unifi.ing.dao.interfaces.AiModelDao;
 import it.unifi.ing.domain.AiModel;
 import it.unifi.ing.domain.ModelStatus;
 
@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class InMemoryAiModelDAO implements AiModelDAO {
+public class InMemoryAiModelDao implements AiModelDao {
 
 	private final Map<Integer, AiModel> storage = new HashMap<>();
 

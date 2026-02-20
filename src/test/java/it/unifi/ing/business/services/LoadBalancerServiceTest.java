@@ -1,7 +1,7 @@
 package it.unifi.ing.business.services;
 
-import it.unifi.ing.dao.memory.InMemoryGpuDAO;
-import it.unifi.ing.dao.memory.InMemorySessionDAO;
+import it.unifi.ing.dao.memory.InMemoryGpuDao;
+import it.unifi.ing.dao.memory.InMemorySessionDao;
 import it.unifi.ing.domain.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class LoadBalancerServiceTest {
 
 	private LoadBalancerService loadBalancerService;
-	private InMemorySessionDAO sessionDao;
+	private InMemorySessionDao sessionDao;
 	private GpuCluster cluster;
 	private GPU gpu;
 	private Developer developer;
@@ -20,8 +20,8 @@ class LoadBalancerServiceTest {
 	@BeforeEach
 	void setUp() {
 		GpuCluster.resetInstance();
-		sessionDao = new InMemorySessionDAO();
-		InMemoryGpuDAO gpuDao = new InMemoryGpuDAO();
+		sessionDao = new InMemorySessionDao();
+		InMemoryGpuDao gpuDao = new InMemoryGpuDao();
 		gpu = new GPU(1);
 		gpuDao.save(gpu);
 

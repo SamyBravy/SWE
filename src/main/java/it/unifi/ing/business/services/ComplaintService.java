@@ -1,7 +1,7 @@
 package it.unifi.ing.business.services;
 
-import it.unifi.ing.dao.interfaces.ComplaintDAO;
-import it.unifi.ing.dao.interfaces.UserDAO;
+import it.unifi.ing.dao.interfaces.ComplaintDao;
+import it.unifi.ing.dao.interfaces.UserDao;
 import it.unifi.ing.domain.AiModel;
 import it.unifi.ing.domain.Complaint;
 import it.unifi.ing.domain.ComplaintStatus;
@@ -16,10 +16,10 @@ import java.util.List;
  */
 public class ComplaintService {
 
-    private final ComplaintDAO complaintDao;
-    private final UserDAO userDao;
+    private final ComplaintDao complaintDao;
+    private final UserDao userDao;
 
-    public ComplaintService(ComplaintDAO complaintDao, UserDAO userDao) {
+    public ComplaintService(ComplaintDao complaintDao, UserDao userDao) {
         this.complaintDao = complaintDao;
         this.userDao = userDao;
     }
@@ -39,7 +39,7 @@ public class ComplaintService {
     /**
      * Accepts a complaint, refunding tokens and optionally blocking the model.
      */
-    public void acceptComplaint(Complaint complaint, int refundedTokens, int blockHours) {
+    public void acceptComplaint(Complaint complaint, int refundedTokens, double blockHours) {
         complaint.setStatus(ComplaintStatus.ACCEPTED);
 
         if (refundedTokens > 0) {

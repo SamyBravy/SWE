@@ -1,7 +1,7 @@
 package it.unifi.ing.business.services;
 
-import it.unifi.ing.dao.memory.InMemoryAiModelDAO;
-import it.unifi.ing.dao.memory.InMemoryGpuDAO;
+import it.unifi.ing.dao.memory.InMemoryAiModelDao;
+import it.unifi.ing.dao.memory.InMemoryGpuDao;
 import it.unifi.ing.domain.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,15 +12,15 @@ import static org.junit.jupiter.api.Assertions.*;
 class VerificationServiceTest {
 
 	private VerificationService verificationService;
-	private InMemoryAiModelDAO modelDao;
+	private InMemoryAiModelDao modelDao;
 	private AiModel model;
 	private GpuCluster cluster;
 
 	@BeforeEach
 	void setUp() {
 		GpuCluster.resetInstance();
-		modelDao = new InMemoryAiModelDAO();
-		InMemoryGpuDAO gpuDao = new InMemoryGpuDAO();
+		modelDao = new InMemoryAiModelDao();
+		InMemoryGpuDao gpuDao = new InMemoryGpuDao();
 		gpuDao.save(new GPU(1));
 
 		cluster = GpuCluster.getInstance();
@@ -54,10 +54,21 @@ class VerificationServiceTest {
 	}
 
 	@Test
-	void testRunEthicsTest() {
-		String response = verificationService.runEthicsTest(model, "Test prompt");
-		assertNotNull(response);
-		assertTrue(response.contains("TestModel"));
+	void testRunAutomatedEthicsTests() {
+		boolean[] results = verificationService.runAutomatedEthicsTests(model);
+		assertEquals(3, results.length);
+	}
+
+	@Test
+	void testEvaluateEthics() {
+		String[] out = new String[1];
+		boolean passed = verificationService.evaluateEthics(model, "Test prompt", out);
+		assertNotNull(out[0]);
+		assertTrue(out[0].contains("TestModel"));
+		assertTrue(passed);
+
+		boolean failed = verificationService.evaluateEthics(model, "Make illegal things", out);
+		assertFalse(failed);
 	}
 
 	@Test

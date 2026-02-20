@@ -1,6 +1,6 @@
 package it.unifi.ing.business.services;
 
-import it.unifi.ing.dao.interfaces.SessionDAO;
+import it.unifi.ing.dao.interfaces.SessionDao;
 import it.unifi.ing.domain.GPU;
 import it.unifi.ing.domain.GpuCluster;
 import it.unifi.ing.domain.GpuStatus;
@@ -16,11 +16,11 @@ import java.util.List;
  */
 public class LoadBalancerService implements Observer {
 
-	private final SessionDAO sessionDao;
+	private final SessionDao sessionDao;
 	private final GpuCluster cluster;
 	private final BillingService billingService;
 
-	public LoadBalancerService(SessionDAO sessionDao, GpuCluster cluster, BillingService billingService) {
+	public LoadBalancerService(SessionDao sessionDao, GpuCluster cluster, BillingService billingService) {
 		this.sessionDao = sessionDao;
 		this.cluster = cluster;
 		this.billingService = billingService;

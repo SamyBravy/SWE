@@ -6,15 +6,15 @@ import org.junit.jupiter.api.BeforeEach;
 import java.util.Arrays;
 import static org.junit.jupiter.api.Assertions.*;
 
-class InMemoryComplaintDAOTest {
+class InMemoryComplaintDaoTest {
 
-    private InMemoryComplaintDAO dao;
+    private InMemoryComplaintDao dao;
     private Developer developer;
     private AiModel model;
 
     @BeforeEach
     void setUp() {
-        dao = new InMemoryComplaintDAO();
+        dao = new InMemoryComplaintDao();
         developer = new Developer(1, "Dev", "dev@test.com", "pass");
         ModelProvider prov = new ModelProvider(2, "Prov", "prov@test.com", "pass");
         model = new AiModel(1, "Model", "Desc", 0.01, "s.bin", "c.json", prov);

@@ -4,10 +4,6 @@ import it.unifi.ing.domain.User;
 
 import java.util.List;
 
-public interface UserDAO {
-	void save(User user);
-	User findById(int id);
+public interface UserDao extends GenericDao<User> {
 	User findByEmail(String email);
-	List<User> findAll();
-	void delete(int id);
 }

@@ -4,12 +4,7 @@ import it.unifi.ing.domain.Session;
 
 import java.util.List;
 
-public interface SessionDAO {
-	void save(Session session);
-	Session findById(int id);
+public interface SessionDao extends GenericDao<Session> {
 	List<Session> findByUser(int userId);
-	List<Session> findAll();
 	List<Session> findActiveSessions();
-	void update(Session session);
-	void delete(int id);
 }
