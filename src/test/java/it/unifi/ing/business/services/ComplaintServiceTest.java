@@ -25,20 +25,20 @@ class ComplaintServiceTest {
 		userDao.save(developer);
 
 		ModelProvider prov = new ModelProvider(2, "Prov", "prov@test.com", "pass");
-		model = new AiModel(1, "TestModel", "Desc", 0.01, "s.bin", "c.json", prov);
+		model = AiModel.submitForReview(1, "TestModel", "Desc", 0.01, "s.bin", "c.json", prov);
 		model.setCostPerTokenPlatform(0.005);
 	}
 
 	@Test
 	void testSaveAndFindComplaint() {
-		Complaint c = new Complaint(1, developer, model, "Issue", Arrays.asList("log1"));
+		Complaint c = Complaint.submit(1, developer, model, "Issue", Arrays.asList("log1"));
 		complaintService.saveComplaint(c);
 		assertNotNull(complaintService.findById(1));
 	}
 
 	@Test
 	void testAcceptComplaint() {
-		Complaint c = new Complaint(1, developer, model, "Issue", Arrays.asList("log1"));
+		Complaint c = Complaint.submit(1, developer, model, "Issue", Arrays.asList("log1"));
 		complaintService.saveComplaint(c);
 		double balanceBefore = developer.getWallet().getBalance();
 		complaintService.acceptComplaint(c, 100, 0);
@@ -48,7 +48,7 @@ class ComplaintServiceTest {
 
 	@Test
 	void testRejectComplaint() {
-		Complaint c = new Complaint(1, developer, model, "Issue", Arrays.asList("log1"));
+		Complaint c = Complaint.submit(1, developer, model, "Issue", Arrays.asList("log1"));
 		complaintService.saveComplaint(c);
 		complaintService.rejectComplaint(c, "Invalid");
 		assertEquals(ComplaintStatus.REJECTED, c.getStatus());
@@ -57,14 +57,14 @@ class ComplaintServiceTest {
 
 	@Test
 	void testGetPendingComplaints() {
-		complaintService.saveComplaint(new Complaint(1, developer, model, "Issue1", Arrays.asList("l1")));
-		complaintService.saveComplaint(new Complaint(2, developer, model, "Issue2", Arrays.asList("l2")));
+		complaintService.saveComplaint(Complaint.submit(1, developer, model, "Issue1", Arrays.asList("l1")));
+		complaintService.saveComplaint(Complaint.submit(2, developer, model, "Issue2", Arrays.asList("l2")));
 		assertEquals(2, complaintService.getPendingComplaints().size());
 	}
 
 	@Test
 	void testAcceptComplaintWithModelBlock() {
-		Complaint c = new Complaint(1, developer, model, "Issue", Arrays.asList("log1"));
+		Complaint c = Complaint.submit(1, developer, model, "Issue", Arrays.asList("log1"));
 		complaintService.saveComplaint(c);
 		complaintService.acceptComplaint(c, 0, 24);
 		assertEquals(ModelStatus.BLOCKED, model.getStatus());

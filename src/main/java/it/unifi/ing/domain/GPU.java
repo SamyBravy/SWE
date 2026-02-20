@@ -7,7 +7,11 @@ import java.util.List;
  * GPU: graphics card in the cluster. Implements Subject in the Observer pattern.
  * When temperature exceeds 90°C, notifies all registered observers.
  */
-public class GPU implements Subject {
+
+/**
+ * Final class to prevent extension.
+ */
+public final class GPU implements Subject {
 
     private static final double TEMPERATURE_THRESHOLD = 90.0;
 
@@ -31,7 +35,8 @@ public class GPU implements Subject {
 
     @Override
     public void attach(Observer o) {
-        if (!observers.contains(o)) {
+        //item 23: Check parameters for validity
+        if (o != null && !observers.contains(o)) {
             observers.add(o);
         }
     }
@@ -43,7 +48,9 @@ public class GPU implements Subject {
 
     @Override
     public void notifyObservers(Object event) {
-        for (Observer observer : observers) {
+        //Item 24: Defensive copy if an observer detaches itself during the updated loop
+        List<Observer> observersCopy = new ArrayList<>(observers);
+        for (Observer observer : observersCopy) {
             observer.update(this, event);
         }
     }

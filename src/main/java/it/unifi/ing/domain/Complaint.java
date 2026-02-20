@@ -1,5 +1,6 @@
 package it.unifi.ing.domain;
 
+import java.util.Objects;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -18,7 +19,7 @@ public class Complaint {
     private ComplaintStatus status;
     private String rejectionReasons;
 
-    public Complaint(int id, Developer developer, AiModel model, String description, List<String> promptLogs) {
+    private Complaint(int id, Developer developer, AiModel model, String description, List<String> promptLogs) {
         this.id = id;
         this.developer = developer;
         this.model = model;
@@ -26,6 +27,26 @@ public class Complaint {
         this.promptLogs = new ArrayList<>(promptLogs);
         this.status = ComplaintStatus.PENDING_REVIEW;
         this.rejectionReasons = null;
+    }
+
+    //Item1
+    public static Complaint submit(int id, Developer developer, AiModel model, String description, List<String> promptLogs) {
+        if (id <= 0) {
+            throw new IllegalArgumentException("Complaint ID must be positive");
+        }
+        Objects.requireNonNull(developer, "The developer filing the complaint cannot be null");
+        Objects.requireNonNull(model, "The model being reported cannot be null");
+
+        if (description == null || description.trim().isEmpty()) {
+            throw new IllegalArgumentException("Complaint description cannot be empty");
+        }
+
+        Objects.requireNonNull(promptLogs, "Prompt logs cannot be null");
+        if (promptLogs.isEmpty()) {
+            throw new IllegalArgumentException("A complaint must include at least one prompt log as evidence");
+        }
+
+        return new Complaint(id, developer, model, description, promptLogs);
     }
 
     public int getId() {

@@ -1,4 +1,5 @@
 package it.unifi.ing.domain;
+import java.util.Objects;
 
 /**
  * AI Model published by a ModelProvider.
@@ -18,7 +19,7 @@ public class AiModel {
 	private double costPerTokenPlatform;
 	private String rejectionReasons;
 
-	public AiModel(int id, String name, String description, double costPerTokenProvider,
+	private AiModel(int id, String name, String description, double costPerTokenProvider,
 			String safetensorsFile, String jsonFile, ModelProvider provider) {
 		this.id = id;
 		this.name = name;
@@ -30,6 +31,33 @@ public class AiModel {
 		this.provider = provider;
 		this.costPerTokenPlatform = 0.0;
 		this.rejectionReasons = null;
+	}
+
+	//Item1: Static factory method with a descriptive name
+	public static AiModel submitForReview(int id, String name, String description, double costPerTokenProvider,
+										  String safetensorsFile, String jsonFile, ModelProvider provider) {
+
+		if (id <= 0) {
+			throw new IllegalArgumentException("Model ID must be positive. Received: " + id);
+		}
+		if (name == null || name.trim().isEmpty()) {
+			throw new IllegalArgumentException("Model name cannot be null or empty");
+		}
+		if (description == null || description.trim().isEmpty()) {
+			throw new IllegalArgumentException("Model description cannot be null or empty");
+		}
+		if (costPerTokenProvider < 0 || Double.isNaN(costPerTokenProvider)) {
+			throw new IllegalArgumentException("Provider cost cannot be negative or invalid");
+		}
+		if (safetensorsFile == null || !safetensorsFile.toLowerCase().endsWith(".safetensors")) {
+			throw new IllegalArgumentException("Valid .safetensors file path is required");
+		}
+		if (jsonFile == null || !jsonFile.toLowerCase().endsWith(".json")) {
+			throw new IllegalArgumentException("Valid .json file path is required");
+		}
+		Objects.requireNonNull(provider, "Model provider cannot be null");
+
+		return new AiModel(id, name, description, costPerTokenProvider, safetensorsFile, jsonFile, provider);
 	}
 
 	public int getId() {

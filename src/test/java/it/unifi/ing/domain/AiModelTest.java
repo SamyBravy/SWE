@@ -11,7 +11,7 @@ class AiModelTest {
 	@BeforeEach
 	void setUp() {
 		ModelProvider provider = new ModelProvider(1, "TestProvider", "prov@test.com", "pass");
-		model = new AiModel(1, "GPT-Test", "Test model", 0.005, "model.safetensors", "config.json", provider);
+		model = AiModel.submitForReview(1, "GPT-Test", "Test model", 0.005, "model.safetensors", "config.json", provider);
 	}
 
 	@Test

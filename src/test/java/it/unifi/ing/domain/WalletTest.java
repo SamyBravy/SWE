@@ -60,7 +60,7 @@ class WalletTest {
 	void testTransactionHistoryImmutable() {
 		wallet.addFunds(10.0);
 		assertThrows(UnsupportedOperationException.class, () -> wallet.getTransactionHistory().add(
-				new Transaction(99, 1.0, java.time.LocalDateTime.now(), "hack")));
+				Transaction.create(99, 1.0, java.time.LocalDateTime.now(), "hack")));
 	}
 
 	@Test

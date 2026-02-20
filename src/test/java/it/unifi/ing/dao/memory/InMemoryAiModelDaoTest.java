@@ -20,15 +20,15 @@ class InMemoryAiModelDaoTest {
 
 	@Test
 	void testSaveAndFindById() {
-		AiModel model = new AiModel(1, "TestModel", "Desc", 0.01, "s.bin", "c.json", provider);
+		AiModel model = AiModel.submitForReview(1, "TestModel", "Desc", 0.01, "s.bin", "c.json", provider);
 		dao.save(model);
 		assertNotNull(dao.findById(1));
 	}
 
 	@Test
 	void testFindByStatus() {
-		AiModel m1 = new AiModel(1, "M1", "D1", 0.01, "s.bin", "c.json", provider);
-		AiModel m2 = new AiModel(2, "M2", "D2", 0.02, "s.bin", "c.json", provider);
+		AiModel m1 = AiModel.submitForReview(1, "M1", "D1", 0.01, "s.bin", "c.json", provider);
+		AiModel m2 = AiModel.submitForReview(2, "M2", "D2", 0.02, "s.bin", "c.json", provider);
 		m2.setStatus(ModelStatus.APPROVED);
 		dao.save(m1);
 		dao.save(m2);
@@ -38,21 +38,21 @@ class InMemoryAiModelDaoTest {
 
 	@Test
 	void testFindAll() {
-		dao.save(new AiModel(1, "M1", "D1", 0.01, "s.bin", "c.json", provider));
-		dao.save(new AiModel(2, "M2", "D2", 0.02, "s.bin", "c.json", provider));
+		dao.save(AiModel.submitForReview(1, "M1", "D1", 0.01, "s.bin", "c.json", provider));
+		dao.save(AiModel.submitForReview(2, "M2", "D2", 0.02, "s.bin", "c.json", provider));
 		assertEquals(2, dao.findAll().size());
 	}
 
 	@Test
 	void testDelete() {
-		dao.save(new AiModel(1, "M1", "D1", 0.01, "s.bin", "c.json", provider));
+		dao.save(AiModel.submitForReview(1, "M1", "D1", 0.01, "s.bin", "c.json", provider));
 		dao.delete(1);
 		assertNull(dao.findById(1));
 	}
 
 	@Test
 	void testUpdate() {
-		AiModel m = new AiModel(1, "M1", "D1", 0.01, "s.bin", "c.json", provider);
+		AiModel m = AiModel.submitForReview(1, "M1", "D1", 0.01, "s.bin", "c.json", provider);
 		dao.save(m);
 		m.setStatus(ModelStatus.APPROVED);
 		dao.update(m);

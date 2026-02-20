@@ -181,7 +181,7 @@ public class Main {
 		}
 
 		int nextId = complaintDao.findAll().size() + 1;
-		Complaint complaint = new Complaint(nextId, developer, model, description, promptLogs);
+		Complaint complaint = Complaint.submit(nextId, developer, model, description, promptLogs);
 		complaintDao.save(complaint);
 
 		System.out.println("✅ Complaint #" + complaint.getId() + " filed. Pending review.");

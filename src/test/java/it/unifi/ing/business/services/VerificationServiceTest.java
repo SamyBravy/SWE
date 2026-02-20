@@ -29,7 +29,7 @@ class VerificationServiceTest {
 		verificationService = new VerificationService(modelDao, cluster);
 
 		ModelProvider prov = new ModelProvider(1, "Prov", "prov@test.com", "pass");
-		model = new AiModel(1, "TestModel", "Desc", 0.01, "s.bin", "c.json", prov);
+		model = AiModel.submitForReview(1, "TestModel", "Desc", 0.01, "s.bin", "c.json", prov);
 		modelDao.save(model);
 	}
 

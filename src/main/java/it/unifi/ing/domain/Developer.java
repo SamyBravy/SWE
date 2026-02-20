@@ -3,7 +3,8 @@ package it.unifi.ing.domain;
 /**
  * Developer: user who uses AI models and manages credits via Wallet.
  */
-public class Developer extends User {
+
+public final class Developer extends User {
 
 	private Wallet wallet;
 
