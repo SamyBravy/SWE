@@ -2,14 +2,8 @@ package it.unifi.ing.business;
 
 import it.unifi.ing.domain.GPU;
 import it.unifi.ing.domain.GpuCluster;
-import it.unifi.ing.domain.Observer;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import it.unifi.ing.domain.Observer;
 import it.unifi.ing.domain.Subject;
-
+import it.unifi.ing.domain.Observer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -52,18 +46,6 @@ public class Timer implements Subject {
 	@Override
 	public void detach(Observer observer) {
 		observers.remove(observer);
-	}
-
-	/**
-	 * Backward-compatible service configuration.
-	 */
-	public void configureServices(Object billingService, Object loadBalancerService) {
-		if (billingService instanceof Observer) {
-			attach((Observer) billingService);
-		}
-		if (loadBalancerService instanceof Observer) {
-			attach((Observer) loadBalancerService);
-		}
 	}
 
 	public void start() {

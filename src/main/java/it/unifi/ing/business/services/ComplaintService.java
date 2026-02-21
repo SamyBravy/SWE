@@ -1,11 +1,11 @@
 package it.unifi.ing.business.services;
 
 import it.unifi.ing.dao.interfaces.ComplaintDao;
-import it.unifi.ing.dao.interfaces.UserDao;
 import it.unifi.ing.domain.AiModel;
 import it.unifi.ing.domain.Complaint;
 import it.unifi.ing.domain.ComplaintStatus;
 import it.unifi.ing.domain.ModelStatus;
+import it.unifi.ing.domain.Developer;
 
 import java.util.List;
 
@@ -17,11 +17,11 @@ import java.util.List;
 public class ComplaintService {
 
 	private final ComplaintDao complaintDao;
-	private final UserDao userDao;
+	private int nextId;
 
-	public ComplaintService(ComplaintDao complaintDao, UserDao userDao) {
+	public ComplaintService(ComplaintDao complaintDao) {
 		this.complaintDao = complaintDao;
-		this.userDao = userDao;
+		this.nextId = 1;
 	}
 
 	public List<Complaint> getPendingComplaints() {
@@ -37,9 +37,10 @@ public class ComplaintService {
 	}
 
 	/**
-	 * Accepts a complaint, refunding tokens and optionally blocking the model.
+	 * Accepts a complaint, refunding tokens and optionally blocking the model
+	 * permanently.
 	 */
-	public void acceptComplaint(Complaint complaint, int refundedTokens, double blockHours) {
+	public void acceptComplaint(Complaint complaint, int refundedTokens, boolean blockModel) {
 		complaint.setStatus(ComplaintStatus.ACCEPTED);
 
 		if (refundedTokens > 0) {
@@ -48,10 +49,10 @@ public class ComplaintService {
 					"REFUND complaint #" + complaint.getId() + ": " + refundedTokens + " tokens");
 		}
 
-		if (blockHours > 0) {
+		if (blockModel) {
 			AiModel model = complaint.getModel();
 			model.setStatus(ModelStatus.BLOCKED);
-			System.out.println("🔒 Model '" + model.getName() + "' blocked for " + blockHours + " hours.");
+			System.out.println("🔒 Model '" + model.getName() + "' blocked.");
 		}
 
 		complaintDao.update(complaint);
@@ -66,7 +67,9 @@ public class ComplaintService {
 		complaintDao.update(complaint);
 	}
 
-	public void saveComplaint(Complaint complaint) {
+	public void fileComplaint(Developer developer, AiModel model, String description,
+			List<String> promptLogs) {
+		Complaint complaint = Complaint.submit(nextId++, developer, model, description, promptLogs);
 		complaintDao.save(complaint);
 	}
 }

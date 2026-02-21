@@ -34,6 +34,10 @@ public class ModelService {
 		return modelDao.findByStatus(ModelStatus.APPROVED);
 	}
 
+	public List<AiModel> getBlockedModels() {
+		return modelDao.findByStatus(ModelStatus.BLOCKED);
+	}
+
 	public List<AiModel> getAllModels() {
 		return modelDao.findAll();
 	}

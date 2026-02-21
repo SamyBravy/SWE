@@ -28,8 +28,8 @@ class LoadBalancerServiceTest {
 		cluster = GpuCluster.getInstance();
 		cluster.init(gpuDao);
 
-		BillingService billingService = new BillingService(new StandardBillingStrategy());
-		loadBalancerService = new LoadBalancerService(sessionDao, cluster, billingService);
+		SessionService sessionService = new SessionService(sessionDao, cluster);
+		loadBalancerService = new LoadBalancerService(sessionService, cluster, new EvenLoadBalancingStrategy());
 
 		developer = new Developer(1, "Dev", "dev@test.com", "pass");
 		developer.getWallet().addFunds(100.0);

@@ -109,9 +109,6 @@ public final class GPU implements Subject {
         return status == GpuStatus.ACTIVE;
     }
 
-    /**
-     * Simulates a temperature tick for the Timer.
-     */
     public void simulateTick() {
         if (status == GpuStatus.INACTIVE) {
             double increment = 1.0 + Math.random() * 3.0;

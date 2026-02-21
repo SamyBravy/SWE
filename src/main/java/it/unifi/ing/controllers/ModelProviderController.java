@@ -11,12 +11,12 @@ import java.util.Scanner;
 /**
  * Controller for AI model management (publishing).
  */
-public class ModelManagementController {
+public class ModelProviderController {
 
 	private final ModelService modelService;
 	private final Scanner scanner;
 
-	public ModelManagementController(ModelService modelService, Scanner scanner) {
+	public ModelProviderController(ModelService modelService, Scanner scanner) {
 		this.modelService = modelService;
 		this.scanner = scanner;
 	}
@@ -35,16 +35,12 @@ public class ModelManagementController {
 			String choice = scanner.nextLine().trim();
 
 			switch (choice) {
-				case "1":
-					publishModel(provider);
-					break;
-				case "2":
-					viewModels();
-					break;
-				case "0":
+				case "1" -> publishModel(provider);
+				case "2" -> viewModels();
+				case "0" -> {
 					return;
-				default:
-					System.out.println("Invalid choice.");
+				}
+				default -> System.out.println("Invalid choice.");
 			}
 		}
 	}

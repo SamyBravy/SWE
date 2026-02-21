@@ -1,8 +1,12 @@
 package it.unifi.ing.controllers;
 
 import it.unifi.ing.business.services.ComplaintService;
+import it.unifi.ing.business.services.ModelService;
+import it.unifi.ing.business.services.SessionService;
+import it.unifi.ing.domain.AiModel;
 import it.unifi.ing.domain.Complaint;
 import it.unifi.ing.domain.ComplaintStatus;
+import it.unifi.ing.domain.Developer;
 import it.unifi.ing.domain.Supervisor;
 
 import java.util.List;
@@ -14,10 +18,15 @@ import java.util.Scanner;
 public class ComplaintManagementController {
 
 	private final ComplaintService complaintService;
+	private final ModelService modelService;
+	private final SessionService sessionService;
 	private final Scanner scanner;
 
-	public ComplaintManagementController(ComplaintService complaintService, Scanner scanner) {
+	public ComplaintManagementController(ComplaintService complaintService, ModelService modelService,
+			SessionService sessionService, Scanner scanner) {
 		this.complaintService = complaintService;
+		this.modelService = modelService;
+		this.sessionService = sessionService;
 		this.scanner = scanner;
 	}
 
@@ -35,16 +44,12 @@ public class ComplaintManagementController {
 			String choice = scanner.nextLine().trim();
 
 			switch (choice) {
-				case "1":
-					handlePendingComplaints();
-					break;
-				case "2":
-					viewAllComplaints();
-					break;
-				case "0":
+				case "1" -> handlePendingComplaints();
+				case "2" -> viewAllComplaints();
+				case "0" -> {
 					return;
-				default:
-					System.out.println("Invalid choice.");
+				}
+				default -> System.out.println("Invalid choice.");
 			}
 		}
 	}
@@ -110,18 +115,10 @@ public class ComplaintManagementController {
 			}
 
 			System.out.print("Block model? (y/n): ");
-			String block = scanner.nextLine().trim().toLowerCase();
-			double blockHours = 0;
-			if ("y".equals(block)) {
-				System.out.print("Block duration (hours): ");
-				try {
-					blockHours = Double.parseDouble(scanner.nextLine().trim());
-				} catch (NumberFormatException e) {
-					System.out.println("Invalid value, block ignored.");
-				}
-			}
+			String blockChoice = scanner.nextLine().trim().toLowerCase();
+			boolean blockModel = "y".equals(blockChoice);
 
-			complaintService.acceptComplaint(complaint, refundedTokens, blockHours);
+			complaintService.acceptComplaint(complaint, refundedTokens, blockModel);
 			System.out.println("✅ Complaint #" + complaint.getId() + " accepted."
 					+ (refundedTokens > 0 ? " Tokens refunded: " + refundedTokens : ""));
 
@@ -143,5 +140,44 @@ public class ComplaintManagementController {
 		for (Complaint c : all) {
 			System.out.println("  " + c);
 		}
+	}
+
+	public void fileComplaintMenu(Developer developer) {
+		List<AiModel> models = modelService.getApprovedModels();
+		if (models.isEmpty()) {
+			System.out.println("No models available for complaint.");
+			return;
+		}
+
+		System.out.println("\n--- FILE COMPLAINT ---");
+		for (AiModel m : models) {
+			System.out.println("  ID: " + m.getId() + " | " + m.getName());
+		}
+
+		System.out.print("Model ID: ");
+		int id;
+		try {
+			id = Integer.parseInt(scanner.nextLine().trim());
+		} catch (NumberFormatException e) {
+			System.out.println("Invalid ID.");
+			return;
+		}
+
+		AiModel model = modelService.findById(id);
+		if (model == null) {
+			System.out.println("❌ Model not found.");
+			return;
+		}
+
+		System.out.print("Describe the issue: ");
+		String description = scanner.nextLine().trim();
+
+		List<String> promptLogs = sessionService.getRecentLogs(developer, model);
+		if (!promptLogs.isEmpty()) {
+			System.out.println("✅ Logs from last session attached (" + promptLogs.size() + " interactions).");
+		}
+
+		complaintService.fileComplaint(developer, model, description, promptLogs);
+		System.out.println("✅ Complaint filed. Pending review.");
 	}
 }

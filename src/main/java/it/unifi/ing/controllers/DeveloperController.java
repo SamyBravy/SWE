@@ -12,18 +12,55 @@ import java.util.List;
 import java.util.Scanner;
 
 /**
- * Controller for user management: credit top-up and stats.
+ * Controller for developer menus and logic (session start, top-up, stats,
+ * complaints).
  */
-public class UserController {
+public class DeveloperController {
 
 	private final SessionDao sessionDao;
 	private final ComplaintDao complaintDao;
+	private final SessionController sessionController;
+	private final ComplaintManagementController complaintController;
 	private final Scanner scanner;
 
-	public UserController(SessionDao sessionDao, ComplaintDao complaintDao, Scanner scanner) {
+	public DeveloperController(SessionDao sessionDao, ComplaintDao complaintDao,
+			SessionController sessionController,
+			ComplaintManagementController complaintController,
+			Scanner scanner) {
 		this.sessionDao = sessionDao;
 		this.complaintDao = complaintDao;
+		this.sessionController = sessionController;
+		this.complaintController = complaintController;
 		this.scanner = scanner;
+	}
+
+	public void showMenu(Developer developer) {
+		while (true) {
+			System.out.println("\n╔══════════════════════════════════════╗");
+			System.out.println("║   DEVELOPER MENU                     ║");
+			System.out.println("╠══════════════════════════════════════╣");
+			System.out.println("║  1. Start session (AI Chat)          ║");
+			System.out.println("║  2. Top-up credit                    ║");
+			System.out.println("║  3. Stats                            ║");
+			System.out.println("║  4. File complaint                   ║");
+			System.out.println("║  0. Logout                           ║");
+			System.out.println("╚══════════════════════════════════════╝");
+			System.out.println("  Balance: €" + String.format("%.2f", developer.getWallet().getBalance()));
+			System.out.print("Choice: ");
+
+			String choice = scanner.nextLine().trim();
+
+			switch (choice) {
+				case "1" -> sessionController.startSession(developer);
+				case "2" -> topUpCredit(developer);
+				case "3" -> viewStats(developer);
+				case "4" -> complaintController.fileComplaintMenu(developer);
+				case "0" -> {
+					return;
+				}
+				default -> System.out.println("Invalid choice.");
+			}
+		}
 	}
 
 	public void topUpCredit(Developer developer) {
@@ -47,7 +84,7 @@ public class UserController {
 
 	public void viewStats(Developer developer) {
 		System.out.println("\n╔══════════════════════════════════════╗");
-		System.out.println("║   USER STATS                         ║");
+		System.out.println("║   DEVELOPER STATS                    ║");
 		System.out.println("╚══════════════════════════════════════╝");
 		System.out.println("  Name: " + developer.getName());
 		System.out.println("  Email: " + developer.getEmail());
@@ -70,7 +107,6 @@ public class UserController {
 			}
 		}
 
-		// Show rejected complaints with reason
 		List<Complaint> allComplaints = complaintDao.findAll();
 		List<Complaint> devComplaints = allComplaints.stream()
 				.filter(c -> c.getDeveloper().getId() == developer.getId())

@@ -15,13 +15,11 @@ public class SessionService {
 
 	private final SessionDao sessionDao;
 	private final GpuCluster cluster;
-	private final BillingService billingService;
 	private int nextId;
 
-	public SessionService(SessionDao sessionDao, GpuCluster cluster, BillingService billingService) {
+	public SessionService(SessionDao sessionDao, GpuCluster cluster) {
 		this.sessionDao = sessionDao;
 		this.cluster = cluster;
-		this.billingService = billingService;
 		this.nextId = 1;
 	}
 
@@ -41,13 +39,14 @@ public class SessionService {
 			return "Error: session has already ended.";
 		}
 
-		if (session.getGpu().getStatus() == GpuStatus.IDLE) {
-			return "Error: assigned GPU is overheated. Session will be terminated.";
+		boolean allOverheated = session.getGpus().stream().allMatch(g -> g.getStatus() == GpuStatus.IDLE);
+		if (session.getGpus().isEmpty() || allOverheated) {
+			return "Error: assigned GPUs are overheated or unavailable. Session will be terminated.";
 		}
 
 		int tokensConsumed = Math.max(5, (int) Math.ceil(prompt.length()));
 
-		double promptCost = billingService.calculateCost(session, tokensConsumed);
+		double promptCost = calculateCost(session, tokensConsumed);
 		double availableBalance = session.getDeveloper().getWallet().getBalance();
 		if (promptCost > availableBalance) {
 			closeSession(session);
@@ -79,17 +78,51 @@ public class SessionService {
 			return 0;
 		}
 
-		double totalCost = billingService.calculateCost(session, session.getTotalTokensUsed());
+		double totalCost = calculateCost(session, session.getTotalTokensUsed());
 
 		session.close();
 		sessionDao.update(session);
-		cluster.releaseGpu(session.getGpu());
+		for (GPU g : session.getGpus()) {
+			cluster.releaseGpu(g);
+		}
 
 		return totalCost;
 	}
 
 	public Session findById(int id) {
 		return sessionDao.findById(id);
+	}
+
+	public void detachGpuFromSession(GPU gpu) {
+		for (Session session : sessionDao.findAll()) {
+			if (session.isActive() && session.getGpus().contains(gpu)) {
+				double lostLoad = gpu.getLoadPercentage();
+				session.removeGpu(gpu);
+				System.out.println("⚠️ GPU " + gpu.getId() + " detached from session " + session.getId()
+						+ " due to safety/overheating.");
+				if (session.getGpus().isEmpty()) {
+					System.out.println("🔴 Forced termination of session " + session.getId()
+							+ " (no GPUs left for developer: " + session.getDeveloper().getName() + ")");
+					closeSession(session);
+				} else if (lostLoad > 0) {
+					double addedLoad = lostLoad / session.getGpus().size();
+					for (GPU remainingGpu : session.getGpus()) {
+						remainingGpu.setLoadPercentage(Math.min(100.0, remainingGpu.getLoadPercentage() + addedLoad));
+					}
+					System.out.println("🔄 Lost load (" + String.format("%.1f", lostLoad)
+							+ "%) redistributed evenly among surviving GPUs.");
+				}
+				return; // A GPU belongs exclusively to one session, we can exit early.
+			}
+		}
+	}
+
+	public java.util.List<Session> getAllSessions() {
+		return sessionDao.findAll();
+	}
+
+	public double calculateCost(Session session, int tokensConsumed) {
+		return tokensConsumed * session.getModel().getCostPerToken();
 	}
 
 	public java.util.List<String> getRecentLogs(Developer developer, AiModel model) {
