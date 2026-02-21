@@ -9,10 +9,6 @@ import it.unifi.ing.domain.ModelStatus;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Service for AI model verification by the Supervisor.
- * Supports: GPU loading, benchmarks, ethics tests, approval/rejection.
- */
 public class VerificationService {
 
 	private final AiModelDao modelDao;
@@ -23,21 +19,11 @@ public class VerificationService {
 		this.cluster = cluster;
 	}
 
-	/**
-	 * Loads a model on a GPU for verification.
-	 * 
-	 * @return the assigned GPU, or null if none available
-	 */
 	public GPU loadOnGpu(AiModel model) {
 		GPU gpu = cluster.getAvailableGpu();
 		return gpu;
 	}
 
-	/**
-	 * Runs benchmarks on the model using the assigned GPU.
-	 * 
-	 * @return map with benchmark results (simulated)
-	 */
 	public Map<String, Object> runBenchmarks(AiModel model, GPU gpu) {
 		Map<String, Object> results = new HashMap<>();
 		results.put("avg_latency_ms", 45 + (int) (Math.random() * 50));

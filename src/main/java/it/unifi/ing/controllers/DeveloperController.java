@@ -11,10 +11,6 @@ import it.unifi.ing.domain.Transaction;
 import java.util.List;
 import java.util.Scanner;
 
-/**
- * Controller for developer menus and logic (session start, top-up, stats,
- * complaints).
- */
 public class DeveloperController {
 
 	private final SessionDao sessionDao;
@@ -71,14 +67,14 @@ public class DeveloperController {
 		try {
 			double amount = Double.parseDouble(scanner.nextLine().trim());
 			if (amount <= 0) {
-				System.out.println("❌ Amount must be positive.");
+				System.out.println("Amount must be positive.");
 				return;
 			}
 			developer.getWallet().addFunds(amount);
-			System.out.println("✅ Top-up of €" + String.format("%.2f", amount) + " successful!");
+			System.out.println("Top-up of €" + String.format("%.2f", amount) + " successful!");
 			System.out.println("   New balance: €" + String.format("%.2f", developer.getWallet().getBalance()));
 		} catch (NumberFormatException e) {
-			System.out.println("❌ Invalid amount.");
+			System.out.println("Invalid amount.");
 		}
 	}
 
@@ -95,13 +91,13 @@ public class DeveloperController {
 		int activeSessions = (int) sessions.stream().filter(Session::isActive).count();
 		int totalTokens = sessions.stream().mapToInt(Session::getTotalTokensUsed).sum();
 
-		System.out.println("\n  📊 Session Stats:");
+		System.out.println("\n Session Stats:");
 		System.out.println("  - Total sessions: " + totalSessions);
 		System.out.println("  - Active sessions: " + activeSessions);
 		System.out.println("  - Total tokens used: " + totalTokens);
 
 		if (!sessions.isEmpty()) {
-			System.out.println("\n  📋 Session History:");
+			System.out.println("\n  Session History:");
 			for (Session s : sessions) {
 				System.out.println("    " + s);
 			}
@@ -113,19 +109,19 @@ public class DeveloperController {
 				.toList();
 
 		if (!devComplaints.isEmpty()) {
-			System.out.println("\n  📝 Complaints:");
+			System.out.println("\n  Complaints:");
 			for (Complaint c : devComplaints) {
 				System.out.println("    #" + c.getId() + " | Model: " + c.getModel().getName()
 						+ " | Status: " + c.getStatus());
 				if (c.getStatus() == ComplaintStatus.REJECTED && c.getRejectionReasons() != null) {
-					System.out.println("      ❌ Rejection reason: " + c.getRejectionReasons());
+					System.out.println("      Rejection reason: " + c.getRejectionReasons());
 				}
 			}
 		}
 
 		List<Transaction> transactions = developer.getWallet().getTransactionHistory();
 		if (!transactions.isEmpty()) {
-			System.out.println("\n  💰 Transaction History:");
+			System.out.println("\n  Transaction History:");
 			for (Transaction t : transactions) {
 				System.out.println("    " + t);
 			}

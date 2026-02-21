@@ -6,9 +6,6 @@ import it.unifi.ing.domain.ModelProvider;
 import it.unifi.ing.domain.Supervisor;
 import it.unifi.ing.domain.User;
 
-/**
- * Service for user authentication and registration.
- */
 public class AuthService {
 
 	private final UserDao userDao;

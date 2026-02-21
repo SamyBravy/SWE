@@ -56,7 +56,7 @@ public class ModelProviderController {
 		try {
 			costPerToken = Double.parseDouble(scanner.nextLine().trim());
 		} catch (NumberFormatException e) {
-			System.out.println("❌ Invalid cost.");
+			System.out.println("Invalid cost.");
 			return;
 		}
 		System.out.print("Safetensors file path: ");
@@ -65,7 +65,7 @@ public class ModelProviderController {
 		String json = scanner.nextLine().trim();
 
 		modelService.publishModel(provider, name, desc, costPerToken, safetensors, json);
-		System.out.println("✅ Model '" + name + "' published successfully! Pending review.");
+		System.out.println("Model '" + name + "' published successfully! Pending review.");
 	}
 
 	private void viewModels() {
@@ -78,7 +78,7 @@ public class ModelProviderController {
 		for (AiModel m : models) {
 			System.out.println("  " + m);
 			if (m.getStatus() == ModelStatus.REJECTED && m.getRejectionReasons() != null) {
-				System.out.println("    ❌ Rejection reason: " + m.getRejectionReasons());
+				System.out.println("    Rejection reason: " + m.getRejectionReasons());
 			}
 		}
 	}

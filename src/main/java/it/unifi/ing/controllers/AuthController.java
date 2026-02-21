@@ -5,9 +5,6 @@ import it.unifi.ing.domain.User;
 
 import java.util.Scanner;
 
-/**
- * Controller for authentication: login/registration via CLI.
- */
 public class AuthController {
 
 	private final AuthService authService;

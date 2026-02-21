@@ -5,10 +5,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * Wallet: manages a developer's credit balance and transaction history.
- * UML: id, balance, transactionHistory
- */
 public class Wallet {
 
 	private int id;
@@ -35,10 +31,6 @@ public class Wallet {
 		return balance;
 	}
 
-	/**
-	 * Adds funds to the wallet.
-	 * UML: addFunds(amount)
-	 */
 	public void addFunds(double amount, String... optionalReason) {
 		//item 23: Check parameters for validity
 		if (amount <= 0) {
@@ -47,19 +39,13 @@ public class Wallet {
 
 		String reason = (optionalReason != null && optionalReason.length > 0)
 				? optionalReason[0]
-				: "TOP-UP";
+				: "TOP-UP"; //if optionalReason is null then reason is "TOP-UP"
 
 		this.balance += amount;
 		transactionHistory.add(Transaction.create(
 				nextTransactionId++, amount, LocalDateTime.now(), reason));
 	}
 
-	/**
-	 * Charges the wallet.
-	 * UML: charge(amount)
-	 * 
-	 * @return true if the charge was successful
-	 */
 	public boolean charge(double amount) {
 		if (amount < 0) {
 			throw new IllegalArgumentException("Amount cannot be negative");

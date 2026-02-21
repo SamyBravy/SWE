@@ -52,18 +52,18 @@ public class SessionController {
 
 		AiModel model = modelService.findById(id);
 		if (model == null || model.getStatus() != ModelStatus.APPROVED) {
-			System.out.println("❌ Model not available.");
+			System.out.println("Model not available.");
 			return;
 		}
 
 		Session session = sessionService.openSession(developer, model);
 		if (session == null) {
-			System.out.println("❌ No GPU available. Try again later.");
+			System.out.println("No GPU available. Try again later.");
 			return;
 		}
 
 		System.out.println(
-				"✅ Session started! (ID: " + session.getId() + ", GPUs attached: " + session.getGpus().size() + ")");
+				"Session started! (ID: " + session.getId() + ", GPUs attached: " + session.getGpus().size() + ")");
 		System.out.println("Type your messages. Type '/exit' to end the session.");
 
 		handleChat(developer, session);
