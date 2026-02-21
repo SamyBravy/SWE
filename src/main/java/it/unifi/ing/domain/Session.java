@@ -5,16 +5,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * Session: links a Developer, an AiModel, and a GPU.
- * UML: id, developer, model, gpu, startTimestamp, isActive
- */
 public class Session {
 
 	private int id;
 	private Developer developer;
 	private AiModel model;
-	private List<GPU> gpus;
+	private List<GPU> gpus; //one Session can use more than one GPU
 	private LocalDateTime startTimestamp;
 	private boolean active;
 	private int totalTokensUsed;
@@ -31,7 +27,7 @@ public class Session {
 		this.startTimestamp = LocalDateTime.now();
 		this.active = true;
 		this.totalTokensUsed = 0;
-		this.interactionLog = new ArrayList<>();
+		this.interactionLog = new ArrayList<>(); //grows dynamically
 	}
 
 	public int getId() {

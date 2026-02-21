@@ -87,10 +87,10 @@ public class VerificationController {
 
 		GPU gpu = verificationService.loadOnGpu(model);
 		if (gpu == null) {
-			System.out.println("❌ No GPU available for verification.");
+			System.out.println("No GPU available for verification.");
 			return;
 		}
-		System.out.println("✅ Model loaded on GPU " + gpu.getId());
+		System.out.println("Model loaded on GPU " + gpu.getId());
 
 		Map<String, Object> results = verificationService.runBenchmarks(model, gpu);
 		System.out.println("\n📊 Benchmark Results:");
@@ -123,16 +123,16 @@ public class VerificationController {
 			try {
 				double platformCost = Double.parseDouble(scanner.nextLine().trim());
 				verificationService.approveModel(model, platformCost);
-				System.out.println("✅ Model '" + model.getName() + "' approved! Total cost/token: €"
+				System.out.println("Model '" + model.getName() + "' approved! Total cost/token: €"
 						+ String.format("%.4f", model.getCostPerToken()));
 			} catch (NumberFormatException e) {
-				System.out.println("❌ Invalid cost.");
+				System.out.println("Invalid cost.");
 			}
 		} else if ("2".equals(decision)) {
 			System.out.print("Rejection reason: ");
 			String reason = scanner.nextLine().trim();
 			verificationService.rejectModel(model, reason);
-			System.out.println("❌ Model '" + model.getName() + "' rejected.");
+			System.out.println("Model '" + model.getName() + "' rejected.");
 		}
 
 		verificationService.releaseGpu(gpu);
@@ -169,7 +169,7 @@ public class VerificationController {
 		}
 
 		verificationService.unblockModel(model);
-		System.out.println("✅ Model '" + model.getName() + "' successfully unblocked and approved.");
+		System.out.println("Model '" + model.getName() + "' successfully unblocked and approved.");
 	}
 
 	private void viewAllModels() {

@@ -12,9 +12,6 @@ import it.unifi.ing.domain.Supervisor;
 import java.util.List;
 import java.util.Scanner;
 
-/**
- * Controller for complaint management.
- */
 public class ComplaintManagementController {
 
 	private final ComplaintService complaintService;
@@ -93,7 +90,7 @@ public class ComplaintManagementController {
 		System.out.println("  Model: " + complaint.getModel().getName());
 		System.out.println("  Description: " + complaint.getDescription());
 
-		System.out.println("\n  📋 Prompt Log:");
+		System.out.println("\n  Prompt Log:");
 		for (String log : complaint.getPromptLogs()) {
 			System.out.println("    " + log);
 		}
@@ -119,14 +116,14 @@ public class ComplaintManagementController {
 			boolean blockModel = "y".equals(blockChoice);
 
 			complaintService.acceptComplaint(complaint, refundedTokens, blockModel);
-			System.out.println("✅ Complaint #" + complaint.getId() + " accepted."
+			System.out.println("Complaint #" + complaint.getId() + " accepted."
 					+ (refundedTokens > 0 ? " Tokens refunded: " + refundedTokens : ""));
 
 		} else if ("2".equals(decision)) {
 			System.out.print("Rejection reason: ");
 			String reason = scanner.nextLine().trim();
 			complaintService.rejectComplaint(complaint, reason);
-			System.out.println("❌ Complaint #" + complaint.getId() + " rejected.");
+			System.out.println("Complaint #" + complaint.getId() + " rejected.");
 		}
 	}
 
@@ -165,7 +162,7 @@ public class ComplaintManagementController {
 
 		AiModel model = modelService.findById(id);
 		if (model == null) {
-			System.out.println("❌ Model not found.");
+			System.out.println("Model not found.");
 			return;
 		}
 
@@ -174,10 +171,10 @@ public class ComplaintManagementController {
 
 		List<String> promptLogs = sessionService.getRecentLogs(developer, model);
 		if (!promptLogs.isEmpty()) {
-			System.out.println("✅ Logs from last session attached (" + promptLogs.size() + " interactions).");
+			System.out.println("Logs from last session attached (" + promptLogs.size() + " interactions).");
 		}
 
 		complaintService.fileComplaint(developer, model, description, promptLogs);
-		System.out.println("✅ Complaint filed. Pending review.");
+		System.out.println("Complaint filed. Pending review.");
 	}
 }

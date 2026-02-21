@@ -33,12 +33,12 @@ public class EcoBalancingStrategy implements LoadBalancingStrategy {
 			while (session.getGpus().size() < neededGpus) {
 				GPU freeGpu = cluster.getAvailableGpu();
 				if (freeGpu == null) {
-					System.out.println("⚠️ GPU shortage: cannot handle peak for Session " + session.getId());
+					System.out.println("GPU shortage: cannot handle peak for Session " + session.getId());
 					break;
 				}
 				session.addGpu(freeGpu);
 				freeGpu.setStatus(GpuStatus.ACTIVE);
-				System.out.println("⚡ GPU " + freeGpu.getId() + " activated to handle peak for Session "
+				System.out.println("GPU " + freeGpu.getId() + " activated to handle peak for Session "
 						+ session.getId() + " (Eco Strategy).");
 			}
 
@@ -48,7 +48,7 @@ public class EcoBalancingStrategy implements LoadBalancingStrategy {
 				session.removeGpu(removed);
 				cluster.releaseGpu(removed);
 				System.out.println(
-						"🌱 GPU " + removed.getId() + " detached from Session " + session.getId() + " to save power.");
+						"GPU " + removed.getId() + " detached from Session " + session.getId() + " to save power.");
 			}
 
 			// Pack load greedily

@@ -8,9 +8,6 @@ import it.unifi.ing.domain.GpuCluster;
 import it.unifi.ing.domain.GpuStatus;
 import it.unifi.ing.domain.Session;
 
-/**
- * Service for managing AI chat sessions.
- */
 public class SessionService {
 
 	private final SessionDao sessionDao;
@@ -50,14 +47,14 @@ public class SessionService {
 		double availableBalance = session.getDeveloper().getWallet().getBalance();
 		if (promptCost > availableBalance) {
 			closeSession(session);
-			return "❌ Insufficient credit (need €" + String.format("%.2f", promptCost)
+			return "Insufficient credit (need €" + String.format("%.2f", promptCost)
 					+ ", available €" + String.format("%.2f", availableBalance)
 					+ "). Session terminated automatically.";
 		}
 
 		boolean charged = session.getDeveloper().getWallet().charge(promptCost);
 		if (!charged) {
-			return "❌ Error during charge. Session terminated.";
+			return "Error during charge. Session terminated.";
 		}
 
 		session.addUsedTokens(tokensConsumed);
@@ -98,10 +95,10 @@ public class SessionService {
 			if (session.isActive() && session.getGpus().contains(gpu)) {
 				double lostLoad = gpu.getLoadPercentage();
 				session.removeGpu(gpu);
-				System.out.println("⚠️ GPU " + gpu.getId() + " detached from session " + session.getId()
+				System.out.println("GPU " + gpu.getId() + " detached from session " + session.getId()
 						+ " due to safety/overheating.");
 				if (session.getGpus().isEmpty()) {
-					System.out.println("🔴 Forced termination of session " + session.getId()
+					System.out.println("Forced termination of session " + session.getId()
 							+ " (no GPUs left for developer: " + session.getDeveloper().getName() + ")");
 					closeSession(session);
 				} else if (lostLoad > 0) {
@@ -109,7 +106,7 @@ public class SessionService {
 					for (GPU remainingGpu : session.getGpus()) {
 						remainingGpu.setLoadPercentage(Math.min(100.0, remainingGpu.getLoadPercentage() + addedLoad));
 					}
-					System.out.println("🔄 Lost load (" + String.format("%.1f", lostLoad)
+					System.out.println("Lost load (" + String.format("%.1f", lostLoad)
 							+ "%) redistributed evenly among surviving GPUs.");
 				}
 				return; // A GPU belongs exclusively to one session, we can exit early.

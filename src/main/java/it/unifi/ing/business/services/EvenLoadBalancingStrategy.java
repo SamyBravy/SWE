@@ -32,13 +32,13 @@ public class EvenLoadBalancingStrategy implements LoadBalancingStrategy {
 				if (freeGpu != null) {
 					session.addGpu(freeGpu);
 					freeGpu.setStatus(GpuStatus.ACTIVE);
-					System.out.println("⚡ GPU " + freeGpu.getId() + " activated for load balancing Session "
+					System.out.println("GPU " + freeGpu.getId() + " activated for load balancing Session "
 							+ session.getId() + ".");
 					double newLoad = totalLoad / session.getGpus().size();
 					session.getGpus().forEach(g -> g.setLoadPercentage(newLoad));
 				} else {
 					System.out.println(
-							"⚠️ GPU shortage: load will be distributed uniformly ignoring max constraint for Session "
+							"GPU shortage: load will be distributed uniformly ignoring max constraint for Session "
 									+ session.getId());
 					session.getGpus().forEach(g -> g.setLoadPercentage(expectedLoad));
 				}
@@ -46,7 +46,7 @@ public class EvenLoadBalancingStrategy implements LoadBalancingStrategy {
 				GPU removed = gpus.get(gpus.size() - 1);
 				session.removeGpu(removed);
 				cluster.releaseGpu(removed);
-				System.out.println("💤 GPU " + removed.getId() + " detached from Session " + session.getId()
+				System.out.println("GPU " + removed.getId() + " detached from Session " + session.getId()
 						+ " (Even Balancing).");
 				double newLoad = totalLoad / session.getGpus().size();
 				session.getGpus().forEach(g -> g.setLoadPercentage(newLoad));

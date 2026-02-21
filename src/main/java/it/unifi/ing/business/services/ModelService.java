@@ -7,9 +7,6 @@ import it.unifi.ing.domain.ModelStatus;
 
 import java.util.List;
 
-/**
- * Service for AI model management.
- */
 public class ModelService {
 
 	private final AiModelDao modelDao;

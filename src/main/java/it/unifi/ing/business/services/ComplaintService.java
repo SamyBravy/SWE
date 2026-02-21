@@ -9,11 +9,6 @@ import it.unifi.ing.domain.Developer;
 
 import java.util.List;
 
-/**
- * Service for complaint management.
- * Allows the Supervisor to accept or reject complaints,
- * with token refund and model blocking options.
- */
 public class ComplaintService {
 
 	private final ComplaintDao complaintDao;

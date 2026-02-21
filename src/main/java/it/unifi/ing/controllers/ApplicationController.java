@@ -5,9 +5,6 @@ import it.unifi.ing.domain.ModelProvider;
 import it.unifi.ing.domain.Supervisor;
 import it.unifi.ing.domain.User;
 
-/**
- * Main dispatcher controller that handles the root application loop.
- */
 public class ApplicationController {
 
 	private final AuthController authController;

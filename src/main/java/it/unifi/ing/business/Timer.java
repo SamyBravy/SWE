@@ -7,17 +7,12 @@ import it.unifi.ing.domain.Observer;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Timer: Singleton that simulates a background thread
- * for periodic GPU temperature updates, token billing, and load balancing.
- * UML: instance, observers. Methods: getInstance(), tick()
- */
 public class Timer implements Subject {
 
 	private static Timer instance;
 
 	private Thread timerThread;
-	private volatile boolean running;
+	private volatile boolean running; //to avoid copying into cache memory
 	private final GpuCluster cluster;
 	private final List<Observer> observers;
 	private int intervalMs;
