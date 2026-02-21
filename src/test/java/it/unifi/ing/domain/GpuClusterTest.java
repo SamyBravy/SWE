@@ -36,14 +36,14 @@ class GpuClusterTest {
 	void testGetAvailableGpu() {
 		GPU gpu = cluster.getAvailableGpu();
 		assertNotNull(gpu);
-		assertEquals(GpuStatus.INACTIVE, gpu.getStatus());
+		assertEquals(GpuStatus.ACTIVE, gpu.getStatus());
 	}
 
 	@Test
 	void testReleaseGpu() {
 		GPU gpu = cluster.getAvailableGpu();
 		cluster.releaseGpu(gpu);
-		assertEquals(GpuStatus.ACTIVE, gpu.getStatus());
+		assertEquals(GpuStatus.INACTIVE, gpu.getStatus());
 	}
 
 	@Test

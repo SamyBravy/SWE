@@ -15,7 +15,7 @@ class ComplaintTest {
 	void setUp() {
 		developer = new Developer(1, "Dev", "dev@test.com", "pass");
 		ModelProvider provider = new ModelProvider(2, "Prov", "prov@test.com", "pass");
-		model = AiModel.submitForReview(1, "Model", "Desc", 0.01, "s.bin", "c.json", provider);
+		model = AiModel.submitForReview(1, "Model", "Desc", 0.01, "s.safetensors", "c.json", provider);
 		complaint = Complaint.submit(1, developer, model, "Bad responses", Arrays.asList("log1", "log2"));
 	}
 

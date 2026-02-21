@@ -37,7 +37,7 @@ public class EcoBalancingStrategy implements LoadBalancingStrategy {
 					break;
 				}
 				session.addGpu(freeGpu);
-				freeGpu.setStatus(GpuStatus.INACTIVE);
+				freeGpu.setStatus(GpuStatus.ACTIVE);
 				System.out.println("⚡ GPU " + freeGpu.getId() + " activated to handle peak for Session "
 						+ session.getId() + " (Eco Strategy).");
 			}

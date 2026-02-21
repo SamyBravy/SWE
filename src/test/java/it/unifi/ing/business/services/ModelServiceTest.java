@@ -21,25 +21,25 @@ class ModelServiceTest {
 
 	@Test
 	void testPublishModel() {
-		modelService.publishModel(provider, "TestModel", "Desc", 0.01, "s.bin", "c.json");
+		modelService.publishModel(provider, "TestModel", "Desc", 0.01, "s.safetensors", "c.json");
 		assertEquals(1, modelService.getAllModels().size());
 	}
 
 	@Test
 	void testGetPendingModels() {
-		modelService.publishModel(provider, "M1", "D1", 0.01, "s.bin", "c.json");
+		modelService.publishModel(provider, "M1", "D1", 0.01, "s.safetensors", "c.json");
 		assertEquals(1, modelService.getPendingModels().size());
 	}
 
 	@Test
 	void testGetApprovedModels() {
-		modelService.publishModel(provider, "M1", "D1", 0.01, "s.bin", "c.json");
+		modelService.publishModel(provider, "M1", "D1", 0.01, "s.safetensors", "c.json");
 		assertEquals(0, modelService.getApprovedModels().size());
 	}
 
 	@Test
 	void testFindById() {
-		modelService.publishModel(provider, "M1", "D1", 0.01, "s.bin", "c.json");
+		modelService.publishModel(provider, "M1", "D1", 0.01, "s.safetensors", "c.json");
 		AiModel model = modelService.findById(1);
 		assertNotNull(model);
 		assertEquals("M1", model.getName());

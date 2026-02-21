@@ -17,7 +17,7 @@ class InMemoryComplaintDaoTest {
         dao = new InMemoryComplaintDao();
         developer = new Developer(1, "Dev", "dev@test.com", "pass");
         ModelProvider prov = new ModelProvider(2, "Prov", "prov@test.com", "pass");
-        model = AiModel.submitForReview(1, "Model", "Desc", 0.01, "s.bin", "c.json", prov);
+        model = AiModel.submitForReview(1, "Model", "Desc", 0.01, "s.safetensors", "c.json", prov);
     }
 
     @Test

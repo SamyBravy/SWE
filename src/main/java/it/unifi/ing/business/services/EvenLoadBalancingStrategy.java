@@ -31,7 +31,7 @@ public class EvenLoadBalancingStrategy implements LoadBalancingStrategy {
 				GPU freeGpu = cluster.getAvailableGpu();
 				if (freeGpu != null) {
 					session.addGpu(freeGpu);
-					freeGpu.setStatus(GpuStatus.INACTIVE);
+					freeGpu.setStatus(GpuStatus.ACTIVE);
 					System.out.println("⚡ GPU " + freeGpu.getId() + " activated for load balancing Session "
 							+ session.getId() + ".");
 					double newLoad = totalLoad / session.getGpus().size();

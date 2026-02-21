@@ -66,6 +66,7 @@ public class Main {
 
 		ApplicationController appController = new ApplicationController(
 				authController, developerController, modelProviderController, supervisorController);
+
 		appController.start();
 	}
 }

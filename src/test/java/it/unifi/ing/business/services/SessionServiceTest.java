@@ -33,7 +33,7 @@ class SessionServiceTest {
 		developer.getWallet().addFunds(100.0);
 
 		ModelProvider prov = new ModelProvider(2, "Prov", "prov@test.com", "pass");
-		model = AiModel.submitForReview(1, "TestModel", "Desc", 0.005, "s.bin", "c.json", prov);
+		model = AiModel.submitForReview(1, "TestModel", "Desc", 0.005, "s.safetensors", "c.json", prov);
 		model.setCostPerTokenPlatform(0.005);
 	}
 
@@ -80,7 +80,7 @@ class SessionServiceTest {
 		sessionService.closeSession(session);
 		assertFalse(session.isActive());
 		for (GPU g : session.getGpus()) {
-			assertEquals(GpuStatus.ACTIVE, g.getStatus());
+			assertEquals(GpuStatus.INACTIVE, g.getStatus());
 		}
 	}
 

@@ -29,7 +29,7 @@ class VerificationServiceTest {
 		verificationService = new VerificationService(modelDao, cluster);
 
 		ModelProvider prov = new ModelProvider(1, "Prov", "prov@test.com", "pass");
-		model = AiModel.submitForReview(1, "TestModel", "Desc", 0.01, "s.bin", "c.json", prov);
+		model = AiModel.submitForReview(1, "TestModel", "Desc", 0.01, "s.safetensors", "c.json", prov);
 		modelDao.save(model);
 	}
 
@@ -84,7 +84,7 @@ class VerificationServiceTest {
 	void testReleaseGpu() {
 		GPU gpu = verificationService.loadOnGpu(model);
 		verificationService.releaseGpu(gpu);
-		assertEquals(GpuStatus.ACTIVE, gpu.getStatus());
+		assertEquals(GpuStatus.INACTIVE, gpu.getStatus());
 	}
 
 	@Test

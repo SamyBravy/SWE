@@ -36,7 +36,7 @@ public class GpuCluster {
         List<GPU> all = gpuDao.findAll();
         for (GPU gpu : all) {
             if (gpu.isAvailable()) {
-                gpu.setStatus(GpuStatus.INACTIVE);
+                gpu.setStatus(GpuStatus.ACTIVE);
                 return gpu;
             }
         }
@@ -47,7 +47,7 @@ public class GpuCluster {
      * Releases a GPU, setting it back to ACTIVE.
      */
     public void releaseGpu(GPU gpu) {
-        gpu.setStatus(GpuStatus.ACTIVE);
+        gpu.setStatus(GpuStatus.INACTIVE);
     }
 
     /**

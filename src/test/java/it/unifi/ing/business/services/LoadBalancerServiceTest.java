@@ -35,7 +35,7 @@ class LoadBalancerServiceTest {
 		developer.getWallet().addFunds(100.0);
 
 		ModelProvider provider = new ModelProvider(2, "Prov", "prov@test.com", "pass");
-		model = AiModel.submitForReview(1, "TestModel", "Desc", 0.005, "s.bin", "c.json", provider);
+		model = AiModel.submitForReview(1, "TestModel", "Desc", 0.005, "s.safetensors", "c.json", provider);
 		model.setCostPerTokenPlatform(0.005);
 	}
 
@@ -47,14 +47,14 @@ class LoadBalancerServiceTest {
 	@Test
 	void testRegisterOnAllGpus() {
 		loadBalancerService.registerOnAllGpus();
-		gpu.setStatus(GpuStatus.INACTIVE);
+		gpu.setStatus(GpuStatus.ACTIVE);
 		gpu.setTemperature(95.0);
-		assertEquals(GpuStatus.ACTIVE, gpu.getStatus());
+		assertEquals(GpuStatus.INACTIVE, gpu.getStatus());
 	}
 
 	@Test
 	void testOnTemperatureAlertWithActiveSession() {
-		gpu.setStatus(GpuStatus.INACTIVE);
+		gpu.setStatus(GpuStatus.ACTIVE);
 		Session session = new Session(1, developer, model, gpu);
 		session.addUsedTokens(100);
 		sessionDao.save(session);
@@ -62,14 +62,14 @@ class LoadBalancerServiceTest {
 		loadBalancerService.update(gpu, "TEMPERATURE_ALERT");
 
 		assertFalse(session.isActive());
-		assertEquals(GpuStatus.ACTIVE, gpu.getStatus());
+		assertEquals(GpuStatus.INACTIVE, gpu.getStatus());
 	}
 
 	@Test
 	void testOnTemperatureAlertWithoutSession() {
-		gpu.setStatus(GpuStatus.INACTIVE);
+		gpu.setStatus(GpuStatus.ACTIVE);
 		loadBalancerService.update(gpu, "TEMPERATURE_ALERT");
-		assertEquals(GpuStatus.ACTIVE, gpu.getStatus());
+		assertEquals(GpuStatus.INACTIVE, gpu.getStatus());
 	}
 
 }

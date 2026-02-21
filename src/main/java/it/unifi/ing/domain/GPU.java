@@ -18,7 +18,7 @@ public final class GPU implements Subject {
         this.id = id;
         this.temperature = 30.0;
         this.loadPercentage = 0.0;
-        this.status = GpuStatus.ACTIVE;
+        this.status = GpuStatus.INACTIVE;
         this.vramCapacity = 24.0;
         this.observers = new ArrayList<>();
     }
@@ -90,15 +90,15 @@ public final class GPU implements Subject {
     }
 
     public boolean isAvailable() {
-        return status == GpuStatus.ACTIVE;
+        return status == GpuStatus.INACTIVE;
     }
 
     public void simulateTick() {
-        if (status == GpuStatus.INACTIVE) {
+        if (status == GpuStatus.ACTIVE) {
             double increment = 1.0 + Math.random() * 3.0;
             setTemperature(temperature + increment);
             loadPercentage = Math.min(100.0, loadPercentage + Math.random() * 5.0);
-        } else if (status == GpuStatus.ACTIVE) {
+        } else if (status == GpuStatus.INACTIVE) {
             if (temperature > 30.0) {
                 double decrement = 0.5 + Math.random() * 1.5;
                 this.temperature = Math.max(30.0, temperature - decrement);

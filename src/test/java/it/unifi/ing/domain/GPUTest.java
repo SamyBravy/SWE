@@ -21,7 +21,7 @@ class GPUTest {
 	void testGpuCreation() {
 		assertEquals(1, gpu.getId());
 		assertEquals(30.0, gpu.getTemperature());
-		assertEquals(GpuStatus.ACTIVE, gpu.getStatus());
+		assertEquals(GpuStatus.INACTIVE, gpu.getStatus());
 		assertTrue(gpu.isAvailable());
 	}
 
@@ -71,7 +71,7 @@ class GPUTest {
 
 	@Test
 	void testSimulateTickInactive() {
-		gpu.setStatus(GpuStatus.INACTIVE);
+		gpu.setStatus(GpuStatus.ACTIVE);
 		double initialTemp = gpu.getTemperature();
 		gpu.simulateTick();
 		assertTrue(gpu.getTemperature() > initialTemp);
@@ -79,9 +79,9 @@ class GPUTest {
 
 	@Test
 	void testSimulateTickActive() {
-		gpu.setStatus(GpuStatus.ACTIVE);
+		gpu.setStatus(GpuStatus.INACTIVE);
 		gpu.setTemperature(50.0);
-		gpu.setStatus(GpuStatus.ACTIVE);
+		gpu.setStatus(GpuStatus.INACTIVE);
 		gpu.simulateTick();
 		assertTrue(gpu.getTemperature() < 50.0);
 	}
@@ -89,7 +89,7 @@ class GPUTest {
 	@Test
 	void testIsAvailable() {
 		assertTrue(gpu.isAvailable());
-		gpu.setStatus(GpuStatus.INACTIVE);
+		gpu.setStatus(GpuStatus.ACTIVE);
 		assertFalse(gpu.isAvailable());
 	}
 
