@@ -69,7 +69,7 @@ public class ComplaintService {
 
 	public void fileComplaint(Developer developer, AiModel model, String description,
 			List<String> promptLogs) {
-		Complaint complaint = new Complaint(nextId++, developer, model, description, promptLogs);
+		Complaint complaint = Complaint.submit(nextId++, developer, model, description, promptLogs);
 		complaintDao.save(complaint);
 	}
 }

@@ -16,7 +16,7 @@ class SessionTest {
 		developer = new Developer(1, "Dev", "dev@test.com", "pass");
 		developer.getWallet().addFunds(100.0);
 		ModelProvider provider = new ModelProvider(2, "Prov", "prov@test.com", "pass");
-		model = new AiModel(1, "TestModel", "Desc", 0.01, "s.bin", "c.json", provider);
+		model = AiModel.submitForReview(1, "TestModel", "Desc", 0.01, "s.bin", "c.json", provider);
 		gpu = new GPU(1);
 		session = new Session(1, developer, model, gpu);
 	}

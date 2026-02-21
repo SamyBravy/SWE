@@ -13,6 +13,7 @@ public class GpuCluster {
     private static GpuCluster instance;
     private GpuDao gpuDao;
 
+    //Item 2: enforce the singleton property with a private constructor
     private GpuCluster() {
     }
 

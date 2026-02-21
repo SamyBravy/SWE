@@ -35,7 +35,7 @@ class LoadBalancerServiceTest {
 		developer.getWallet().addFunds(100.0);
 
 		ModelProvider provider = new ModelProvider(2, "Prov", "prov@test.com", "pass");
-		model = new AiModel(1, "TestModel", "Desc", 0.005, "s.bin", "c.json", provider);
+		model = AiModel.submitForReview(1, "TestModel", "Desc", 0.005, "s.bin", "c.json", provider);
 		model.setCostPerTokenPlatform(0.005);
 	}
 

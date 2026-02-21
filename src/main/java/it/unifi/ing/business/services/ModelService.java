@@ -22,7 +22,7 @@ public class ModelService {
 
 	public void publishModel(ModelProvider provider, String name, String desc,
 			double cost, String safetensors, String json) {
-		AiModel model = new AiModel(nextId++, name, desc, cost, safetensors, json, provider);
+		AiModel model = AiModel.submitForReview(nextId++, name, desc, cost, safetensors, json, provider);
 		modelDao.save(model);
 	}
 

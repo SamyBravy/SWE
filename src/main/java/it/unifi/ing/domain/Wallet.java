@@ -40,6 +40,7 @@ public class Wallet {
 	 * UML: addFunds(amount)
 	 */
 	public void addFunds(double amount, String... optionalReason) {
+		//item 23: Check parameters for validity
 		if (amount <= 0) {
 			throw new IllegalArgumentException("Amount must be positive");
 		}
@@ -49,7 +50,7 @@ public class Wallet {
 				: "TOP-UP";
 
 		this.balance += amount;
-		transactionHistory.add(new Transaction(
+		transactionHistory.add(Transaction.create(
 				nextTransactionId++, amount, LocalDateTime.now(), reason));
 	}
 
@@ -70,7 +71,7 @@ public class Wallet {
 			return false;
 		}
 		this.balance -= amount;
-		transactionHistory.add(new Transaction(
+		transactionHistory.add(Transaction.create(
 				nextTransactionId++, -amount, LocalDateTime.now(),
 				"CHARGE: -" + String.format("%.2f", amount)));
 		return true;

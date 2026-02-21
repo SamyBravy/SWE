@@ -23,7 +23,7 @@ class ComplaintServiceTest {
 		developer.getWallet().addFunds(100.0);
 
 		ModelProvider prov = new ModelProvider(2, "Prov", "prov@test.com", "pass");
-		model = new AiModel(1, "TestModel", "Desc", 0.01, "s.bin", "c.json", prov);
+		model = AiModel.submitForReview(1, "TestModel", "Desc", 0.01, "s.bin", "c.json", prov);
 		model.setCostPerTokenPlatform(0.005);
 	}
 
