@@ -59,7 +59,9 @@ public class Main {
 		ComplaintController complaintController = new ComplaintController(complaintService, modelService,
 				sessionService, scanner);
 		WalletController walletController = new WalletController(scanner);
-		StatsController statsController = new StatsController(sessionService, complaintService);
+		
+		StatsService statsService = new StatsService(sessionService, complaintService);
+		StatsController statsController = new StatsController(statsService);
 
 		NavigationController navigationController = new NavigationController(
 				authController, sessionController, modelController,
