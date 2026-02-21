@@ -1,11 +1,6 @@
 package it.unifi.ing.domain;
 import java.util.Objects;
 
-/**
- * AI Model published by a ModelProvider.
- * UML: AiModel (id, name, description, costPerToken, status, safetensorsFile,
- * jsonFile, provider)
- */
 public class AiModel {
 
 	private int id;

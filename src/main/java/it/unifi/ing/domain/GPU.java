@@ -3,14 +3,6 @@ package it.unifi.ing.domain;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * GPU: graphics card in the cluster. Implements Subject in the Observer pattern.
- * When temperature exceeds 90°C, notifies all registered observers.
- */
-
-/**
- * Final class to prevent extension.
- */
 public final class GPU implements Subject {
 
     private static final double TEMPERATURE_THRESHOLD = 90.0;
@@ -31,8 +23,6 @@ public final class GPU implements Subject {
         this.observers = new ArrayList<>();
     }
 
-    // --- Observer pattern (Subject interface) ---
-
     @Override
     public void attach(Observer o) {
         //item 23: Check parameters for validity
@@ -51,11 +41,9 @@ public final class GPU implements Subject {
         //Item 24: Defensive copy if an observer detaches itself during the updated loop
         List<Observer> observersCopy = new ArrayList<>(observers);
         for (Observer observer : observersCopy) {
-            observer.update(this, event);
+            observer.update(this, event); //push observer
         }
     }
-
-    // --- Getters / Setters ---
 
     public int getId() {
         return id;
@@ -69,10 +57,6 @@ public final class GPU implements Subject {
         return temperature;
     }
 
-    /**
-     * Sets GPU temperature. If it exceeds the threshold (90°C),
-     * status becomes IDLE and observers are notified.
-     */
     public void setTemperature(double temperature) {
         this.temperature = temperature;
         if (temperature > TEMPERATURE_THRESHOLD) {
