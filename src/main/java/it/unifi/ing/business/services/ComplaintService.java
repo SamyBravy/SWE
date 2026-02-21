@@ -67,4 +67,10 @@ public class ComplaintService {
 		Complaint complaint = Complaint.submit(nextId++, developer, model, description, promptLogs);
 		complaintDao.save(complaint);
 	}
+
+	public List<Complaint> findByDeveloper(int developerId) {
+		return complaintDao.findAll().stream()
+				.filter(c -> c.getDeveloper().getId() == developerId)
+				.toList();
+	}
 }

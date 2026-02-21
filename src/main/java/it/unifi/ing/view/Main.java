@@ -53,20 +53,19 @@ public class Main {
 		// ===== 5. CREATE CONTROLLERS =====
 		AuthController authController = new AuthController(authService, scanner);
 		SessionController sessionController = new SessionController(sessionService, modelService, scanner);
-		ModelProviderController modelProviderController = new ModelProviderController(modelService, scanner);
+		ModelController modelController = new ModelController(modelService, scanner);
 		VerificationController verificationController = new VerificationController(verificationService, modelService,
-				scanner);
-		ComplaintManagementController complaintController = new ComplaintManagementController(complaintService,
-				modelService, sessionService, scanner);
+				modelController, scanner);
+		ComplaintController complaintController = new ComplaintController(complaintService, modelService,
+				sessionService, scanner);
+		WalletController walletController = new WalletController(scanner);
+		StatsController statsController = new StatsController(sessionService, complaintService);
 
-		DeveloperController developerController = new DeveloperController(sessionDao, complaintDao, sessionController,
-				complaintController, scanner);
-		SupervisorController supervisorController = new SupervisorController(verificationController,
-				complaintController, scanner);
+		NavigationController navigationController = new NavigationController(
+				authController, sessionController, modelController,
+				verificationController, complaintController, walletController,
+				statsController, scanner);
 
-		ApplicationController appController = new ApplicationController(
-				authController, developerController, modelProviderController, supervisorController);
-
-		appController.start();
+		navigationController.start();
 	}
 }

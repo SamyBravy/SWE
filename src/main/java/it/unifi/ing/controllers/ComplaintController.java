@@ -12,14 +12,17 @@ import it.unifi.ing.domain.Supervisor;
 import java.util.List;
 import java.util.Scanner;
 
-public class ComplaintManagementController {
+/**
+ * Controller for complaint operations: filing (Developer) and review (Supervisor).
+ */
+public class ComplaintController {
 
 	private final ComplaintService complaintService;
 	private final ModelService modelService;
 	private final SessionService sessionService;
 	private final Scanner scanner;
 
-	public ComplaintManagementController(ComplaintService complaintService, ModelService modelService,
+	public ComplaintController(ComplaintService complaintService, ModelService modelService,
 			SessionService sessionService, Scanner scanner) {
 		this.complaintService = complaintService;
 		this.modelService = modelService;
@@ -27,7 +30,50 @@ public class ComplaintManagementController {
 		this.scanner = scanner;
 	}
 
-	public void showDashboard(Supervisor supervisor) {
+	// ===== DEVELOPER SIDE =====
+
+	public void fileComplaint(Developer developer) {
+		List<AiModel> models = modelService.getApprovedModels();
+		if (models.isEmpty()) {
+			System.out.println("No models available for complaint.");
+			return;
+		}
+
+		System.out.println("\n--- FILE COMPLAINT ---");
+		for (AiModel m : models) {
+			System.out.println("  ID: " + m.getId() + " | " + m.getName());
+		}
+
+		System.out.print("Model ID: ");
+		int id;
+		try {
+			id = Integer.parseInt(scanner.nextLine().trim());
+		} catch (NumberFormatException e) {
+			System.out.println("Invalid ID.");
+			return;
+		}
+
+		AiModel model = modelService.findById(id);
+		if (model == null) {
+			System.out.println("Model not found.");
+			return;
+		}
+
+		System.out.print("Describe the issue: ");
+		String description = scanner.nextLine().trim();
+
+		List<String> promptLogs = sessionService.getRecentLogs(developer, model);
+		if (!promptLogs.isEmpty()) {
+			System.out.println("Logs from last session attached (" + promptLogs.size() + " interactions).");
+		}
+
+		complaintService.fileComplaint(developer, model, description, promptLogs);
+		System.out.println("Complaint filed. Pending review.");
+	}
+
+	// ===== SUPERVISOR SIDE =====
+
+	public void showReviewDashboard(Supervisor supervisor) {
 		while (true) {
 			System.out.println("\n╔══════════════════════════════════════╗");
 			System.out.println("║   COMPLAINTS DASHBOARD               ║");
@@ -137,44 +183,5 @@ public class ComplaintManagementController {
 		for (Complaint c : all) {
 			System.out.println("  " + c);
 		}
-	}
-
-	public void fileComplaintMenu(Developer developer) {
-		List<AiModel> models = modelService.getApprovedModels();
-		if (models.isEmpty()) {
-			System.out.println("No models available for complaint.");
-			return;
-		}
-
-		System.out.println("\n--- FILE COMPLAINT ---");
-		for (AiModel m : models) {
-			System.out.println("  ID: " + m.getId() + " | " + m.getName());
-		}
-
-		System.out.print("Model ID: ");
-		int id;
-		try {
-			id = Integer.parseInt(scanner.nextLine().trim());
-		} catch (NumberFormatException e) {
-			System.out.println("Invalid ID.");
-			return;
-		}
-
-		AiModel model = modelService.findById(id);
-		if (model == null) {
-			System.out.println("Model not found.");
-			return;
-		}
-
-		System.out.print("Describe the issue: ");
-		String description = scanner.nextLine().trim();
-
-		List<String> promptLogs = sessionService.getRecentLogs(developer, model);
-		if (!promptLogs.isEmpty()) {
-			System.out.println("Logs from last session attached (" + promptLogs.size() + " interactions).");
-		}
-
-		complaintService.fileComplaint(developer, model, description, promptLogs);
-		System.out.println("Complaint filed. Pending review.");
 	}
 }

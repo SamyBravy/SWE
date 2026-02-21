@@ -18,12 +18,14 @@ public class VerificationController {
 
 	private final VerificationService verificationService;
 	private final ModelService modelService;
+	private final ModelController modelController;
 	private final Scanner scanner;
 
 	public VerificationController(VerificationService verificationService,
-			ModelService modelService, Scanner scanner) {
+			ModelService modelService, ModelController modelController, Scanner scanner) {
 		this.verificationService = verificationService;
 		this.modelService = modelService;
+		this.modelController = modelController;
 		this.scanner = scanner;
 	}
 
@@ -43,7 +45,7 @@ public class VerificationController {
 
 			switch (choice) {
 				case "1" -> verifyPendingModels(supervisor);
-				case "2" -> viewAllModels();
+				case "2" -> modelController.viewModels();
 				case "3" -> unblockModels(supervisor);
 				case "0" -> {
 					return;
@@ -172,15 +174,4 @@ public class VerificationController {
 		System.out.println("Model '" + model.getName() + "' successfully unblocked and approved.");
 	}
 
-	private void viewAllModels() {
-		List<AiModel> models = modelService.getAllModels();
-		if (models.isEmpty()) {
-			System.out.println("No models in the system.");
-			return;
-		}
-		System.out.println("\n--- ALL MODELS ---");
-		for (AiModel m : models) {
-			System.out.println("  " + m);
-		}
-	}
 }
