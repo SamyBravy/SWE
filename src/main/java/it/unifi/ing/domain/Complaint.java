@@ -5,10 +5,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * Complaint: a report filed by a Developer regarding an AI model.
- * UML: id, developer, model, description, promptLogs, status, rejectionReasons
- */
 public class Complaint {
 
     private int id;
