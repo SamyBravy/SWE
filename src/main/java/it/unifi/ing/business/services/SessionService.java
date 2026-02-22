@@ -118,6 +118,10 @@ public class SessionService {
 		return sessionDao.findAll();
 	}
 
+	public java.util.List<Session> findByUser(int userId) {
+		return sessionDao.findByUser(userId);
+	}
+
 	public double calculateCost(Session session, int tokensConsumed) {
 		return tokensConsumed * session.getModel().getCostPerToken();
 	}

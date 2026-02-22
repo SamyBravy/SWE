@@ -9,43 +9,19 @@ import java.util.List;
 import java.util.Scanner;
 
 /**
- * Controller for AI model management (publishing).
+ * Controller for AI model management (publishing and listing).
  */
-public class ModelProviderController {
+public class ModelController {
 
 	private final ModelService modelService;
 	private final Scanner scanner;
 
-	public ModelProviderController(ModelService modelService, Scanner scanner) {
+	public ModelController(ModelService modelService, Scanner scanner) {
 		this.modelService = modelService;
 		this.scanner = scanner;
 	}
 
-	public void showMenu(ModelProvider provider) {
-		while (true) {
-			System.out.println("\n╔══════════════════════════════════════╗");
-			System.out.println("║   MODEL PROVIDER MENU                ║");
-			System.out.println("╠══════════════════════════════════════╣");
-			System.out.println("║  1. Publish Model                    ║");
-			System.out.println("║  2. My Models                        ║");
-			System.out.println("║  0. Logout                           ║");
-			System.out.println("╚══════════════════════════════════════╝");
-			System.out.print("Choice: ");
-
-			String choice = scanner.nextLine().trim();
-
-			switch (choice) {
-				case "1" -> publishModel(provider);
-				case "2" -> viewModels();
-				case "0" -> {
-					return;
-				}
-				default -> System.out.println("Invalid choice.");
-			}
-		}
-	}
-
-	private void publishModel(ModelProvider provider) {
+	public void publishModel(ModelProvider provider) {
 		System.out.println("\n--- PUBLISH MODEL ---");
 		System.out.print("Model name: ");
 		String name = scanner.nextLine().trim();
@@ -68,7 +44,7 @@ public class ModelProviderController {
 		System.out.println("Model '" + name + "' published successfully! Pending review.");
 	}
 
-	private void viewModels() {
+	public void viewModels() {
 		List<AiModel> models = modelService.getAllModels();
 		if (models.isEmpty()) {
 			System.out.println("No models in the system.");
