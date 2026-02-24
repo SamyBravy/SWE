@@ -7,6 +7,7 @@
 
 \usepackage{indentfirst} 
 \usepackage{titlesec}
+\usepackage{subfig}
 
 \usepackage{quoting} %v.p. 62
 \quotingsetup{font = small}
@@ -215,7 +216,7 @@
     	
     	\begin{figure}[H]
     		\centering
-    		\includegraphics[width=1.8\textwidth,height=1.8\textheight,keepaspectratio]{Images/UML/services.pdf}
+    		\includegraphics[width=1.9\textwidth,height=1.9\textheight,keepaspectratio]{Images/UML/services.pdf}
     		\caption{Service package class diagram}
     		\label{fig:services}
     	\end{figure}
@@ -228,7 +229,7 @@
     	
     	\begin{figure}[H]
     		\centering
-    		\includegraphics[width=1.6\textwidth,height=1.6\textheight,keepaspectratio]{Images/UML/dao.pdf}
+    		\includegraphics[width=1.8\textwidth,height=1.8\textheight,keepaspectratio]{Images/UML/dao.pdf}
     		\caption{Dao package class diagram}
     		\label{fig:dao}
     	\end{figure}
@@ -241,14 +242,90 @@
     	
     	\begin{figure}[H]
     		\centering
-    		\includegraphics[width=1.8\textwidth,height=1.6\textheight,keepaspectratio]{Images/UML/controller.pdf}
+    		\includegraphics[width=1.8\textwidth,height=1.8\textheight,keepaspectratio]{Images/UML/controller.pdf}
     		\caption{Controllers package class diagram}
     		\label{fig:controller}
     	\end{figure}
     	
     \end{landscape}
     
+    \subsection{Design Patterns}
+    To ensure high cohesion, low coupling, and overall software maintainability, the system architecture leverages several established design patterns. These patterns provide standardized solutions to recurring architectural challenges, ranging from resource management to component communication.
+    
+    \subsubsection{Observer Pattern}
+    The Observer pattern establishes a dependency between objects, ensuring that when one object changes state, all its dependents are notified and updated accordingly. In this implementation, it allows the \texttt{LoadBalancerService} to monitor system-wide changes dynamically. Specifically, the service acts as a Concrete Observer to two distinct subjects: the \texttt{Timer} and the \texttt{GPU} classes.
+    \smallskip
+    
+    The \texttt{Timer} serves as the system’s central clock. Implemented as a Singleton (see later ~\vref{subsub:Singleton}) to ensure a single, synchronized source of time, it uses an internal thread to execute at fixed intervals. Every cycle, the Timer broadcasts a generic "TICK" event. Upon receiving this signal, the \texttt{LoadBalancerService} triggers its \texttt{balanceLoad()} routine to periodically reshuffle the workload and ensure optimal distribution.
+    
+    Simultaneously, the \texttt{GPU} acts as a second subject. It monitors hardware health and notifies its subscribers if its temperature reaches the critical threshold. This allows the \texttt{LoadBalancerService} to react not just to time, but to urgent hardware demands, triggering an immediate load redistribution to mitigate overheating.
+    Figure ~\ref{fig:Obspattern} visually explains what has been said.
+    
+    \begin{figure}[H]
+    	\centering
+    	\includegraphics[width=\textwidth]{Images/ObserverPattern.pdf}
+    	\caption{Observer Pattern Implementation}
+    	\label{fig:Obspattern}
+    \end{figure} 
+    
+    \subsubsection{Strategy Patter}
+    The Strategy pattern is employed to define a family of algorithms, encapsulate each one, and make them interchangeable (see Figure~\ref{fig:StrategyGeneral}). This pattern is primarily used within the load balancing mechanism.
+    \smallskip
+    
+    The system utilizes a \texttt{LoadBalancingStrategy} interface (see Figure~\ref{fig:Strategy}) to expose load-balancing capabilities without tying the system to a single implementation.
 
+	Two distinct algorithms are implemented: the \texttt{EvenBalancingStrategy}, which distributes workloads equally across available hardware , and the \texttt{EcoBalancingStrategy}, which focuses on power-saving.
+	
+	This allows the choice of the balancing algorithm to be determined dynamically without modifying the underlying service logic. Furthermore, as the system evolves, new balancing strategies can be added arbitrarily by simply implementing the existing interface.
+	
+	\begin{figure}[H]
+		\centering
+		\subfloat[][\emph{Strategy pattern general framework}\label{fig:StrategyGeneral}]
+		{\includegraphics[width=0.7\textwidth]{Images/StrategyPatternGeneral.pdf}} 
+		
+		\vspace{0.5cm} 
+		
+		\subfloat[][\emph{LoadBalancingStrategy Implementations}\label{fig:Strategy}]
+		{\includegraphics[width=0.7\textwidth]{Images/StrategyPattern.pdf}}
+		
+		\caption{Strategy Pattern class diagram}
+		\label{fig:subfig}
+	\end{figure}
+	
+	
+    \subsubsection{Singleton Pattern}
+    \label{subsub:Singleton}
+    The Singleton pattern restricts the instantiation of a class to a single, globally accessible object. This is critical for managing shared, system-wide resources to prevent conflicting states.
+    \smallskip
+    
+    The \texttt{GpuCluster} is implemented as a singleton to serve as the centralized manager for all GPUs. To this end, as seen in listing ~\vref{lst:Singleton}, the constructor is declared private so that it can only be invoked by methods within the class itself.
+    
+    The class therefore provides a static method as an access point, which can be called before the object has been instantiated. Consequently, the design pattern involves maintaining a static attribute to be used both as a pointer to the object and as a flag indicating whether instantiation has already occurred. This attribute must be static, as a static method can only access attributes that are also static. Furthermore, in this case, this static method is synchronized to ensure thread safe access.
+    
+    \begin{minipage}{\linewidth}
+    	\begin{lstlisting}[caption={GpuCluster singleton design pattern implementation}, label = {lst:Singleton}]
+    		public class GpuCluster {
+    			
+    			private static GpuCluster instance;
+    			...
+    			
+    			private GpuCluster() {
+    			}
+    			
+    			public static synchronized GpuCluster getInstance() {
+    				if (instance == null) {
+    					instance = new GpuCluster();
+    				}
+    				return instance;
+    			}
+    			...
+    		}
+    	\end{lstlisting}
+    \end{minipage}
+
+    \smallskip
+    The \texttt{Timer} also follows the singleton pattern to ensure that only one global clock dictates the simulation's tempo, preventing erratic or overlapping tick events. 
+    
     \chapter{Implementations}
     In this section we illustrate the implementation of the most important methods in our project, providing a detailed description of every layer.
     \section{Business Logic}
@@ -414,7 +491,7 @@ It first checks if the session is active and if it still has assigned GPUs that 
 
 Then, after checking whether the Developer has enough credit to pay for the prompt's tokens, it charges the Developer's wallet. 
 
-\begin{lstlisting}[label={lst:sendprompt3}, firstnumber=60]
+\begin{lstlisting}[label={lst:sendprompt3}, firstnumber=60],
     session.addUsedTokens(tokensConsumed);
     sessionDao.update(session);
 
@@ -428,6 +505,7 @@ Then, after checking whether the Developer has enough credit to pay for the prom
     return response;
 }
 \end{lstlisting}
+
 used
 Finally, it uses the \texttt{SessionDao} to update the session and returns the response.
 
