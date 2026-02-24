@@ -1,0 +1,215 @@
+@startuml
+
+' --- A4 PAGE SCALING ---
+scale max 750 width
+scale max 1050 height
+
+' --- IMPOSTAZIONI STILE ---
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam roundcorner 10
+skinparam nodesep 50
+skinparam ranksep 50
+
+' Stili di base
+skinparam class {
+    BackgroundColor White
+    ArrowColor #333333
+    BorderColor #333333
+}
+
+skinparam interface {
+    BackgroundColor White
+    BorderColor #333333
+}
+
+skinparam enum {
+    BackgroundColor White
+    BorderColor #333333
+}
+
+package dao #FFF3E0 {
+    interface GpuDao <<External>> {
+        + findAll(): List<GPU>
+    }
+}
+
+package domain #E3F2FD {
+
+    ' --- INTERFACES & ENUMS (Stacked to save width) ---
+    together {
+        interface Subject {
+            + attach(o: Observer): void
+            + detach(o: Observer): void
+            + notifyObservers(event: Object): void
+        }
+        interface Observer {
+            + update(subject: Subject, event: Object): void
+        }
+    }
+
+    together {
+        enum ModelStatus {
+            PENDING_REVIEW
+            APPROVED
+            REJECTED
+            BLOCKED
+        }
+        enum ComplaintStatus {
+            PENDING_REVIEW
+            ACCEPTED
+            REJECTED
+        }
+        enum GpuStatus {
+            ACTIVE
+            INACTIVE
+            IDLE
+        }
+    }
+
+    ' --- UTENTI ---
+    abstract class User {
+        - id: int
+        - name: String
+        - email: String
+        - password: String
+        # User(id: int, name: String, email: String, pwd: String)
+        + login(email: String, pwd: String): boolean
+        + {abstract} getRole(): String
+    }
+
+    class Developer {
+        - wallet: Wallet
+        + Developer(id: int, name: String, email: String, pwd: String)
+        + getRole(): String
+    }
+
+    class ModelProvider {
+        + ModelProvider(id: int, name: String, email: String, pwd: String)
+        + getRole(): String
+    }
+
+    class Supervisor {
+        + Supervisor(id: int, name: String, email: String, pwd: String)
+        + getRole(): String
+    }
+
+    ' --- CORE DOMAIN ---
+    class Wallet {
+        - id: int
+        - balance: double
+        - transactionHistory: List<Transaction>
+        + Wallet(id: int)
+        + addFunds(amount: double, reason: String...): void
+        + charge(amount: double): boolean
+    }
+
+    class Transaction <<Value Object>> {
+        - id: int
+        - amount: double
+        - timestamp: LocalDateTime
+        - reason: String
+        + {static} create(...): Transaction
+    }
+
+    class AiModel {
+        - id: int
+        - name: String
+        - costPerTokenProvider: double
+        - costPerTokenPlatform: double
+        - status: ModelStatus
+          ...
+        + {static} submitForReview(...): AiModel
+        + generateResponse(prompt: String): String
+    }
+
+    class Complaint {
+        - id: int
+        - developer: Developer
+        - model: AiModel
+        - description: String
+        - status: ComplaintStatus
+          ...
+        + {static} submit(...): Complaint
+    }
+
+    class Session {
+        - id: int
+        - developer: Developer
+        - model: AiModel
+        - gpus: List<GPU>
+        - startTimestamp: LocalDateTime
+        - active: boolean
+        - totalTokensUsed: int
+        + Session(id: int, dev: Developer, model: AiModel, gpu: GPU)
+        + addGpu(gpu: GPU): void
+        + activate(): void
+        + close(): void
+    }
+
+    ' --- INFRASTRUTTURA ---
+    class GPU {
+        - {static} TEMPERATURE_THRESHOLD: double
+        - id: int
+        - temperature: double
+        - loadPercentage: double
+        - status: GpuStatus
+        ...
+        + isAvailable(): boolean
+        + simulateTick(): void
+    }
+
+    class GpuCluster <<Singleton>> {
+        - {static} instance: GpuCluster
+        - gpuDao: GpuDao
+        + {static} getInstance(): GpuCluster
+        + init(gpuDao: GpuDao): void
+        + getAvailableGpu(): GPU
+        +getAvailableGpus(): List<GPU>
+        + releaseGpu(gpu: GPU): void
+    }
+
+    ' --- RELAZIONI (Forced downwards for vertical layout) ---
+    
+    GpuCluster -down-> GpuDao : references >
+    
+    ' Ereditarietà
+    User <|-down- Developer
+    User <|-down- ModelProvider
+    User <|-down- Supervisor
+
+    ' Realizzazione Interfacce
+    Subject <|.down. GPU
+    Observer <|.down. Session
+
+    ' Composizione e Aggregazione
+    Developer "1" *-down- "1" Wallet
+    
+    ' MODIFICA 1: Spostata la transazione a sinistra del Wallet
+    Wallet "1" *-left- "*" Transaction 
+    
+    Session "1" o-down- "*" GPU
+    GpuCluster "1" *-down- "*" GPU
+
+    ' Associazioni Semplici
+    ModelProvider "1" -down- "*" AiModel
+    AiModel -right-> "1" ModelStatus
+
+    Complaint -down-> "1" Developer : filed by >
+    Complaint -down-> "1" AiModel : targets >
+    Complaint -right-> "1" ComplaintStatus
+
+    Session -up-> "1" Developer
+    Session -up-> "1" AiModel
+    
+    Subject "1" --> "*" Observer
+    Session "1"-->"1" GPU
+
+    GPU -right-> "1" GpuStatus
+    
+    ' MODIFICA 2: Link nascosto per forzare Wallet sotto GpuCluster
+    GpuCluster -[hidden]down- Wallet
+
+}
+@enduml

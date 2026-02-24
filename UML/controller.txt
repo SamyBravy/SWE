@@ -1,0 +1,148 @@
+@startuml
+
+' --- A4 PAGE SCALING ---
+scale max 750 width
+scale max 1050 height
+
+' --- IMPOSTAZIONI STILE ---
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam roundcorner 10
+skinparam nodesep 60
+skinparam ranksep 60
+
+' Stili di base
+skinparam class {
+    BackgroundColor White
+    ArrowColor #333333
+    BorderColor #333333
+}
+
+' Stile per rendere il divisore 100% invisibile senza icone o scritte
+skinparam class {
+    BackgroundColor<<Dummy>> transparent
+    BorderColor<<Dummy>> transparent
+    FontColor<<Dummy>> transparent
+}
+hide <<Dummy>> circle
+hide <<Dummy>> stereotype
+hide <<Dummy>> members
+
+package controllers #E8F5E9 {
+
+    class NavigationController {
+        - authController: AuthController
+        - sessionController: SessionController
+        - modelController: ModelController
+        - verificationController: VerificationController
+        - complaintController: ComplaintController
+        - walletController: WalletController
+        - statsController: StatsController
+        - scanner: Scanner
+        + NavigationController(...)
+        + start(): void
+        - showDeveloperMenu(developer: Developer): void
+        - showModelProviderMenu(provider: ModelProvider): void
+        - showSupervisorMenu(supervisor: Supervisor): void
+    }
+
+    together {
+        class AuthController {
+            - authService: AuthService
+            - scanner: Scanner
+            + AuthController(...)
+            + showMenu(): User
+            - handleLogin(): User
+            - handleRegistration(): User
+        }
+
+        class WalletController {
+            - scanner: Scanner
+            + WalletController(scanner: Scanner)
+            + topUpCredit(developer: Developer): void
+        }
+
+        class StatsController {
+            - statsService: StatsService
+            + StatsController(...)
+            + showDeveloperStats(developer: Developer): void
+        }
+    }
+
+    together {
+        class ModelController {
+            - modelService: ModelService
+            - scanner: Scanner
+            + ModelController(...)
+            + publishModel(provider: ModelProvider): void
+            + viewModels(): void
+        }
+
+        class VerificationController {
+            - verificationService: VerificationService
+            - modelService: ModelService
+            - modelController: ModelController
+            - scanner: Scanner
+            + VerificationController(...)
+            + showMenu(supervisor: Supervisor): void
+            - verifyPendingModels(supervisor: Supervisor): void
+            - unblockModels(supervisor: Supervisor): void
+        }
+    }
+
+    together {
+        class ComplaintController {
+            - complaintService: ComplaintService
+            - modelService: ModelService
+            - sessionService: SessionService
+            - scanner: Scanner
+            + ComplaintController(...)
+            + fileComplaint(developer: Developer): void
+            + showReviewDashboard(supervisor: Supervisor): void
+            - handlePendingComplaints(): void
+            - reviewComplaint(complaint: Complaint): void
+            - viewAllComplaints(): void
+        }
+
+        class SessionController {
+            - sessionService: SessionService
+            - modelService: ModelService
+            - scanner: Scanner
+            + SessionController(...)
+            + startSession(developer: Developer): void
+            - handleChat(developer: Developer, session: Session): void
+        }
+    }
+
+    ' --- RELAZIONI ---
+    NavigationController o-down- AuthController
+    NavigationController o-down- WalletController
+    NavigationController o-down- StatsController
+    NavigationController o-down- ModelController
+    NavigationController o-down- VerificationController
+    NavigationController o-down- ComplaintController
+    NavigationController o-down- SessionController
+
+    VerificationController -right-> ModelController : uses >
+}
+
+package services #F3E5F5 {
+    class "                                                                                                                                                                                                                                                                                                  " as Spacer <<Dummy>>
+}
+
+' FORZA IL LAYOUT
+SessionController -[hidden]down-> Spacer
+ComplaintController -[hidden]down-> Spacer
+StatsController -[hidden]down-> Spacer
+
+' --- NUOVA FRECCIA VERSO IL PACCHETTO ---
+' Usiamo esplicitamente -down-> per forzare il pacchetto sotto
+VerificationController -down-> services : uses >
+ModelController -down-> services : uses >
+StatsController -down-> services : uses >
+AuthController -down-> services : uses >
+SessionController -down-> services : uses >
+ComplaintController -down-> services : uses >
+
+@enduml

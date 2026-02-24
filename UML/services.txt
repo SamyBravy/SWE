@@ -1,0 +1,205 @@
+@startuml
+
+' --- A4 PAGE SCALING ---
+scale max 750 width
+scale max 1050 height
+
+' --- IMPOSTAZIONI STILE ---
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam roundcorner 10
+skinparam nodesep 60
+skinparam ranksep 60
+
+skinparam class {
+    BackgroundColor White
+    ArrowColor #333333
+    BorderColor #333333
+}
+
+skinparam interface {
+    BackgroundColor White
+    BorderColor #333333
+}
+
+' =====================================
+' DOMAIN
+' =====================================
+
+package domain #E3F2FD{
+
+    class GpuCluster <<Singleton>> {
+    }
+    
+    interface Observer
+    interface Subject
+
+}
+
+domain.Subject "1" --> "*" domain.Observer
+
+' =====================================
+' BUSINESS
+' =====================================
+
+package business {
+
+    class Timer <<Singleton>> {
+        - {static} instance: Timer
+        - running: boolean
+        - intervalMs: int
+        - cluster: domain.GpuCluster
+        - observers: List<Observer>
+        + {static} getInstance(cluster: domain.GpuCluster): Timer
+        + start(): void
+        + stop(): void
+        + tick(): void
+        + attach(o: Observer): void
+        + notifyObservers(event: Object): void
+    }
+
+}
+
+' =====================================
+' BUSINESS.SERVICES
+' =====================================
+
+package business.services #F3E5F5{
+
+    ' ===== STRATEGY =====
+
+    interface LoadBalancingStrategy {
+        + balanceLoad(cluster: domain.GpuCluster, sessionService: SessionService): void
+    }
+
+    class EcoBalancingStrategy {
+        + balanceLoad(cluster: domain.GpuCluster, sessionService: SessionService): void
+    }
+
+    class EvenLoadBalancingStrategy {
+        + balanceLoad(cluster: domain.GpuCluster, sessionService: SessionService): void
+    }
+
+    class LoadBalancerService {
+        - sessionService: SessionService
+        - cluster: domain.GpuCluster
+        - balancingStrategy: LoadBalancingStrategy
+        + LoadBalancerService(...)
+        + setBalancingStrategy(strategy: LoadBalancingStrategy): void
+        + update(subject: Subject, event: Object): void
+        - onTemperatureAlert(gpu: GPU): void
+        + balanceLoad(): void
+        + registerOnAllGpus(): void
+    }
+
+    ' ===== CORE SERVICES =====
+
+    class AuthService {
+        - userDao: UserDao
+        - nextId: int
+        + AuthService(userDao: UserDao)
+        + login(email: String, pwd: String): User
+        + register(name: String, email: String, pwd: String, role: String): User
+    }
+
+    class ModelService {
+        - modelDao: AiModelDao
+        - nextId: int
+        + ModelService(modelDao: AiModelDao)
+        + publishModel(...): void
+        + getPendingModels(): List<AiModel>
+        + getApprovedModels(): List<AiModel>
+    }
+
+    class SessionService {
+        - sessionDao: SessionDao
+        - cluster: domain.GpuCluster
+        - nextId: int
+        + SessionService(sessionDao: SessionDao, cluster: domain.GpuCluster)
+        + openSession(dev: Developer, model: AiModel): Session
+        + sendPrompt(session: Session, prompt: String): String
+        + closeSession(session: Session): double
+        + detachGpuFromSession(gpu: GPU): void
+        + calculateCost(session: Session, tokens: int): double
+    }
+
+    class VerificationService {
+        - modelDao: AiModelDao
+        - cluster: domain.GpuCluster
+        + VerificationService(modelDao: AiModelDao, cluster: domain.GpuCluster)
+        + loadOnGpu(model: AiModel): GPU
+        + runBenchmarks(model: AiModel, gpu: GPU): Map
+        + runAutomatedEthicsTests(model: AiModel): boolean[]
+        + approveModel(model: AiModel, cost: double): void
+        + rejectModel(model: AiModel, reason: String): void
+    }
+
+    class ComplaintService {
+        - complaintDao: ComplaintDao
+        - nextId: int
+        + ComplaintService(complaintDao: ComplaintDao)
+        + getPendingComplaints(): List<Complaint>
+        + getAllComplaints(): List<Complaint>
+        + findById(id: int): Complaint
+        + acceptComplaint(complaint: Complaint, refundedTokens: int, blockModel: boolean): void
+        + rejectComplaint(complaint: Complaint, reason: String): void
+        + fileComplaint(developer: Developer, model: AiModel, description: String, promptLogs: List<String>): void
+        + findByDeveloper(developerId: int): List<Complaint>
+    }
+
+    class StatsService {
+        - sessionService: SessionService
+        - complaintService: ComplaintService
+        + StatsService(...)
+        + getDeveloperStats(dev: Developer): DeveloperStats
+    }
+
+    class DeveloperStats <<Record>> {
+        + totalSessions: int
+        + activeSessions: int
+        + totalTokens: int
+        + sessions: List<Session>
+        + complaints: List<Complaint>
+        + transactions: List<Transaction>
+    }
+
+    ' ===== RELAZIONI =====
+
+    LoadBalancingStrategy <|.down. EcoBalancingStrategy
+    LoadBalancingStrategy <|.down. EvenLoadBalancingStrategy
+    LoadBalancerService o-up- LoadBalancingStrategy
+
+    LoadBalancerService .up.|> "Observer"
+    LoadBalancerService "1" --> "1" Timer
+    LoadBalancerService --> "1" SessionService : manages >
+
+    LoadBalancerService --> "1" domain.GpuCluster
+    SessionService --> "1" domain.GpuCluster
+    VerificationService --> "1" domain.GpuCluster
+    business.Timer --> "1" domain.GpuCluster
+
+    StatsService --> "1" SessionService : queries >
+    StatsService --> "1" ComplaintService
+    StatsService <-right- DeveloperStats
+    Timer ..|> Subject
+}
+
+' =====================================
+' DAO
+' =====================================
+
+package dao.interfaces #FFF8DC {
+    interface UserDao
+    interface SessionDao
+    interface AiModelDao
+    interface ComplaintDao
+}
+
+AuthService --> "1" UserDao
+SessionService --> "1" SessionDao
+ModelService --> "1" AiModelDao
+VerificationService --> "1" AiModelDao
+ComplaintService --> "1" ComplaintDao
+
+@enduml
