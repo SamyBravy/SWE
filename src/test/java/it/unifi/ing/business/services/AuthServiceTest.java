@@ -19,53 +19,35 @@ class AuthServiceTest {
 	}
 
 	@Test
-	void testRegisterDeveloper() {
-		User user = authService.register("Dev", "dev@test.com", "pass", "developer");
-		assertNotNull(user);
-		assertTrue(user instanceof Developer);
+	void testSuccessfulAuthentication() {
+		User dev = authService.register("Dev", "dev@test.com", "pass", "developer");
+		assertNotNull(dev);
+		assertTrue(dev instanceof Developer);
+
+		User prov = authService.register("Prov", "prov@test.com", "pass", "modelprovider");
+		assertNotNull(prov);
+		assertTrue(prov instanceof ModelProvider);
+
+		User sup = authService.register("Sup", "sup@test.com", "pass", "supervisor");
+		assertNotNull(sup);
+		assertTrue(sup instanceof Supervisor);
+
+		User loggedInUser = authService.login("dev@test.com", "pass");
+		assertNotNull(loggedInUser);
 	}
 
 	@Test
-	void testRegisterModelProvider() {
-		User user = authService.register("Prov", "prov@test.com", "pass", "modelprovider");
-		assertNotNull(user);
-		assertTrue(user instanceof ModelProvider);
-	}
+	void testAuthenticationErrors() {
+		authService.register("ValidUser", "valid@test.com", "pass", "developer");
 
-	@Test
-	void testRegisterSupervisor() {
-		User user = authService.register("Sup", "sup@test.com", "pass", "supervisor");
-		assertNotNull(user);
-		assertTrue(user instanceof Supervisor);
-	}
-
-	@Test
-	void testRegisterDuplicateEmail() {
-		authService.register("Dev1", "dev@test.com", "pass", "developer");
-		User dup = authService.register("Dev2", "dev@test.com", "pass", "developer");
+		User dup = authService.register("Duplicate", "valid@test.com", "pass", "developer");
 		assertNull(dup);
-	}
 
-	@Test
-	void testRegisterInvalidRole() {
-		assertNull(authService.register("X", "x@test.com", "pass", "invalid"));
-	}
+		User invalidRole = authService.register("X", "x@test.com", "pass", "invalid_role");
+		assertNull(invalidRole);
 
-	@Test
-	void testLoginSuccess() {
-		authService.register("Dev", "dev@test.com", "pass", "developer");
-		User user = authService.login("dev@test.com", "pass");
-		assertNotNull(user);
-	}
+		assertNull(authService.login("valid@test.com", "wrong_password"));
 
-	@Test
-	void testLoginWrongPassword() {
-		authService.register("Dev", "dev@test.com", "pass", "developer");
-		assertNull(authService.login("dev@test.com", "wrong"));
-	}
-
-	@Test
-	void testLoginNonExistent() {
 		assertNull(authService.login("nobody@test.com", "pass"));
 	}
 }

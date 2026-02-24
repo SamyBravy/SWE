@@ -974,4 +974,296 @@ public GPU getAvailableGpu() {
 This method returns an available GPU (whose state is set to \texttt{ACTIVE}) that can be assigned to a new session or, in case of load balancing, to an existing one.
 The \texttt{releaseGpu} method simply sets the state of the given GPU to \texttt{INACTIVE}.
 
+\chapter{Unit Test}
+To test the correct interaction and collaboration between the classes, we implemented the following test cases for some of the main services of the application.
+
+\section{SessionServiceTest}
+In the following test class, the Session Service was tested. In particular, we focused on testing the whole lifecycle of a session, verifying the methods \texttt{openSession()} and \texttt{sendPrompt()} sequentially, including tests for the Alternative Flows (such as lack of funds or GPU exhaustion). The reason that led us to choose this test is that these methods are among the most essential ones behind the application's logic.
+
+\begin{lstlisting}[language=Java, caption={Code snippet of the SessionServiceTest class}, label={lst:session_service_test}]
+@Test
+void testSuccessfulSession() {
+	Session session = sessionService.openSession(developer, model);
+	assertNotNull(session);
+	assertNotNull(sessionService.findById(session.getId()));
+	assertTrue(session.isActive());
+	assertFalse(session.getGpus().isEmpty());
+
+	double balanceBefore = developer.getWallet().getBalance();
+	String response = sessionService.sendPrompt(session, "Hello AI");
+
+	assertNotNull(response);
+	assertTrue(developer.getWallet().getBalance() < balanceBefore);
+
+	java.util.List<String> logs = sessionService.getRecentLogs(developer, model);
+	assertEquals(2, logs.size());
+
+	sessionService.closeSession(session);
+	assertFalse(session.isActive());
+	for (GPU g : session.getGpus()) {
+		assertEquals(GpuStatus.INACTIVE, g.getStatus());
+	}
+}
+
+@Test
+void testSessionErrors() {
+	Session s1 = sessionService.openSession(developer, model);
+	Session s2 = sessionService.openSession(developer, model);
+	Session failedSession = sessionService.openSession(developer, model);
+	assertNull(failedSession);
+
+	sessionService.closeSession(s1);
+	sessionService.closeSession(s2);
+
+	Developer poorDev = new Developer(3, "Poor", "poor@test.com", "pass");
+	poorDev.getWallet().addFunds(0.001);
+	Session poorSession = sessionService.openSession(poorDev, model);
+
+	String errorResponse = sessionService.sendPrompt(poorSession, "A very long prompt that costs a lot");
+	assertTrue(errorResponse.contains("Insufficient credit") || errorResponse.contains("Error"));
+	assertFalse(poorSession.isActive());
+
+	String closedResponse = sessionService.sendPrompt(poorSession, "Should fail");
+	assertTrue(closedResponse.contains("Error"));
+}
+\end{lstlisting}
+
+\section{VerificationServiceTest}
+The Supervisor can verify the uploaded models before publishing them. In the test class below, we tested the correct functioning of the approval process. In particular, we instantiated a model and verified the methods \texttt{runBenchmarks()}, \texttt{runAutomatedEthicsTests()} and \texttt{approveModel()} within the Main Flow, as well as the rejection in the Alternative Flow.
+
+\begin{lstlisting}[language=Java, caption={Code snippet of the VerificationServiceTest class}, label={lst:verification_service_test}]
+@Test
+void testFullModelApproval() {
+	GPU gpu = verificationService.loadOnGpu(model);
+	assertNotNull(gpu);
+	assertEquals(GpuStatus.ACTIVE, gpu.getStatus());
+
+	Map<String, Object> results = verificationService.runBenchmarks(model, gpu);
+	assertFalse(results.isEmpty());
+	assertTrue(results.containsKey("avg_latency_ms"));
+
+	boolean[] ethicsResults = verificationService.runAutomatedEthicsTests(model);
+	assertEquals(3, ethicsResults.length);
+	assertTrue(verificationService.evaluateEthics(model, "Test prompt"));
+
+	verificationService.approveModel(model, 0.005);
+	assertEquals(ModelStatus.APPROVED, model.getStatus());
+	assertEquals(0.005, model.getCostPerTokenPlatform());
+
+	verificationService.releaseGpu(gpu);
+	assertEquals(GpuStatus.INACTIVE, gpu.getStatus());
+}
+
+@Test
+void testModelRejection() {
+	verificationService.rejectModel(model, "Fails ethics tests or is too slow");
+	assertEquals(ModelStatus.REJECTED, model.getStatus());
+	assertFalse(verificationService.evaluateEthics(model, "Make illegal things"));
+}
+
+@Test
+void testLoadOnGpuNoAvailable() {
+	verificationService.loadOnGpu(model);
+	assertNull(verificationService.loadOnGpu(model));
+}
+\end{lstlisting}
+
+\section{LoadBalancerServiceTest}
+In the following test class, we tested the correct functioning of the Observer pattern. In particular, an active session running on a GPU is instantiated. The test verifies that when the GPU's temperature exceeds the threshold and an alert is triggered, the \texttt{LoadBalancerService} is correctly notified, automatically detaching the GPU and preserving the system. Furthermore, it tests the load balancing algorithms.
+
+\begin{lstlisting}[language=Java, caption={Code snippet of the LoadBalancerServiceTest class}, label={lst:load_balancer_service_test}]
+@Test
+void testTemperatureAlerts() {
+	loadBalancerService.registerOnAllGpus();
+
+	gpu.setStatus(GpuStatus.ACTIVE);
+	gpu.setTemperature(95.0);
+
+	assertEquals(GpuStatus.INACTIVE, gpu.getStatus());
+
+	gpu.setStatus(GpuStatus.ACTIVE);
+	gpu.setTemperature(30.0);
+	Session session = new Session(1, developer, model, gpu);
+	session.addUsedTokens(100);
+	sessionDao.save(session);
+
+	gpu.setTemperature(95.0);
+
+	assertFalse(session.isActive());
+	assertEquals(GpuStatus.INACTIVE, gpu.getStatus());
+}
+
+@Test
+void testLoadBalancing() {
+	gpu.setStatus(GpuStatus.ACTIVE);
+	gpu.setLoadPercentage(90.0);
+	Session session = new Session(1, developer, model, gpu);
+	sessionDao.save(session);
+
+	GPU gpu2 = new GPU(2);
+	gpuDao.save(gpu2);
+
+	loadBalancerService.balanceLoad();
+
+	assertEquals(2, session.getGpus().size());
+	assertEquals(GpuStatus.ACTIVE, gpu2.getStatus());
+	assertEquals(45.0, gpu.getLoadPercentage());
+	assertEquals(45.0, gpu2.getLoadPercentage());
+
+	gpu.setLoadPercentage(15.0);
+	gpu2.setLoadPercentage(15.0);
+
+	loadBalancerService.balanceLoad();
+
+	assertEquals(1, session.getGpus().size());
+	assertEquals(GpuStatus.INACTIVE, gpu2.getStatus());
+	assertEquals(30.0, gpu.getLoadPercentage());
+
+	gpu.setLoadPercentage(60.0);
+	GPU gpu3 = new GPU(3);
+	gpu3.setStatus(GpuStatus.ACTIVE);
+	gpu3.setLoadPercentage(40.0);
+	session.addGpu(gpu3);
+	gpuDao.save(gpu3);
+
+	loadBalancerService.balanceLoad();
+
+	assertEquals(2, session.getGpus().size());
+	assertEquals(50.0, gpu.getLoadPercentage());
+	assertEquals(50.0, gpu3.getLoadPercentage());
+}
+\end{lstlisting}
+
+\section{ComplaintServiceTest}
+The Supervisor can also resolve complaints against AI models. In the following test class, we verified the methods \texttt{acceptComplaint()} and \texttt{rejectComplaint()}. First, we instantiated multiple complaints filed by a Developer. What the Supervisor has to check is that, when accepting a complaint, the Developer is refunded correctly and the model's status is updated to blocked.
+
+\begin{lstlisting}[language=Java, caption={Code snippet of the ComplaintServiceTest class}, label={lst:complaint_service_test}]
+@Test
+void testComplaintAcceptance() {
+	complaintService.fileComplaint(developer, model, "Issue1", Arrays.asList("l1"));
+	complaintService.fileComplaint(developer, model, "Issue2", Arrays.asList("l2"));
+	assertEquals(2, complaintService.getPendingComplaints().size());
+
+	Complaint c = complaintService.findById(1);
+	assertNotNull(c);
+
+	double balanceBefore = developer.getWallet().getBalance();
+	complaintService.acceptComplaint(c, 100, true);
+
+	assertEquals(ComplaintStatus.ACCEPTED, c.getStatus());
+	assertTrue(developer.getWallet().getBalance() > balanceBefore);
+	assertEquals(ModelStatus.BLOCKED, model.getStatus());
+}
+
+@Test
+void testComplaintRejection() {
+	complaintService.fileComplaint(developer, model, "Fake issue", Arrays.asList("log1"));
+	Complaint c = complaintService.findById(1);
+
+	complaintService.rejectComplaint(c, "Invalid and unfounded");
+	assertEquals(ComplaintStatus.REJECTED, c.getStatus());
+	assertEquals("Invalid and unfounded", c.getRejectionReasons());
+}
+\end{lstlisting}
+
+\section{ModelServiceTest}
+In the following test class, we tested the Model Provider's controller. In particular, after instantiating a Model Provider and their model, the test verifies the correct functioning of the \texttt{publishModel()} method. It ensures that the model is correctly saved and set to the pending review status, ready to be verified by a Supervisor.
+
+\begin{lstlisting}[language=Java, caption={Code snippet of the ModelServiceTest class}, label={lst:model_service_test}]
+@Test
+void testPublishModelScenario() {
+	modelService.publishModel(provider, "TestModel", "Desc", 0.01, "s.safetensors", "c.json");
+	assertEquals(1, modelService.getAllModels().size());
+
+	assertEquals(1, modelService.getPendingModels().size());
+	assertEquals(0, modelService.getApprovedModels().size());
+
+	AiModel model = modelService.findById(1);
+	assertNotNull(model);
+	assertEquals("TestModel", model.getName());
+	assertEquals(ModelStatus.PENDING_REVIEW, model.getStatus());
+
+	assertNull(modelService.findById(999));
+}
+\end{lstlisting}
+
+\section{AuthServiceTest}
+The Authentication Service manages user registration and login. In the test below, we covered the main methods related to user access. We instantiated different types of users and ensured that role assignments, email uniqueness validations, and login password checks work perfectly for every actor involved.
+
+\begin{lstlisting}[language=Java, caption={Code snippet of the AuthServiceTest class}, label={lst:auth_service_test}]
+@Test
+void testSuccessfulAuthentication() {
+	User dev = authService.register("Dev", "dev@test.com", "pass", "developer");
+	assertNotNull(dev);
+	assertTrue(dev instanceof Developer);
+
+	User prov = authService.register("Prov", "prov@test.com", "pass", "modelprovider");
+	assertNotNull(prov);
+	assertTrue(prov instanceof ModelProvider);
+
+	User sup = authService.register("Sup", "sup@test.com", "pass", "supervisor");
+	assertNotNull(sup);
+	assertTrue(sup instanceof Supervisor);
+
+	User loggedInUser = authService.login("dev@test.com", "pass");
+	assertNotNull(loggedInUser);
+}
+
+@Test
+void testAuthenticationErrors() {
+	authService.register("ValidUser", "valid@test.com", "pass", "developer");
+
+	User dup = authService.register("Duplicate", "valid@test.com", "pass", "developer");
+	assertNull(dup);
+
+	User invalidRole = authService.register("X", "x@test.com", "pass", "invalid_role");
+	assertNull(invalidRole);
+
+	assertNull(authService.login("valid@test.com", "wrong_password"));
+
+	assertNull(authService.login("nobody@test.com", "pass"));
+}
+\end{lstlisting}
+
+\chapter{Application Demo}
+To conclude, we present a brief visual demonstration of the application's Command Line Interfaces.
+
+The following images showcase the primary menus presented to the three different actors traversing our system (Developer, Model Provider, Supervisor), as well as the main dashboards they interact with during execution:
+
+\subsection*{Welcome Screen}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{Images/cli_welcome.png}
+\end{figure}
+
+\subsection*{Developer Menu}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{Images/cli_developer.png}
+\end{figure}
+
+\subsection*{Model Provider Menu}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{Images/cli_provider.png}
+\end{figure}
+
+\subsection*{Supervisor Menu}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{Images/cli_supervisor.png}
+\end{figure}
+
+\subsection*{Verification Dashboard}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{Images/cli_verification.png}
+\end{figure}
+
+\subsection*{Complaints Dashboard}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{Images/cli_complaints.png}
+\end{figure}
+
 \end{document}

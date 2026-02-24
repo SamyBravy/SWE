@@ -67,8 +67,12 @@ public class ComplaintController {
 			System.out.println("Logs from last session attached (" + promptLogs.size() + " interactions).");
 		}
 
-		complaintService.fileComplaint(developer, model, description, promptLogs);
-		System.out.println("Complaint filed. Pending review.");
+		try {
+			complaintService.fileComplaint(developer, model, description, promptLogs);
+			System.out.println("Complaint filed. Pending review.");
+		} catch (IllegalArgumentException e) {
+			System.out.println("Error filing complaint: " + e.getMessage());
+		}
 	}
 
 	// ===== SUPERVISOR SIDE =====

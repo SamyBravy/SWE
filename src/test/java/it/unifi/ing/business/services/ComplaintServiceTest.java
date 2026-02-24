@@ -28,42 +28,29 @@ class ComplaintServiceTest {
 	}
 
 	@Test
-	void testSaveAndFindComplaint() {
-		complaintService.fileComplaint(developer, model, "Issue", Arrays.asList("log1"));
-		assertNotNull(complaintService.findById(1));
-	}
-
-	@Test
-	void testAcceptComplaint() {
-		complaintService.fileComplaint(developer, model, "Issue", Arrays.asList("log1"));
-		Complaint c = complaintService.findById(1);
-		double balanceBefore = developer.getWallet().getBalance();
-		complaintService.acceptComplaint(c, 100, false);
-		assertEquals(ComplaintStatus.ACCEPTED, c.getStatus());
-		assertTrue(developer.getWallet().getBalance() > balanceBefore);
-	}
-
-	@Test
-	void testRejectComplaint() {
-		complaintService.fileComplaint(developer, model, "Issue", Arrays.asList("log1"));
-		Complaint c = complaintService.findById(1);
-		complaintService.rejectComplaint(c, "Invalid");
-		assertEquals(ComplaintStatus.REJECTED, c.getStatus());
-		assertEquals("Invalid", c.getRejectionReasons());
-	}
-
-	@Test
-	void testGetPendingComplaints() {
+	void testComplaintAcceptance() {
 		complaintService.fileComplaint(developer, model, "Issue1", Arrays.asList("l1"));
 		complaintService.fileComplaint(developer, model, "Issue2", Arrays.asList("l2"));
 		assertEquals(2, complaintService.getPendingComplaints().size());
+
+		Complaint c = complaintService.findById(1);
+		assertNotNull(c);
+
+		double balanceBefore = developer.getWallet().getBalance();
+		complaintService.acceptComplaint(c, 100, true);
+
+		assertEquals(ComplaintStatus.ACCEPTED, c.getStatus());
+		assertTrue(developer.getWallet().getBalance() > balanceBefore);
+		assertEquals(ModelStatus.BLOCKED, model.getStatus());
 	}
 
 	@Test
-	void testAcceptComplaintWithModelBlock() {
-		complaintService.fileComplaint(developer, model, "Issue", Arrays.asList("log1"));
+	void testComplaintRejection() {
+		complaintService.fileComplaint(developer, model, "Fake issue", Arrays.asList("log1"));
 		Complaint c = complaintService.findById(1);
-		complaintService.acceptComplaint(c, 0, true);
-		assertEquals(ModelStatus.BLOCKED, model.getStatus());
+
+		complaintService.rejectComplaint(c, "Invalid and unfounded");
+		assertEquals(ComplaintStatus.REJECTED, c.getStatus());
+		assertEquals("Invalid and unfounded", c.getRejectionReasons());
 	}
 }

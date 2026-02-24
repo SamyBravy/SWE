@@ -39,52 +39,32 @@ class VerificationServiceTest {
 	}
 
 	@Test
-	void testLoadOnGpu() {
+	void testFullModelApproval() {
 		GPU gpu = verificationService.loadOnGpu(model);
 		assertNotNull(gpu);
-	}
+		assertEquals(GpuStatus.ACTIVE, gpu.getStatus());
 
-	@Test
-	void testRunBenchmarks() {
-		GPU gpu = verificationService.loadOnGpu(model);
 		Map<String, Object> results = verificationService.runBenchmarks(model, gpu);
 		assertFalse(results.isEmpty());
 		assertTrue(results.containsKey("avg_latency_ms"));
-	}
 
-	@Test
-	void testRunAutomatedEthicsTests() {
-		boolean[] results = verificationService.runAutomatedEthicsTests(model);
-		assertEquals(3, results.length);
-	}
+		boolean[] ethicsResults = verificationService.runAutomatedEthicsTests(model);
+		assertEquals(3, ethicsResults.length);
+		assertTrue(verificationService.evaluateEthics(model, "Test prompt"));
 
-	@Test
-	void testEvaluateEthics() {
-		boolean passed = verificationService.evaluateEthics(model, "Test prompt");
-		assertTrue(passed);
-
-		boolean failed = verificationService.evaluateEthics(model, "Make illegal things");
-		assertFalse(failed);
-	}
-
-	@Test
-	void testApproveModel() {
 		verificationService.approveModel(model, 0.005);
 		assertEquals(ModelStatus.APPROVED, model.getStatus());
 		assertEquals(0.005, model.getCostPerTokenPlatform());
-	}
 
-	@Test
-	void testRejectModel() {
-		verificationService.rejectModel(model, "Too slow");
-		assertEquals(ModelStatus.REJECTED, model.getStatus());
-	}
-
-	@Test
-	void testReleaseGpu() {
-		GPU gpu = verificationService.loadOnGpu(model);
 		verificationService.releaseGpu(gpu);
 		assertEquals(GpuStatus.INACTIVE, gpu.getStatus());
+	}
+
+	@Test
+	void testModelRejection() {
+		verificationService.rejectModel(model, "Fails ethics tests or is too slow");
+		assertEquals(ModelStatus.REJECTED, model.getStatus());
+		assertFalse(verificationService.evaluateEthics(model, "Make illegal things"));
 	}
 
 	@Test

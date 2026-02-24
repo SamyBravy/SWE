@@ -40,8 +40,12 @@ public class ModelController {
 		System.out.print("JSON config file path: ");
 		String json = scanner.nextLine().trim();
 
-		modelService.publishModel(provider, name, desc, costPerToken, safetensors, json);
-		System.out.println("Model '" + name + "' published successfully! Pending review.");
+		try {
+			modelService.publishModel(provider, name, desc, costPerToken, safetensors, json);
+			System.out.println("Model '" + name + "' published successfully! Pending review.");
+		} catch (IllegalArgumentException e) {
+			System.out.println("Error publishing model: " + e.getMessage());
+		}
 	}
 
 	public void viewModels() {
