@@ -1,0 +1,47 @@
+\begin{table}[H]
+    \centering
+    \renewcommand{\arraystretch}{1.15}
+    \begin{tabularx}{\textwidth}{|l|>{\raggedright\arraybackslash}X|}
+        \hline
+        \textbf{Field} & \textbf{Content} \\
+        \hline
+        \textbf{Name} & Resolve Complaints \\
+        \hline
+        \textbf{Level} & User Goal \\
+        \hline
+        \textbf{Description} & The supervisor resolves a developer's complaint about a model. If he accepts the complaint, he can refund tokens to the developer or block the model. \\
+        \hline
+        \textbf{Actors} & Supervisor \\
+        \hline
+        \textbf{Pre-conditions} & There is at least one complaint in PENDING\_REVIEW state. \\
+        \hline
+        \textbf{Post-conditions} & The complaint is in ACCEPTED or REJECTED state. \\
+        \hline
+        \textbf{Main Flow} & 
+        \normallist{
+            \item The supervisor accesses the "Complaints" dashboard.
+            \item The supervisor clicks on a complaint to review.
+            \item On the right, the following informations are shown: the name of the developer who made the complaint, the complaint's description and the log of the prompts sent to the model.
+            \item The supervisor chooses one of the following options:
+            \begin{itemize}
+                \item Accept Complaint:
+                \begin{enumerate}[label=\arabic*a., start=5, nosep]
+                    \item The supervisor enters the number of tokens to refund in the "Tokens to refund" text box.
+                    \item (Optional) The supervisor checks the "Block model?" checkbox.
+                    \item The supervisor presses "ACCEPT AND REFUND".
+                \end{enumerate}
+                
+                \item Reject Complaint:
+                \begin{enumerate}[label=\arabic*b., start=5, nosep]
+                    \item The supervisor presses "REJECT COMPLAINT".
+                    \item The system shows the "REASON FOR REJECTION" text box.
+                    \item The supervisor inserts the reason of the rejection.
+                    \item The supervisor presses "SEND".
+                \end{enumerate}
+            \end{itemize}
+        }
+        \vspace{0.1em}
+        \\
+        \hline
+    \end{tabularx}
+\end{table}
