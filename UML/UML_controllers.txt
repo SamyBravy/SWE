@@ -1,0 +1,863 @@
+package it.unifi.ing.controllers;
+
+import it.unifi.ing.business.services.AuthService;
+import it.unifi.ing.domain.User;
+
+import java.util.Scanner;
+
+public class AuthController {
+
+	private final AuthService authService;
+	private final Scanner scanner;
+
+	public AuthController(AuthService authService, Scanner scanner) {
+		this.authService = authService;
+		this.scanner = scanner;
+	}
+
+	public User showMenu() {
+		while (true) {
+			System.out.println("\n╔══════════════════════════════════════╗");
+			System.out.println("║   GPU CLUSTER MANAGEMENT - Welcome   ║");
+			System.out.println("╠══════════════════════════════════════╣");
+			System.out.println("║  1. Login                            ║");
+			System.out.println("║  2. Register                         ║");
+			System.out.println("║  0. Exit                             ║");
+			System.out.println("╚══════════════════════════════════════╝");
+			System.out.print("Choice: ");
+
+			String choice = scanner.nextLine().trim();
+
+			switch (choice) {
+				case "1" -> {
+					User loginUser = handleLogin();
+					if (loginUser != null)
+						return loginUser;
+				}
+				case "2" -> {
+					User regUser = handleRegistration();
+					if (regUser != null)
+						return regUser;
+				}
+				case "0" -> {
+					System.out.println("Goodbye!");
+					System.exit(0);
+				}
+				default -> System.out.println("Invalid choice.");
+			}
+		}
+	}
+
+	private User handleLogin() {
+		System.out.println("\n--- LOGIN ---");
+		System.out.print("Email: ");
+		String email = scanner.nextLine().trim();
+		System.out.print("Password: ");
+		String password = scanner.nextLine().trim();
+
+		User user = authService.login(email, password);
+		if (user != null) {
+			System.out.println("✅ Login successful! Welcome, " + user.getName()
+					+ " (" + user.getRole() + ")");
+			return user;
+		} else {
+			System.out.println("❌ Invalid credentials.");
+			return null;
+		}
+	}
+
+	private User handleRegistration() {
+		System.out.println("\n--- REGISTRATION ---");
+		System.out.print("Name: ");
+		String name = scanner.nextLine().trim();
+		System.out.print("Email: ");
+		String email = scanner.nextLine().trim();
+		System.out.print("Password: ");
+		String password = scanner.nextLine().trim();
+
+		System.out.println("Select role:");
+		System.out.println("  1. Developer");
+		System.out.println("  2. ModelProvider");
+		System.out.println("  3. Supervisor");
+		System.out.print("Choice: ");
+		String roleChoice = scanner.nextLine().trim();
+
+		String role;
+		switch (roleChoice) {
+			case "1":
+				role = "developer";
+				break;
+			case "2":
+				role = "modelprovider";
+				break;
+			case "3":
+				role = "supervisor";
+				break;
+			default:
+				System.out.println("Invalid role.");
+				return null;
+		}
+
+		User user = authService.register(name, email, password, role);
+		if (user != null) {
+			System.out.println("✅ Registration complete! Welcome, " + user.getName()
+					+ " (" + user.getRole() + ")");
+			return user;
+		} else {
+			System.out.println("❌ Email already registered or invalid role.");
+			return null;
+		}
+	}
+}
+package it.unifi.ing.controllers;
+
+import it.unifi.ing.business.services.ComplaintService;
+import it.unifi.ing.business.services.ModelService;
+import it.unifi.ing.business.services.SessionService;
+import it.unifi.ing.domain.AiModel;
+import it.unifi.ing.domain.Complaint;
+import it.unifi.ing.domain.ComplaintStatus;
+import it.unifi.ing.domain.Developer;
+import it.unifi.ing.domain.Supervisor;
+
+import java.util.List;
+import java.util.Scanner;
+
+/**
+ * Controller for complaint operations: filing (Developer) and review (Supervisor).
+ */
+public class ComplaintController {
+
+	private final ComplaintService complaintService;
+	private final ModelService modelService;
+	private final SessionService sessionService;
+	private final Scanner scanner;
+
+	public ComplaintController(ComplaintService complaintService, ModelService modelService,
+			SessionService sessionService, Scanner scanner) {
+		this.complaintService = complaintService;
+		this.modelService = modelService;
+		this.sessionService = sessionService;
+		this.scanner = scanner;
+	}
+
+	// ===== DEVELOPER SIDE =====
+
+	public void fileComplaint(Developer developer) {
+		List<AiModel> models = modelService.getApprovedModels();
+		if (models.isEmpty()) {
+			System.out.println("No models available for complaint.");
+			return;
+		}
+
+		System.out.println("\n--- FILE COMPLAINT ---");
+		for (AiModel m : models) {
+			System.out.println("  ID: " + m.getId() + " | " + m.getName());
+		}
+
+		System.out.print("Model ID: ");
+		int id;
+		try {
+			id = Integer.parseInt(scanner.nextLine().trim());
+		} catch (NumberFormatException e) {
+			System.out.println("Invalid ID.");
+			return;
+		}
+
+		AiModel model = modelService.findById(id);
+		if (model == null) {
+			System.out.println("Model not found.");
+			return;
+		}
+
+		System.out.print("Describe the issue: ");
+		String description = scanner.nextLine().trim();
+
+		List<String> promptLogs = sessionService.getRecentLogs(developer, model);
+		if (!promptLogs.isEmpty()) {
+			System.out.println("Logs from last session attached (" + promptLogs.size() + " interactions).");
+		}
+
+		complaintService.fileComplaint(developer, model, description, promptLogs);
+		System.out.println("Complaint filed. Pending review.");
+	}
+
+	// ===== SUPERVISOR SIDE =====
+
+	public void showReviewDashboard(Supervisor supervisor) {
+		while (true) {
+			System.out.println("\n╔══════════════════════════════════════╗");
+			System.out.println("║   COMPLAINTS DASHBOARD               ║");
+			System.out.println("╠══════════════════════════════════════╣");
+			System.out.println("║  1. Pending complaints               ║");
+			System.out.println("║  2. All complaints                   ║");
+			System.out.println("║  0. Back                             ║");
+			System.out.println("╚══════════════════════════════════════╝");
+			System.out.print("Choice: ");
+
+			String choice = scanner.nextLine().trim();
+
+			switch (choice) {
+				case "1" -> handlePendingComplaints();
+				case "2" -> viewAllComplaints();
+				case "0" -> {
+					return;
+				}
+				default -> System.out.println("Invalid choice.");
+			}
+		}
+	}
+
+	private void handlePendingComplaints() {
+		List<Complaint> pending = complaintService.getPendingComplaints();
+		if (pending.isEmpty()) {
+			System.out.println("No pending complaints.");
+			return;
+		}
+
+		System.out.println("\n--- PENDING COMPLAINTS ---");
+		for (Complaint c : pending) {
+			System.out.println("  ID: " + c.getId() + " | Developer: " + c.getDeveloper().getName()
+					+ " | Model: " + c.getModel().getName());
+		}
+
+		System.out.print("\nSelect complaint ID to review (0 to go back): ");
+		int id;
+		try {
+			id = Integer.parseInt(scanner.nextLine().trim());
+		} catch (NumberFormatException e) {
+			System.out.println("Invalid ID.");
+			return;
+		}
+		if (id == 0)
+			return;
+
+		Complaint complaint = complaintService.findById(id);
+		if (complaint == null || complaint.getStatus() != ComplaintStatus.PENDING_REVIEW) {
+			System.out.println("Complaint not found or already reviewed.");
+			return;
+		}
+
+		reviewComplaint(complaint);
+	}
+
+	private void reviewComplaint(Complaint complaint) {
+		System.out.println("\n=== REVIEWING COMPLAINT #" + complaint.getId() + " ===");
+		System.out.println("  Developer: " + complaint.getDeveloper().getName());
+		System.out.println("  Model: " + complaint.getModel().getName());
+		System.out.println("  Description: " + complaint.getDescription());
+
+		System.out.println("\n  Prompt Log:");
+		for (String log : complaint.getPromptLogs()) {
+			System.out.println("    " + log);
+		}
+
+		System.out.println("\nDecision:");
+		System.out.println("  1. Accept complaint");
+		System.out.println("  2. Reject complaint");
+		System.out.print("Choice: ");
+		String decision = scanner.nextLine().trim();
+
+		if ("1".equals(decision)) {
+			System.out.print("Tokens to refund: ");
+			int refundedTokens;
+			try {
+				refundedTokens = Integer.parseInt(scanner.nextLine().trim());
+			} catch (NumberFormatException e) {
+				System.out.println("Invalid value.");
+				return;
+			}
+
+			System.out.print("Block model? (y/n): ");
+			String blockChoice = scanner.nextLine().trim().toLowerCase();
+			boolean blockModel = "y".equals(blockChoice);
+
+			complaintService.acceptComplaint(complaint, refundedTokens, blockModel);
+			System.out.println("Complaint #" + complaint.getId() + " accepted."
+					+ (refundedTokens > 0 ? " Tokens refunded: " + refundedTokens : ""));
+
+		} else if ("2".equals(decision)) {
+			System.out.print("Rejection reason: ");
+			String reason = scanner.nextLine().trim();
+			complaintService.rejectComplaint(complaint, reason);
+			System.out.println("Complaint #" + complaint.getId() + " rejected.");
+		}
+	}
+
+	private void viewAllComplaints() {
+		List<Complaint> all = complaintService.getAllComplaints();
+		if (all.isEmpty()) {
+			System.out.println("No complaints in the system.");
+			return;
+		}
+		System.out.println("\n--- ALL COMPLAINTS ---");
+		for (Complaint c : all) {
+			System.out.println("  " + c);
+		}
+	}
+}
+
+package it.unifi.ing.controllers;
+
+import it.unifi.ing.business.services.ModelService;
+import it.unifi.ing.domain.AiModel;
+import it.unifi.ing.domain.ModelProvider;
+import it.unifi.ing.domain.ModelStatus;
+
+import java.util.List;
+import java.util.Scanner;
+
+/**
+ * Controller for AI model management (publishing and listing).
+ */
+public class ModelController {
+
+	private final ModelService modelService;
+	private final Scanner scanner;
+
+	public ModelController(ModelService modelService, Scanner scanner) {
+		this.modelService = modelService;
+		this.scanner = scanner;
+	}
+
+	public void publishModel(ModelProvider provider) {
+		System.out.println("\n--- PUBLISH MODEL ---");
+		System.out.print("Model name: ");
+		String name = scanner.nextLine().trim();
+		System.out.print("Description: ");
+		String desc = scanner.nextLine().trim();
+		System.out.print("Cost per token provider (€): ");
+		double costPerToken;
+		try {
+			costPerToken = Double.parseDouble(scanner.nextLine().trim());
+		} catch (NumberFormatException e) {
+			System.out.println("Invalid cost.");
+			return;
+		}
+		System.out.print("Safetensors file path: ");
+		String safetensors = scanner.nextLine().trim();
+		System.out.print("JSON config file path: ");
+		String json = scanner.nextLine().trim();
+
+		modelService.publishModel(provider, name, desc, costPerToken, safetensors, json);
+		System.out.println("Model '" + name + "' published successfully! Pending review.");
+	}
+
+	public void viewModels() {
+		List<AiModel> models = modelService.getAllModels();
+		if (models.isEmpty()) {
+			System.out.println("No models in the system.");
+			return;
+		}
+		System.out.println("\n--- MODEL LIST ---");
+		for (AiModel m : models) {
+			System.out.println("  " + m);
+			if (m.getStatus() == ModelStatus.REJECTED && m.getRejectionReasons() != null) {
+				System.out.println("    Rejection reason: " + m.getRejectionReasons());
+			}
+		}
+	}
+}
+package it.unifi.ing.controllers;
+
+import it.unifi.ing.domain.Developer;
+import it.unifi.ing.domain.ModelProvider;
+import it.unifi.ing.domain.Supervisor;
+import it.unifi.ing.domain.User;
+
+import java.util.Scanner;
+
+/**
+ * Central navigation controller: handles menu routing for all user roles.
+ */
+public class NavigationController {
+
+	private final AuthController authController;
+	private final SessionController sessionController;
+	private final ModelController modelController;
+	private final VerificationController verificationController;
+	private final ComplaintController complaintController;
+	private final WalletController walletController;
+	private final StatsController statsController;
+	private final Scanner scanner;
+
+	public NavigationController(AuthController authController,
+			SessionController sessionController,
+			ModelController modelController,
+			VerificationController verificationController,
+			ComplaintController complaintController,
+			WalletController walletController,
+			StatsController statsController,
+			Scanner scanner) {
+		this.authController = authController;
+		this.sessionController = sessionController;
+		this.modelController = modelController;
+		this.verificationController = verificationController;
+		this.complaintController = complaintController;
+		this.walletController = walletController;
+		this.statsController = statsController;
+		this.scanner = scanner;
+	}
+
+	public void start() {
+		while (true) {
+			User user = authController.showMenu();
+
+			if (user instanceof Developer dev) {
+				showDeveloperMenu(dev);
+			} else if (user instanceof ModelProvider provider) {
+				showModelProviderMenu(provider);
+			} else if (user instanceof Supervisor supervisor) {
+				showSupervisorMenu(supervisor);
+			}
+		}
+	}
+
+	private void showDeveloperMenu(Developer developer) {
+		while (true) {
+			System.out.println("\n╔══════════════════════════════════════╗");
+			System.out.println("║   DEVELOPER MENU                     ║");
+			System.out.println("╠══════════════════════════════════════╣");
+			System.out.println("║  1. Start session (AI Chat)          ║");
+			System.out.println("║  2. Top-up credit                    ║");
+			System.out.println("║  3. Stats                            ║");
+			System.out.println("║  4. File complaint                   ║");
+			System.out.println("║  0. Logout                           ║");
+			System.out.println("╚══════════════════════════════════════╝");
+			System.out.println("  Balance: €" + String.format("%.2f", developer.getWallet().getBalance()));
+			System.out.print("Choice: ");
+
+			String choice = scanner.nextLine().trim();
+
+			switch (choice) {
+				case "1" -> sessionController.startSession(developer);
+				case "2" -> walletController.topUpCredit(developer);
+				case "3" -> statsController.showDeveloperStats(developer);
+				case "4" -> complaintController.fileComplaint(developer);
+				case "0" -> {
+					return;
+				}
+				default -> System.out.println("Invalid choice.");
+			}
+		}
+	}
+
+	private void showModelProviderMenu(ModelProvider provider) {
+		while (true) {
+			System.out.println("\n╔══════════════════════════════════════╗");
+			System.out.println("║   MODEL PROVIDER MENU                ║");
+			System.out.println("╠══════════════════════════════════════╣");
+			System.out.println("║  1. Publish Model                    ║");
+			System.out.println("║  2. My Models                        ║");
+			System.out.println("║  0. Logout                           ║");
+			System.out.println("╚══════════════════════════════════════╝");
+			System.out.print("Choice: ");
+
+			String choice = scanner.nextLine().trim();
+
+			switch (choice) {
+				case "1" -> modelController.publishModel(provider);
+				case "2" -> modelController.viewModels();
+				case "0" -> {
+					return;
+				}
+				default -> System.out.println("Invalid choice.");
+			}
+		}
+	}
+
+	private void showSupervisorMenu(Supervisor supervisor) {
+		while (true) {
+			System.out.println("\n╔══════════════════════════════════════╗");
+			System.out.println("║   SUPERVISOR MENU                    ║");
+			System.out.println("╠══════════════════════════════════════╣");
+			System.out.println("║  1. Verify models                    ║");
+			System.out.println("║  2. Manage complaints                ║");
+			System.out.println("║  0. Logout                           ║");
+			System.out.println("╚══════════════════════════════════════╝");
+			System.out.print("Choice: ");
+
+			String choice = scanner.nextLine().trim();
+
+			switch (choice) {
+				case "1" -> verificationController.showMenu(supervisor);
+				case "2" -> complaintController.showReviewDashboard(supervisor);
+				case "0" -> {
+					return;
+				}
+				default -> System.out.println("Invalid choice.");
+			}
+		}
+	}
+
+}
+package it.unifi.ing.controllers;
+
+import it.unifi.ing.business.services.ModelService;
+import it.unifi.ing.business.services.SessionService;
+import it.unifi.ing.domain.AiModel;
+import it.unifi.ing.domain.Developer;
+import it.unifi.ing.domain.ModelStatus;
+import it.unifi.ing.domain.Session;
+
+import java.util.List;
+import java.util.Scanner;
+
+/**
+ * Controller for AI chat sessions.
+ */
+public class SessionController {
+
+	private final SessionService sessionService;
+	private final ModelService modelService;
+	private final Scanner scanner;
+
+	public SessionController(SessionService sessionService, ModelService modelService, Scanner scanner) {
+		this.sessionService = sessionService;
+		this.modelService = modelService;
+		this.scanner = scanner;
+	}
+
+	public void startSession(Developer developer) {
+		List<AiModel> models = modelService.getApprovedModels();
+		if (models.isEmpty()) {
+			System.out.println("No approved models available.");
+			return;
+		}
+
+		System.out.println("\n--- AVAILABLE MODELS ---");
+		for (AiModel m : models) {
+			System.out.println("  ID: " + m.getId() + " | " + m.getName()
+					+ " | Cost/token: €" + String.format("%.4f", m.getCostPerToken())
+					+ " | Description: " + m.getDescription());
+		}
+
+		System.out.print("\nSelect model ID (0 to go back): ");
+		int id;
+		try {
+			id = Integer.parseInt(scanner.nextLine().trim());
+		} catch (NumberFormatException e) {
+			System.out.println("Invalid ID.");
+			return;
+		}
+		if (id == 0)
+			return;
+
+		AiModel model = modelService.findById(id);
+		if (model == null || model.getStatus() != ModelStatus.APPROVED) {
+			System.out.println("Model not available.");
+			return;
+		}
+
+		Session session = sessionService.openSession(developer, model);
+		if (session == null) {
+			System.out.println("No GPU available. Try again later.");
+			return;
+		}
+
+		System.out.println(
+				"Session started! (ID: " + session.getId() + ", GPUs attached: " + session.getGpus().size() + ")");
+		System.out.println("Type your messages. Type '/exit' to end the session.");
+
+		handleChat(developer, session);
+	}
+
+	private void handleChat(Developer developer, Session session) {
+		while (session.isActive()) {
+			System.out.print("\nYou > ");
+			String prompt = scanner.nextLine().trim();
+
+			if ("/exit".equalsIgnoreCase(prompt)) {
+				double totalCost = sessionService.closeSession(session);
+				System.out.println("\n🔚 Session ended.");
+				System.out.println("   Total tokens used: " + session.getTotalTokensUsed());
+				System.out.println("   Total cost: €" + String.format("%.4f", totalCost));
+				System.out
+						.println("   Remaining balance: €" + String.format("%.2f", developer.getWallet().getBalance()));
+				return;
+			}
+
+			if (prompt.isEmpty()) {
+				continue;
+			}
+
+			String response = sessionService.sendPrompt(session, prompt);
+			System.out.println("AI > " + response);
+		}
+	}
+}
+package it.unifi.ing.controllers;
+
+import it.unifi.ing.business.services.StatsService;
+import it.unifi.ing.domain.Complaint;
+import it.unifi.ing.domain.ComplaintStatus;
+import it.unifi.ing.domain.Developer;
+import it.unifi.ing.domain.Session;
+import it.unifi.ing.domain.Transaction;
+
+/**
+ * Controller responsible for displaying user statistics and reports.
+ */
+public class StatsController {
+
+	private final StatsService statsService;
+
+	public StatsController(StatsService statsService) {
+		this.statsService = statsService;
+	}
+
+	public void showDeveloperStats(Developer developer) {
+		StatsService.DeveloperStats stats = statsService.getDeveloperStats(developer);
+
+		System.out.println("\n╔══════════════════════════════════════╗");
+		System.out.println("║   DEVELOPER STATS                    ║");
+		System.out.println("╚══════════════════════════════════════╝");
+		System.out.println("  Name: " + developer.getName());
+		System.out.println("  Email: " + developer.getEmail());
+		System.out.println("  Balance: €" + String.format("%.2f", developer.getWallet().getBalance()));
+
+		System.out.println("\n Session Stats:");
+		System.out.println("  - Total sessions: " + stats.totalSessions());
+		System.out.println("  - Active sessions: " + stats.activeSessions());
+		System.out.println("  - Total tokens used: " + stats.totalTokens());
+
+		if (!stats.sessions().isEmpty()) {
+			System.out.println("\n  Session History:");
+			for (Session s : stats.sessions()) {
+				System.out.println("    " + s);
+			}
+		}
+
+		if (!stats.complaints().isEmpty()) {
+			System.out.println("\n  Complaints:");
+			for (Complaint c : stats.complaints()) {
+				System.out.println("    #" + c.getId() + " | Model: " + c.getModel().getName()
+						+ " | Status: " + c.getStatus());
+				if (c.getStatus() == ComplaintStatus.REJECTED && c.getRejectionReasons() != null) {
+					System.out.println("      Rejection reason: " + c.getRejectionReasons());
+				}
+			}
+		}
+
+		if (!stats.transactions().isEmpty()) {
+			System.out.println("\n  Transaction History:");
+			for (Transaction t : stats.transactions()) {
+				System.out.println("    " + t);
+			}
+		}
+	}
+}
+
+package it.unifi.ing.controllers;
+
+import it.unifi.ing.business.services.ModelService;
+import it.unifi.ing.business.services.VerificationService;
+import it.unifi.ing.domain.AiModel;
+import it.unifi.ing.domain.GPU;
+import it.unifi.ing.domain.ModelStatus;
+import it.unifi.ing.domain.Supervisor;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Scanner;
+
+/**
+ * Controller for AI model verification by the Supervisor.
+ */
+public class VerificationController {
+
+	private final VerificationService verificationService;
+	private final ModelService modelService;
+	private final ModelController modelController;
+	private final Scanner scanner;
+
+	public VerificationController(VerificationService verificationService,
+			ModelService modelService, ModelController modelController, Scanner scanner) {
+		this.verificationService = verificationService;
+		this.modelService = modelService;
+		this.modelController = modelController;
+		this.scanner = scanner;
+	}
+
+	public void showMenu(Supervisor supervisor) {
+		while (true) {
+			System.out.println("\n╔══════════════════════════════════════╗");
+			System.out.println("║   VERIFICATION DASHBOARD             ║");
+			System.out.println("╠══════════════════════════════════════╣");
+			System.out.println("║  1. Verify pending models            ║");
+			System.out.println("║  2. View all models                  ║");
+			System.out.println("║  3. Unblock models                   ║");
+			System.out.println("║  0. Back                             ║");
+			System.out.println("╚══════════════════════════════════════╝");
+			System.out.print("Choice: ");
+
+			String choice = scanner.nextLine().trim();
+
+			switch (choice) {
+				case "1" -> verifyPendingModels(supervisor);
+				case "2" -> modelController.viewModels();
+				case "3" -> unblockModels(supervisor);
+				case "0" -> {
+					return;
+				}
+				default -> System.out.println("Invalid choice.");
+			}
+		}
+	}
+
+	private void verifyPendingModels(Supervisor supervisor) {
+		List<AiModel> pending = modelService.getPendingModels();
+		if (pending.isEmpty()) {
+			System.out.println("No models pending review.");
+			return;
+		}
+
+		System.out.println("\n--- MODELS PENDING REVIEW ---");
+		for (AiModel m : pending) {
+			System.out.println("  ID: " + m.getId() + " | " + m.getName()
+					+ " | Provider: " + m.getProvider().getName()
+					+ " | Provider cost/token: €" + String.format("%.4f", m.getCostPerTokenProvider())
+					+ " | Description: " + m.getDescription());
+		}
+
+		System.out.print("\nSelect model ID to verify (0 to go back): ");
+		int id;
+		try {
+			id = Integer.parseInt(scanner.nextLine().trim());
+		} catch (NumberFormatException e) {
+			System.out.println("Invalid ID.");
+			return;
+		}
+		if (id == 0)
+			return;
+
+		AiModel model = modelService.findById(id);
+		if (model == null) {
+			System.out.println("Model not found.");
+			return;
+		}
+
+		GPU gpu = verificationService.loadOnGpu(model);
+		if (gpu == null) {
+			System.out.println("No GPU available for verification.");
+			return;
+		}
+		System.out.println("Model loaded on GPU " + gpu.getId());
+
+		Map<String, Object> results = verificationService.runBenchmarks(model, gpu);
+		System.out.println("\n📊 Benchmark Results:");
+		for (Map.Entry<String, Object> entry : results.entrySet()) {
+			System.out.println("  - " + entry.getKey() + ": " + entry.getValue());
+		}
+
+		System.out.println("\n🧪 Automated Ethics Tests:");
+		boolean[] ethicsResults = verificationService.runAutomatedEthicsTests(model);
+		for (int i = 0; i < ethicsResults.length; i++) {
+			System.out.println("  - Test " + (i + 1) + ": " + (ethicsResults[i] ? "✅ PASSED" : "❌ FAILED"));
+		}
+
+		System.out.println("\n🧪 Manual Ethics Test:");
+		System.out.print("Enter test prompt (or press enter to skip): ");
+		String testPrompt = scanner.nextLine().trim();
+		if (!testPrompt.isEmpty()) {
+			String response = model.generateResponse(testPrompt);
+			System.out.println("  Response: " + response);
+		}
+
+		System.out.println("\nDecision:");
+		System.out.println("  1. Approve");
+		System.out.println("  2. Reject");
+		System.out.print("Choice: ");
+		String decision = scanner.nextLine().trim();
+
+		if ("1".equals(decision)) {
+			System.out.print("Platform cost per token (€): ");
+			try {
+				double platformCost = Double.parseDouble(scanner.nextLine().trim());
+				verificationService.approveModel(model, platformCost);
+				System.out.println("Model '" + model.getName() + "' approved! Total cost/token: €"
+						+ String.format("%.4f", model.getCostPerToken()));
+			} catch (NumberFormatException e) {
+				System.out.println("Invalid cost.");
+			}
+		} else if ("2".equals(decision)) {
+			System.out.print("Rejection reason: ");
+			String reason = scanner.nextLine().trim();
+			verificationService.rejectModel(model, reason);
+			System.out.println("Model '" + model.getName() + "' rejected.");
+		}
+
+		verificationService.releaseGpu(gpu);
+	}
+
+	private void unblockModels(Supervisor supervisor) {
+		List<AiModel> blocked = modelService.getBlockedModels();
+		if (blocked.isEmpty()) {
+			System.out.println("No blocked models.");
+			return;
+		}
+
+		System.out.println("\n--- BLOCKED MODELS ---");
+		for (AiModel m : blocked) {
+			System.out.println("  ID: " + m.getId() + " | " + m.getName()
+					+ " | Provider: " + m.getProvider().getName());
+		}
+
+		System.out.print("\nSelect model ID to unblock (0 to go back): ");
+		int id;
+		try {
+			id = Integer.parseInt(scanner.nextLine().trim());
+		} catch (NumberFormatException e) {
+			System.out.println("Invalid ID.");
+			return;
+		}
+		if (id == 0)
+			return;
+
+		AiModel model = modelService.findById(id);
+		if (model == null || model.getStatus() != ModelStatus.BLOCKED) {
+			System.out.println("Model not found or not blocked.");
+			return;
+		}
+
+		verificationService.unblockModel(model);
+		System.out.println("Model '" + model.getName() + "' successfully unblocked and approved.");
+	}
+
+}
+package it.unifi.ing.controllers;
+
+import it.unifi.ing.domain.Developer;
+
+import java.util.Scanner;
+
+/**
+ * Controller for wallet/credit operations.
+ */
+public class WalletController {
+
+	private final Scanner scanner;
+
+	public WalletController(Scanner scanner) {
+		this.scanner = scanner;
+	}
+
+	public void topUpCredit(Developer developer) {
+		System.out.println("\n--- TOP-UP CREDIT ---");
+		System.out.println("Current balance: €" + String.format("%.2f", developer.getWallet().getBalance()));
+		System.out.print("Amount to add (€): ");
+
+		try {
+			double amount = Double.parseDouble(scanner.nextLine().trim());
+			if (amount <= 0) {
+				System.out.println("Amount must be positive.");
+				return;
+			}
+			developer.getWallet().addFunds(amount);
+			System.out.println("Top-up of €" + String.format("%.2f", amount) + " successful!");
+			System.out.println("   New balance: €" + String.format("%.2f", developer.getWallet().getBalance()));
+		} catch (NumberFormatException e) {
+			System.out.println("Invalid amount.");
+		}
+	}
+}
