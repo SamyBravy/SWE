@@ -8,16 +8,17 @@
 \usepackage{indentfirst} 
 \usepackage{titlesec}
 \usepackage{subfig}
+\usepackage{booktabs}
+
+\usepackage[backend=biber]{biblatex}
+\addbibresource{bibliography.bib}
+\defbibheading{paper}{\section*{Printed Books and Manuals}} 
+\defbibheading{web}{\section*{Websites and Online Docs}}    
 
 \usepackage{quoting} %v.p. 62
 \quotingsetup{font = small}
 
 % \usepackage[autostyle,italian=quotes]{csquotes}
-\usepackage[backend=biber]{biblatex}
-\addbibresource{bibliography.bib}
-\defbibheading{cartaceo}{\subsection*{Printed Manuals}}
-\defbibheading{web}{\subsection*{Consulted Websites}}
-
 \usepackage[autostyle]{csquotes}
 
 \usepackage{graphicx}
@@ -1265,5 +1266,10 @@ The following images showcase the primary menus presented to the three different
     \centering
     \includegraphics[width=0.75\textwidth]{Images/cli_complaints.png}
 \end{figure}
+
+\chapter*{\refname}
+\nocite{*}
+\printbibliography[heading=paper, nottype=online]
+\printbibliography[heading=web, type=online]
 
 \end{document}
