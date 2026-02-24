@@ -1,0 +1,54 @@
+\begin{table}[H]
+    \centering
+    \renewcommand{\arraystretch}{1.25}
+    \begin{tabularx}{\textwidth}{|l|>{\raggedright\arraybackslash}X|}
+        \hline
+        \textbf{Field} & \textbf{Content} \\
+        \hline
+        \textbf{Name} & Send Prompt \\
+        \hline
+        \textbf{Level} & User Goal \\
+        \hline
+        \textbf{Description} & The developer sends one or more prompts to a model, from which he receives one or more answers as output. \\
+        \hline
+        \textbf{Actors} & Developer\\
+        \hline
+        \textbf{Pre-conditions} & 
+        \begin{itemize}[leftmargin=*, nosep, before=\vspace{-0.6\baselineskip}]
+            \item There is at least one model in PUBLISHED state.
+            \item The developer has selected a model in the "Explore Models" page.
+        \end{itemize} \\
+        \hline
+        \textbf{Post-conditions} & The opened session has been closed. \\
+        \hline
+        \textbf{Main Flow} & 
+        \normallist{
+            \item The developer presses "START SESSION" from the model selection page.
+            \item The system loads the model on a GPU of the GPU cluster.
+            \item The system shows the "Active Chat Session" page.
+            \item As long as the developer wants to send prompts:
+            \begin{enumerate}[label=\arabic*., nosep]
+                \item The developer enters the prompt he wants to send in the "Ask something..." text box.
+                \item The developer presses the "SEND" button.
+                \item The cost of the prompt is instantly charged to the developer's balance.
+                \item The answer of the model is shown in the chat.
+            \end{enumerate}
+            \item The developer presses "CLOSE SESSION".
+            \item The system frees the used GPU.
+        }
+        \\
+        \hline
+        \textbf{Alternative Flows} & 
+        \altblock{2.}{GPUs unavailable:}{
+            \item If there is no free GPU in the GPU cluster, the system signals an error.
+            \item The developer sees the message "There are too many requests at the moment, try again later".
+        }
+
+        \altblock{5.}{Insufficient balance for prompt:}{
+            \item If the developer's balance is lower than the cost of the prompt, the system shows an insufficient balance error.
+            \item The system automatically closes the session.
+        }
+        \\
+        \hline
+    \end{tabularx}
+\end{table}
