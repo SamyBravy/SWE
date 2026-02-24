@@ -3,6 +3,7 @@
 \usepackage[utf8]{inputenc} % lettere accentate da tastiera
 \usepackage[english]{babel, varioref} % lingua del documento
 \usepackage{geometry} %per impostare le proporzioni di pagina
+\usepackage{pdflscape}
 
 \usepackage{indentfirst} 
 \usepackage{titlesec}
@@ -191,10 +192,67 @@
     \end{figure}
     \vfill
     
-    \clearpage
+    \begin{landscape}
+    	\vspace*{-4cm}
+    	\section{Class Diagram}
+    	The system architecture is designed following a layered approach to ensure high cohesion and low coupling. The following sections detail the domain entities, the persistence layer, the business logic, and the interaction controllers.
+    	
+    	\subsection{Domain Model}
+    	The Domain Layer defines the core entities and their relationships. A more detailed description of the implemented classes is provided in Section~\ref{sec:DomainModel}.
+    	\bigskip
+    	
+    	\begin{figure}[H]
+    		\centering
+    		\includegraphics[width=1.25\textwidth,height=1.25\textheight,keepaspectratio]{Images/UML/domain.pdf}
+    		\caption{Domain package class diagram}
+    		\label{fig:DomainModel}
+    	\end{figure}
+    	
+    	\subsection{Business Logic Layer (Services)}
+    	The Service Layer encapsulates the application's core business logic and orchestrates the flow of data across components. A more detailed description of the implemented classes and their interrelationships is provided in Section~\ref{sec:BusinessLogic}.
+    	\bigskip
+    	\bigskip
+    	
+    	\begin{figure}[H]
+    		\centering
+    		\includegraphics[width=1.8\textwidth,height=1.8\textheight,keepaspectratio]{Images/UML/services.pdf}
+    		\caption{Service package class diagram}
+    		\label{fig:services}
+    	\end{figure}
+    	\clearpage
+    	
+    	\subsection{Data Access Layer (DAO)}
+    	The Persistence Layer abstracts the data storage mechanism using an interface-driven design.
+    	\bigskip
+    	\bigskip
+    	
+    	\begin{figure}[H]
+    		\centering
+    		\includegraphics[width=1.6\textwidth,height=1.6\textheight,keepaspectratio]{Images/UML/dao.pdf}
+    		\caption{Dao package class diagram}
+    		\label{fig:dao}
+    	\end{figure}
+    	\clearpage
+    	
+    	\subsection{Controller Layer}
+    	The Controller Layer manages user interaction and delegates requests to the underlying services.
+    	\bigskip
+    	\bigskip
+    	
+    	\begin{figure}[H]
+    		\centering
+    		\includegraphics[width=1.8\textwidth,height=1.6\textheight,keepaspectratio]{Images/UML/controller.pdf}
+    		\caption{Controllers package class diagram}
+    		\label{fig:controller}
+    	\end{figure}
+    	
+    \end{landscape}
+    
+
     \chapter{Implementations}
     In this section we illustrate the implementation of the most important methods in our project, providing a detailed description of every layer.
     \section{Business Logic}
+    \label{sec:BusinessLogic}
     The classes in this layer are responsible for implementing the logic of the system, regardless of the interface and how the data is stored.
     \subsection{Auth Service}
     This class handles the login and the registration of users. 
@@ -648,6 +706,7 @@ public void tick() {
 This method calls the \texttt{simulateTick} method on all GPUs to simulate the passage of time (which affects the GPU's load and temperature).
 It also notifies the \texttt{LoadBalancerService} observer, to trigger the load balancing.
 \section{Domain Model}
+\label{sec:DomainModel}
 The domain model contains the classes that define the entities involved in the system and their relationships.
 \subsection{User}
 The \texttt{User} class is an abstract class that represents a user of the platform. It's worth noticing 
