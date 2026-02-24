@@ -1,0 +1,1030 @@
+Software Testing Principles and Java Testing Tools
+Software Engineering Course
+
+Leonardo Scommegna
+leonardo.scommegna@unifi.it
+Università degli Studi di Firenze
+Software Technologies Lab
+
+Leonardo Scommegna
+
+SW Testing
+
+1 / 37
+
+Outline
+
+1
+
+Introduction
+
+2
+
+xUnit/JUnit
+
+3
+
+Object Oriented Testing
+Tests Granularity
+A Structural Example: Unit Tests
+A Functional example: Generating Test Cases From Use Cases
+
+Leonardo Scommegna
+
+SW Testing
+
+2 / 37
+
+Introduction
+
+Introduction
+
+Leonardo Scommegna
+
+SW Testing
+
+3 / 37
+
+Introduction
+
+Software Testing Definition
+“The process of analyzing a software item to detect the differences between
+actual and required conditions (that is, defects) and to evaluate the software
+item features”1
+Verification Method aimed at identifying defects of a System Under Test
+(SUT) through its execution and comparing the actual behavior with the
+expected
+An individual instance of test is also called test case
+As opposed to static inspection, it is a dynamic approach that requires the
+execution of the source code
+“Testing can prove the presence of defects, but not their absence”
+(E.Dijkstra, “Notes On Structured Programming,” 1970)
+
+1 ANSI/IEEE 1059 standard
+Leonardo Scommegna
+
+SW Testing
+
+4 / 37
+
+Introduction
+
+Software Testing Purposes
+
+Defect detection: ensures that the code does what is expected at different
+level of abstraction (e.g., state testing, behavioral testing)
+Software regression: supports the process of SUT extension or refactoring
+Automation: running all the tests of an application may take some time
+(hours for big and real life applications), automating this process allows to
+delegate the execution to a server (continuous integration)
+Executable documentation: readable tests act as documentation providing
+executable example of the application, in addition, some tests will fail when
+the application will be changed, forcing the developer to fix and keep the
+suite up to date.
+
+Leonardo Scommegna
+
+SW Testing
+
+5 / 37
+
+Introduction
+
+Software Testing in Development Process
+Feasibility study
+Prototyping
+
+Iteration n- th
+
+Analysis
+Design
+
+Requirements
+analysis
+
+Coding
+Testing
+
+Customer
+evaluation
+
+Design
+
+Review and
+refine
+
+Customer
+approval
+
+Deployment
+Maintenance
+
+Release
+
+Test
+
+Develop
+
+Prototyping
+model
+
+Incremental model
+
+S crum
+Feasibility study
+Analysis
+
+S piral
+model
+
+UNIT/COMPONENT/MODULE
+
+S YS TEM
+
+VERIFICATION/DEVELOPMENT
+Requirements
+Analysis
+S ystem Design
+Architecture
+Design
+Module Design
+
+VALIDATION/TES TING
+
+Acceptance
+Test Design
+
+Acceptance
+testing
+
+S ystem Test
+Design
+
+S ystem
+testing
+
+Integration
+Test Design
+
+Integration
+testing
+
+Unit Test
+Design
+
+Unit
+testing
+
+Design
+Coding
+Testing
+Deployment
+
+Coding
+
+Maintenance
+
+V- model
+
+Waterfall model
+
+XP
+
+Leonardo Scommegna
+
+SW Testing
+
+6 / 37
+
+xUnit/JUnit
+
+xUnit/JUnit
+
+Leonardo Scommegna
+
+SW Testing
+
+7 / 37
+
+xUnit/JUnit
+
+xUnit/JUnit
+xUnit:
+Collective name for several testing frameworks with similar structure and
+functionalities
+Many xUnit frameworks exist for various programming languages and
+development platforms
+
+JUnit:
+Main Testing Framework for Java
+Member of the xUnit family with whom it shares the structure and various
+components
+The “Unit” in “JUnit” is misleading: is not only for unit testing2
+There are two major version: JUnit 4 and Junit 5, only Junit 4 is covered here
+since it is more documented
+
+This is not about simply learning testing with Java but learn xUnit workflow
+so that you can also test with other languages
+2 More on unit testing later
+Leonardo Scommegna
+
+SW Testing
+
+8 / 37
+
+xUnit/JUnit
+
+Generic Structure of a Test
+Setup:
+Create the environment for the test to be executed
+Instantiate the state of the SUT before any testing activities
+This set of preconditions is called Test Fixture
+a set of test cases sharing the same fixture is a Test Suite
+
+Exercise:
+The test case is executed by the test runner of xUnit/JUnit
+
+Verify:
+verify if the outcome matches the expected behavior of the SUT e.g., checking
+the outcome of a method or the final state of the SUT
+
+Teardown:
+Clean up the environment bringing it back to the initial state e.g., if a file is
+modified during the exercise phase, it should be restored afterward
+
+Test cases should be independent of each other: a test case
+should not rely on side effects of another test case
+Leonardo Scommegna
+
+SW Testing
+
+9 / 37
+
+xUnit/JUnit
+
+Structure of a Test in JUnit
+
+A test suite is represented by a Java class
+
+TestClass
+someAttributes
+
+Methods of the class identify:
+
++@BeforeClass beforeAll() : void
++@Before setUp() : void
++@Test method1Test1() : void
++@Test method1Test2() : void
+…
++@Test method2Test1() : void
+…
++@After tearDown() : void
++@AfterClass afterAll() : void
+
+Setup process
+Test cases
+
+ClassUnderTest
+someAttributes
+
+1..* +method1()
++method2()
+
+Teardown process
+
+Leonardo Scommegna
+
+SW Testing
+
+10 / 37
+
+xUnit/JUnit
+
+Test Case in JUnit
+
+1
+
+Represented by a public void method
+annotated with @Test
+(from org.junit.Test)
+
+public class Ex am pl eT es tS ui te {
+
+2
+3
+4
+5
+6
+
+@Test
+public void aTest () {
+...
+}
+
+7
+
+The JUnit runner will execute all the tests 8
+9
+with no specific order
+10
+11
+
+Leonardo Scommegna
+
+SW Testing
+
+@Test
+public void anotherTest () {
+...
+}
+
+11 / 37
+
+xUnit/JUnit
+
+Test Method in JUnit
+
+Should implement both the Exercise and
+the Verify step
+Junit provide a bunch of static methods to
+simplify the Verify step, e.g.:
+AssertEquals(expected, actual)
+AssertTrue(boolean condition)
+
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+
+@Test
+public void aTest () {
+// exercise
+...
+sut . ma keSideEf fect () ;
+...
+// verify
+assertEquals (5 , sut . getItem () ) ;
+}
+
+AssertNull(expression)
+
+Leonardo Scommegna
+
+SW Testing
+
+12 / 37
+
+xUnit/JUnit
+
+Setup and Teardown Phases in JUnit
+
+Methods annotation for Setup phase:
+@BeforeClass: the method is executed
+only once and before any other method
+@Before: the method is executed before
+each individual test method
+
+@BeforeClass
+
+@Before
+
+@Test
+
+@After
+
+Methods annotation for Teardown phase:
+@AfterClass: the method is executed
+only once and after any other method
+
+@AfterClass
+
+@After: the method is executed after each
+individual test method
+
+Leonardo Scommegna
+
+SW Testing
+
+13 / 37
+
+xUnit/JUnit
+
+Execution Results
+
+xUnit/JUnit follow the “all or nothing” policy:
+a test case success occurs if and only if the execution completes successfully
+with all assertions satisfied
+a test suite success occurs if and only if all test cases complete successfully
+
+Leonardo Scommegna
+
+SW Testing
+
+14 / 37
+
+Object Oriented Testing
+
+Object Oriented Testing
+
+Leonardo Scommegna
+
+SW Testing
+
+15 / 37
+
+Object Oriented Testing
+
+Tests Granularity
+
+Software Testing Granularity
+
+Leonardo Scommegna
+
+Client needs
+
+Acceptance
+Testing
+
+Requirements
+
+S ystem
+Testing
+
+Designs
+
+Integration
+Testing
+
+Coding
+
+Unit
+Testing
+
+SW Testing
+
+S oftware Testing Levels
+
+S oftware Development Process
+
+Testing is conducted at different stages of the software development process
+at different levels of granularity
+
+16 / 37
+
+Object Oriented Testing
+
+Tests Granularity
+
+Software Testing Granularity
+
+Unit Testing: individual functionalities of each unit of software (i.e., classes
+and methods) are tested in isolation
+Integration Testing: single units are combined together to verify whether
+they still work as expected
+End-to-End (E2E) Testing: the whole application is tested: verifying that
+all components interact correctly. Often called also System testing
+Acceptance Testing: the system is tested by users and customers to assess
+whether it is acceptable for delivery
+
+Leonardo Scommegna
+
+SW Testing
+
+17 / 37
+
+Object Oriented Testing
+
+Tests Granularity
+
+Unit Testing
+White Box
+Input
+
+Output
+
+Tests are executed in a White-Box Perspective
+A unit test is usually fast to execute and it is responsible to verify the
+behavior of an individual software unit (i.e., a class) in isolation
+Tests are based on the deep and detailed knowledge of the internal logic of
+a component’s code
+A proper unit testing process requires the support of other techniques:
+Mocking: with Mockito Framework for Java
+Code Coverage: with JaCoCo Library for Java
+Mutation Testing: with PIT Framework for Java
+
+Leonardo Scommegna
+
+SW Testing
+
+18 / 37
+
+Object Oriented Testing
+
+Tests Granularity
+
+E2E Testing
+Black box
+Input
+
+Output
+
+Tests are executed in a Black-Box Perspective
+An E2E test is usually slow to execute and it is responsible to verify the
+behavior of whole application relying on the specification
+Tests interact only with the external interface of the application (the user
+interface) ignoring low level details
+A proper E2E testing process requires the support of a user interaction
+simulator:
+AssertJ Swing for Java SE application
+Selenium Web Driver for Java Web Application
+
+Leonardo Scommegna
+
+SW Testing
+
+19 / 37
+
+Object Oriented Testing
+
+Tests Granularity
+
+Integration Testing
+Gray Box
+Input
+
+Output
+
+Tests are executed in a Gray-Box Perspective
+An integration test is usually slower than a unit test but faster than a E2E
+test
+It is responsible to verify the integration between two or more software units
+Integration tests interact with the class interfaces relying on internal details
+but not as much as unit tests
+This testing process could require to mock some components in order to
+isolate the units under test
+
+Leonardo Scommegna
+
+SW Testing
+
+20 / 37
+
+Object Oriented Testing
+
+Tests Granularity
+
+The Test Pyramid
+Slow
+
+Integration
+
+End2End
+
+Integration Test
+
+Unit Test
+
+Fast
+
+Isolation
+Test Quantity
+
+Leonardo Scommegna
+
+SW Testing
+
+21 / 37
+
+Object Oriented Testing
+
+Tests Granularity
+
+The Test Pyramid
+
+Slow
+
+Unit Tests should test all the important
+code i.e., POJO classes and getters/setters
+can be ignored
+
+Integration
+
+End2End
+
+Integration Test
+
+Integration Tests should test the core
+collaborations between components
+e2e Tests should only test some important
+scenarios
+
+Leonardo Scommegna
+
+SW Testing
+
+Unit Test
+
+Fast
+
+Isolation
+Test Quantity
+
+22 / 37
+
+Object Oriented Testing
+
+Tests Granularity
+
+Testing Process Activities
+Input Generation
+Test Case
+S election
+Test E xecution
+Criterion
+not
+S atisfied
+
+Debugging
+
+Oracle Verdict
+
+Fail
+
+S uccess
+
+Coverage
+Analysis
+Criterion
+S atisfied
+
+Leonardo Scommegna
+
+SW Testing
+
+23 / 37
+
+Object Oriented Testing
+
+Tests Granularity
+
+Testing Process Activities 1/2
+
+Test case selection: define a suite of tests
+able to detect possible Faults
+(more on this later)
+Input Generation: identify inputs that let
+the system run along a test case. It is a kind
+of undecidable problem that could also
+address unfeasibilty issues
+Test Execution: drive the execution of the
+test suite
+
+Leonardo Scommegna
+
+SW Testing
+
+Input Generation
+Test Case
+S election
+Test E xecution
+Criterion
+not
+S atisfied
+
+Debugging
+
+Oracle Verdict
+
+Fail
+
+S uccess
+
+Coverage
+Analysis
+Criterion
+S atisfied
+
+24 / 37
+
+Object Oriented Testing
+
+Tests Granularity
+
+Testing Process Activities 2/2
+
+Oracle Verdict: decides whether the SUT
+passes a test, i.e., test results comply with
+functional requirements. It is the most hard
+part to automate
+Debugging: trace back observed functional
+failures to structural faults
+Coverage Analysis: evaluate how test
+results cover the space of SUT behaviors
+(more on this later)
+
+Leonardo Scommegna
+
+SW Testing
+
+Input Generation
+Test Case
+S election
+Test E xecution
+Criterion
+not
+S atisfied
+
+Debugging
+
+Oracle Verdict
+
+Fail
+
+S uccess
+
+Coverage
+Analysis
+Criterion
+S atisfied
+
+25 / 37
+
+Object Oriented Testing
+
+Tests Granularity
+
+How Testing Activities infer Test Cases Granularity
+Granularity Dependent
+
+Fixed
+
+Input Generation
+
+The process to obtain a test case of any
+perspective remains unchanged
+The combination of the test case selection
+and the coverage analysis phases
+determines the level of granularity of the
+test case
+
+Test Case
+S election
+Test E xecution
+Criterion
+not
+S atisfied
+
+Debugging
+
+Oracle Verdict
+
+Fail
+
+S uccess
+
+Coverage
+Analysis
+Criterion
+S atisfied
+
+Leonardo Scommegna
+
+SW Testing
+
+26 / 37
+
+Object Oriented Testing
+
+Tests Granularity
+
+Test Case Selection and Coverage Analysis
+
+Test Case Selection:
+Identify a suite of tests able to detect possible faults
+Relies on an abstraction of the SUT
+
+Coverage Analysis:
+evaluate how test results cover the space of SUT behaviors
+Relies on a coverage criterion measured on an abstraction of the SUT
+Provides a degree of confidence on the absence of defects in the SUT
+
+Both procedures are based on abstraction properly: test case selection
+operates a-priori while coverage analysis operates a-posteriori
+
+Leonardo Scommegna
+
+SW Testing
+
+27 / 37
+
+Object Oriented Testing
+
+Tests Granularity
+
+Abstraction and Coverage Criterion
+
+Abstraction and coverage criterion depend
+on a Fault Model
+A Fault Model is made up of types of
+faults in the SUT that are being fought
+Fault model depends on SUT structural
+and functional characteristics
+
+Leonardo Scommegna
+
+SW Testing
+
+28 / 37
+
+Object Oriented Testing
+
+Tests Granularity
+
+Abstraction and Perspectives
+
+Abstractions can take different perspectives:
+Functional (black box) refers to the SUT specification (e.g. use case
+diagrams, conceptual class diag., . . . )
+Structural (white box) refers to the SUT implementation (e.g. class diag,
+source or binary code, . . . )
+Architectural (grey box) refers to SUT architecture
+(e.g. architectural design, . . . )
+
+Test case selection and coverage analysis can operate on different
+abstractions mixing perspectives:
+e.g., select test cases from use cases, and then evaluate coverage on the code
+
+Leonardo Scommegna
+
+SW Testing
+
+29 / 37
+
+Object Oriented Testing
+
+Tests Granularity
+
+Relation between Test Pyramid and Abstraction
+
+Abstraction of different perspectives infer a specific granularity:
+Structural abstractions will generate fine-grained tests (e.g., unit tests)
+Functional and architectural abstractions will generate more integrated tests
+(e.g., integration tests or e2e tests)
+Mixing perspectives (e.g., functional test case selection with archituctural
+coverage analysis) will generate gray box tests
+
+Usually the more coarse the abstraction is, the fewer tests will be required
+to satisfy the coverage criterion
+To test the entire application the testing process should be repeated at
+different level
+Note that this implicitly recreates the ratios suggested in the test pyramid
+
+Leonardo Scommegna
+
+SW Testing
+
+30 / 37
+
+Object Oriented Testing
+
+A Structural Example: Unit Tests
+
+Testing Methodology for Unit Testing
+
+Unit testing analyses each component in isolation:
+Abstraction: the source code of the component
+Coverage Criterion: code coverage
+
+Tests will be selected in order to achieve a coverage target:
+Usually 100% of the whole source code are required
+(also 80% is a popular target)
+POJO classes and getters/setters are excluded from coverage
+
+Leonardo Scommegna
+
+SW Testing
+
+31 / 37
+
+Object Oriented Testing
+
+A Structural Example: Unit Tests
+
+More on Code Coverage
+
+Measures how many lines of code are executed in a test suite
+Gives an idea of how many parts of the code are tested
+Usually complemented by mutation testing to further strengthen
+test case selection
+An high percentage of code coverage lowers the probability of containing
+an undetected sw defects in the code
+The code coverage standard tool in Java is JaCoCo (Java Code Coverage)
+Well integrated in most popular IDEs (e.g., Eclipse, IntelliJ, NetBeans)
+
+Leonardo Scommegna
+
+SW Testing
+
+32 / 37
+
+Object Oriented Testing
+
+A Functional example: Generating Test Cases From Use Cases
+
+Use Case Diagrams
+
+Visually represent use cases
+Main characters:
+actors
+use cases
+
+Different level of abstraction
+(we focuses on user goal level)
+Provide the “big picture” of functionalities
+
+Leonardo Scommegna
+
+SW Testing
+
+33 / 37
+
+Object Oriented Testing
+
+A Functional example: Generating Test Cases From Use Cases
+
+Use Case Templates
+
+Each use case also requires an adequate
+textual documentation
+Usually formatted in the so called: use case
+templates
+The core part is the flow description:
+Normal flow
+Alternative flows
+
+Leonardo Scommegna
+
+SW Testing
+
+34 / 37
+
+Object Oriented Testing
+
+A Functional example: Generating Test Cases From Use Cases
+
+Use Case Flows
+
+Basic and Alternative flows can be
+represented as edges of a graph
+Alternative flows can return to the basic
+flow of events
+. . . Can also terminate the use case
+
+Leonardo Scommegna
+
+SW Testing
+
+35 / 37
+
+Object Oriented Testing
+
+A Functional example: Generating Test Cases From Use Cases
+
+Use Case Abstraction
+
+The obtained graph can be used as
+functional abstraction
+On top of that, different coveraga criteria
+could be required
+a test case is represented by a use case
+scenario
+
+Leonardo Scommegna
+
+SW Testing
+
+36 / 37
+
+Object Oriented Testing
+
+A Functional example: Generating Test Cases From Use Cases
+
+References
+
+Martin Fowler’s Website
+Slides on Testing by Prof. E. Vicario
+Slides on JUnit by F. Patara, PhD
+
+Leonardo Scommegna
+
+SW Testing
+
+37 / 37
+
+

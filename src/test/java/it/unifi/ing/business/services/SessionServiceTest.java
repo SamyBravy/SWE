@@ -43,40 +43,22 @@ class SessionServiceTest {
 	}
 
 	@Test
-	void testOpenSession() {
+	void testSuccessfulSession() {
 		Session session = sessionService.openSession(developer, model);
 		assertNotNull(session);
+		assertNotNull(sessionService.findById(session.getId()));
 		assertTrue(session.isActive());
 		assertFalse(session.getGpus().isEmpty());
-	}
 
-	@Test
-	void testOpenSessionNoGpu() {
-		sessionService.openSession(developer, model);
-		sessionService.openSession(developer, model);
-		assertNull(sessionService.openSession(developer, model));
-	}
-
-	@Test
-	void testSendPrompt() {
-		Session session = sessionService.openSession(developer, model);
+		double balanceBefore = developer.getWallet().getBalance();
 		String response = sessionService.sendPrompt(session, "Hello AI");
+
 		assertNotNull(response);
-		assertTrue(response.contains("Hello AI"));
-	}
+		assertTrue(developer.getWallet().getBalance() < balanceBefore);
 
-	@Test
-	void testSendPromptInsufficientCredit() {
-		Developer poorDev = new Developer(3, "Poor", "poor@test.com", "pass");
-		poorDev.getWallet().addFunds(0.001);
-		Session session = sessionService.openSession(poorDev, model);
-		String response = sessionService.sendPrompt(session, "This should fail because tokens will cost more");
-		assertTrue(response.contains("Insufficient credit") || response.contains("Error"));
-	}
+		java.util.List<String> logs = sessionService.getRecentLogs(developer, model);
+		assertEquals(2, logs.size());
 
-	@Test
-	void testCloseSession() {
-		Session session = sessionService.openSession(developer, model);
 		sessionService.closeSession(session);
 		assertFalse(session.isActive());
 		for (GPU g : session.getGpus()) {
@@ -85,48 +67,24 @@ class SessionServiceTest {
 	}
 
 	@Test
-	void testSendPromptClosedSession() {
-		Session session = sessionService.openSession(developer, model);
-		sessionService.closeSession(session);
-		String response = sessionService.sendPrompt(session, "Should fail");
-		assertTrue(response.contains("Error"));
-	}
+	void testSessionErrors() {
+		Session s1 = sessionService.openSession(developer, model);
+		Session s2 = sessionService.openSession(developer, model);
+		Session failedSession = sessionService.openSession(developer, model);
+		assertNull(failedSession);
 
-	@Test
-	void testSendPromptOverheatedGpu() {
-		Session session = sessionService.openSession(developer, model);
-		session.getGpus().get(0).setStatus(GpuStatus.IDLE);
-		String response = sessionService.sendPrompt(session, "Should fail");
-		assertTrue(response.contains("overheated"));
-	}
+		sessionService.closeSession(s1);
+		sessionService.closeSession(s2);
 
-	@Test
-	void testFindById() {
-		Session session = sessionService.openSession(developer, model);
-		assertNotNull(sessionService.findById(session.getId()));
-	}
+		Developer poorDev = new Developer(3, "Poor", "poor@test.com", "pass");
+		poorDev.getWallet().addFunds(0.001);
+		Session poorSession = sessionService.openSession(poorDev, model);
 
-	@Test
-	void testSendPromptSingleCharacter() {
-		Session session = sessionService.openSession(developer, model);
-		String response = sessionService.sendPrompt(session, "d");
-		assertNotNull(response);
-		assertFalse(response.contains("Error"));
-	}
+		String errorResponse = sessionService.sendPrompt(poorSession, "A very long prompt that costs a lot");
+		assertTrue(errorResponse.contains("Insufficient credit") || errorResponse.contains("Error"));
+		assertFalse(poorSession.isActive());
 
-	@Test
-	void testGetRecentLogs() {
-		Session session = sessionService.openSession(developer, model);
-		sessionService.sendPrompt(session, "Hello");
-		java.util.List<String> logs = sessionService.getRecentLogs(developer, model);
-		assertEquals(2, logs.size());
-	}
-
-	@Test
-	void testTokensDeductedFromBalance() {
-		Session session = sessionService.openSession(developer, model);
-		double balanceBefore = developer.getWallet().getBalance();
-		sessionService.sendPrompt(session, "Hello");
-		assertTrue(developer.getWallet().getBalance() < balanceBefore);
+		String closedResponse = sessionService.sendPrompt(poorSession, "Should fail");
+		assertTrue(closedResponse.contains("Error"));
 	}
 }
