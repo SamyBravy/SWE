@@ -3,7 +3,7 @@ package it.unifi.ing.business;
 import it.unifi.ing.domain.GPU;
 import it.unifi.ing.domain.GpuCluster;
 import it.unifi.ing.domain.Subject;
-import it.unifi.ing.domain.Observer;
+import it.unifi.ing.business.services.Observer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,7 +12,7 @@ public class Timer implements Subject {
 	private static Timer instance;
 
 	private Thread timerThread;
-	private volatile boolean running; //to avoid copying into cache memory
+	private volatile boolean running; // to avoid copying into cache memory
 	private final GpuCluster cluster;
 	private final List<Observer> observers;
 	private int intervalMs;
