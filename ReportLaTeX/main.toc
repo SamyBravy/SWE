@@ -10,7 +10,7 @@
 \contentsline {subsection}{\numberline {2.2.3}Send Prompt}{6}{subsection.2.2.3}%
 \contentsline {subsection}{\numberline {2.2.4}Resolve Complaint}{7}{subsection.2.2.4}%
 \contentsline {subsection}{\numberline {2.2.5}Load Balancing}{8}{subsection.2.2.5}%
-\contentsline {section}{\numberline {2.3}Mockups}{9}{section.2.3}%
+\contentsline {section}{\numberline {2.3}Mockups}{8}{section.2.3}%
 \contentsline {subsection}{\numberline {2.3.1}Publish Model Mockup}{9}{subsection.2.3.1}%
 \contentsline {subsection}{\numberline {2.3.2}Verify Model Mockup}{9}{subsection.2.3.2}%
 \contentsline {subsection}{\numberline {2.3.3}Send Prompt Mockup}{10}{subsection.2.3.3}%

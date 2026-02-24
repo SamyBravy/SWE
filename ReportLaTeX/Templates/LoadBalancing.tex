@@ -1,54 +1,54 @@
 \begin{table}[H]
-    \centering
-    \renewcommand{\arraystretch}{1.25}
-    \begin{tabularx}{\textwidth}{|l|>{\raggedright\arraybackslash}X|}
-        \hline
-        \textbf{Field} & \textbf{Content} \\
-        \hline
-        \textbf{Name} & Load Balancing \\
-        \hline
-        \textbf{Level} & User Goal \\
-        \hline
-        \textbf{Description} & The background timer sends periodic triggers to balance the load across the active GPUs.\\
-        \hline
-        \textbf{Actors} & Timer\\
-        \hline
-        \textbf{Pre-conditions} & There is at least one active session. \\
-        \hline
-        \textbf{Post-conditions} & The load is balanced for all active sessions according to the chosen strategy. \\
-        \hline
-        \textbf{Main Flow} & 
-        \normallist{
-            \item The timer sends a trigger to the system.
-            \item The system executes the configured load balancing strategy (Even Balancing or Eco Balancing).
-            \item Depending on the chosen strategy, the system performs the following actions for each active session:
-            \begin{itemize}[leftmargin=1.5em, nosep, topsep=2pt, itemsep=2pt]
-                \item Even Balancing:
-                \begin{enumerate}[label=\arabic*a., nosep, start=4, leftmargin=1.5em]
-                    \item The system computes the average load of the GPUs in the session.
-                    \item It adds a new free GPU if the average load goes over 80\%.
-                    \item It removes a GPU if the average load drops under 20\%.
-                    \item It distributes the work equally across all active GPUs.
-                \end{enumerate}
-                
-                \item Eco Balancing:
-                \begin{enumerate}[label=\arabic*a., nosep, start=4,leftmargin=1.5em]
-                    \item The system calculates the minimum number of GPUs needed, assuming a maximum load of 95\% per GPU.
-                    \item It adds or removes GPUs to match this number.
-                    \item It fills the GPUs one by one up to 95\%.
-                    \item It puts the remaining work on the last active GPU.
-                \end{enumerate}
-            \end{itemize}
-        }
-        \\
-        \hline
-        \textbf{Alternative Flows} & 
-        \altblock{5.}{GPU Shortage:}{
-            \item The cluster has no free GPUs left.
-            \item The system skips adding the new GPU. 
-            \item The system balances the load bypassing normal limits.
-        }
-        \\
-        \hline
-    \end{tabularx}
+	\centering
+	\renewcommand{\arraystretch}{1.25}
+	\begin{tabularx}{\textwidth}{|l|>{\raggedright\arraybackslash}X|}
+		\hline
+		\textbf{Field} & \textbf{Content} \\
+		\hline
+		\textbf{Name} & Load Balancing \\
+		\hline
+		\textbf{Level} & User Goal \\
+		\hline
+		\textbf{Description} & The background timer sends periodic triggers to balance the load across the active GPUs.\\
+		\hline
+		\textbf{Actors} & Timer\\
+		\hline
+		\textbf{Pre-conditions} & There is at least one active session. \\
+		\hline
+		\textbf{Post-conditions} & The load is balanced for all active sessions according to the chosen strategy. \\
+		\hline
+		\textbf{Main Flow} & 
+		\normallist{
+			\item The timer sends a trigger to the system.
+			\item The system executes the configured load balancing strategy (\texttt{Even Balancing} or \texttt{Eco Balancing}).
+			\item Depending on the chosen strategy, the system performs the following actions for each active session:
+			\begin{itemize}[leftmargin=1.5em, nosep, topsep=2pt, itemsep=2pt]
+				\item \texttt{Even Balancing}:
+				\begin{enumerate}[label=\arabic*a., nosep, start=4, leftmargin=1.5em]
+					\item The system computes the average load of the GPUs in the session.
+					\item It adds a new free GPU if the average load goes over 80\%.
+					\item It removes a GPU if the average load drops under 20\%.
+					\item It distributes the work equally across all active GPUs.
+				\end{enumerate}
+				
+				\item \texttt{Eco Balancing}:
+				\begin{enumerate}[label=\arabic*a., nosep, start=4,leftmargin=1.5em]
+					\item The system calculates the minimum number of GPUs needed, assuming a maximum load of 95\% per GPU.
+					\item It adds or removes GPUs to match this number.
+					\item It fills the GPUs one by one up to 95\%.
+					\item It puts the remaining work on the last active GPU.
+				\end{enumerate}
+			\end{itemize}
+		}
+		\\
+		\hline
+		\textbf{Alternative Flows} & 
+		\altblock{5.}{GPU Shortage:}{
+			\item The cluster has no free GPUs left.
+			\item The system skips adding the new GPU. 
+			\item The system balances the load bypassing normal limits.
+		}
+		\\
+		\hline
+	\end{tabularx}
 \end{table}

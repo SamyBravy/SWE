@@ -9,3 +9,14 @@ target/
 .settings/
 .project
 .classpath
+
+#Per report LaTeX : )
+ReportLaTeX/*.aux
+ReportLaTeX/*.bcf
+ReportLaTeX/*.out
+ReportLaTeX/*.run.xml
+ReportLaTeX/*.toc
+ReportLaTeX/*.synctex.gz
+ReportLaTeX/*.log
+ReportLaTeX/*.fls
+ReportLaTeX/*.fdb_latexmk
