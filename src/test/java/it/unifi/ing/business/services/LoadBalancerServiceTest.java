@@ -106,4 +106,17 @@ class LoadBalancerServiceTest {
 		assertEquals(50.0, gpu3.getLoadPercentage());
 	}
 
+	@Test
+	void testLoadBalancingGpuShortage() {
+		gpu.setStatus(GpuStatus.ACTIVE);
+		gpu.setLoadPercentage(90.0);
+		Session session = new Session(1, developer, model, gpu);
+		sessionDao.save(session);
+
+		loadBalancerService.balanceLoad();
+
+		assertEquals(1, session.getGpus().size());
+		assertEquals(90.0, gpu.getLoadPercentage());
+	}
+
 }

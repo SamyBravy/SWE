@@ -34,4 +34,17 @@ class ModelServiceTest {
 
 		assertNull(modelService.findById(999));
 	}
+
+	@Test
+	void testPublishModelInvalidFiles() {
+		IllegalArgumentException ex1 = assertThrows(IllegalArgumentException.class, () -> {
+			modelService.publishModel(provider, "TestModel", "Desc", 0.01, "invalid.txt", "c.json");
+		});
+		assertTrue(ex1.getMessage().contains(".safetensors"));
+
+		IllegalArgumentException ex2 = assertThrows(IllegalArgumentException.class, () -> {
+			modelService.publishModel(provider, "TestModel", "Desc", 0.01, "s.safetensors", "invalid.txt");
+		});
+		assertTrue(ex2.getMessage().contains(".json"));
+	}
 }

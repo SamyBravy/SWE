@@ -1137,7 +1137,7 @@ void testSessionErrors() {
 \end{lstlisting}
 
 \section{VerificationServiceTest}
-The Supervisor can verify the uploaded models before publishing them. In the test class below, we tested the correct functioning of the approval process. In particular, we instantiated a model and verified the methods \texttt{runBenchmarks()}, \texttt{runAutomatedEthicsTests()} and \texttt{approveModel()} within the Main Flow, as well as the rejection in the Alternative Flow.
+The Supervisor can verify the uploaded models before publishing them. In the test class below, we tested the correct functioning of the verification process. In particular, we instantiated a model and verified the methods \texttt{runBenchmarks()}, \texttt{runAutomatedEthicsTests()}, \texttt{approveModel()} and \texttt{rejectModel()} within the Main Flow, as well as the case where no GPUs are available in the Alternative Flow.
 
 \begin{lstlisting}[language=Java, caption={Code snippet of the VerificationServiceTest class}, label={lst:verification_service_test}]
 @Test
@@ -1177,7 +1177,7 @@ void testLoadOnGpuNoAvailable() {
 \end{lstlisting}
 
 \section{LoadBalancerServiceTest}
-In the following test class, we tested the correct functioning of the Observer pattern. In particular, an active session running on a GPU is instantiated. The test verifies that when the GPU's temperature exceeds the threshold and an alert is triggered, the \texttt{LoadBalancerService} is correctly notified, automatically detaching the GPU and preserving the system. Furthermore, it tests the load balancing algorithms.
+In the following test class, we tested the correct functioning of the Observer pattern. In particular, an active session running on a GPU is instantiated. The test verifies that when the GPU's temperature exceeds the threshold and an alert is triggered, the \texttt{LoadBalancerService} is correctly notified, automatically detaching the GPU and preserving the system. Furthermore, it tests the load balancing algorithms, including the Alternative Flow where the cluster experiences a GPU shortage.
 
 \begin{lstlisting}[language=Java, caption={Code snippet of the LoadBalancerServiceTest class}, label={lst:load_balancer_service_test}]
 @Test
@@ -1240,6 +1240,19 @@ void testLoadBalancing() {
 	assertEquals(50.0, gpu.getLoadPercentage());
 	assertEquals(50.0, gpu3.getLoadPercentage());
 }
+
+@Test
+void testLoadBalancingGpuShortage() {
+	gpu.setStatus(GpuStatus.ACTIVE);
+	gpu.setLoadPercentage(90.0);
+	Session session = new Session(1, developer, model, gpu);
+	sessionDao.save(session);
+
+	loadBalancerService.balanceLoad();
+
+	assertEquals(1, session.getGpus().size());
+	assertEquals(90.0, gpu.getLoadPercentage());
+}
 \end{lstlisting}
 
 \section{ComplaintServiceTest}
@@ -1275,7 +1288,7 @@ void testComplaintRejection() {
 \end{lstlisting}
 
 \section{ModelServiceTest}
-In the following test class, we tested the Model Service. After instantiating a Model Provider and their model, the test verifies the correct functioning of the \texttt{publishModel()} method. It ensures that the model is correctly saved and set to the pending review status, ready to be verified by a Supervisor.
+In the following test class, we tested the Model Service. After instantiating a Model Provider and their model, the test verifies the correct functioning of the \texttt{publishModel()} method. It ensures that the model is correctly saved and set to the pending review status, ready to be verified by a Supervisor. We also verified the Alternative Flow: if the provider does not provide files with the correct \texttt{.safetensors} and \texttt{.json} extensions, the method rejects the request by throwing an error.
 
 \begin{lstlisting}[language=Java, caption={Code snippet of the ModelServiceTest class}, label={lst:model_service_test}]
 @Test
@@ -1292,6 +1305,19 @@ void testPublishModelScenario() {
 	assertEquals(ModelStatus.PENDING_REVIEW, model.getStatus());
 
 	assertNull(modelService.findById(999));
+}
+
+@Test
+void testPublishModelInvalidFiles() {
+	IllegalArgumentException ex1 = assertThrows(IllegalArgumentException.class, () -> {
+		modelService.publishModel(provider, "TestModel", "Desc", 0.01, "invalid.txt", "c.json");
+	});
+	assertTrue(ex1.getMessage().contains(".safetensors"));
+
+	IllegalArgumentException ex2 = assertThrows(IllegalArgumentException.class, () -> {
+		modelService.publishModel(provider, "TestModel", "Desc", 0.01, "s.safetensors", "invalid.txt");
+	});
+	assertTrue(ex2.getMessage().contains(".json"));
 }
 \end{lstlisting}
 
