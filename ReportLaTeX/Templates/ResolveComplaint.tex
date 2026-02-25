@@ -5,13 +5,15 @@
 		\hline
 		\textbf{Field} & \textbf{Content} \\
 		\hline
-		\textbf{Name} & Resolve Complaints \\
+		\textbf{Name} & Resolve Complaint \\
 		\hline
 		\textbf{Level} & User Goal \\
 		\hline
 		\textbf{Description} & The supervisor resolves a developer's complaint about a model. If he accepts the complaint, he can refund tokens to the developer or block the model. \\
 		\hline
 		\textbf{Actors} & Supervisor \\
+		\hline
+		\textbf{Unit Test} & \texttt{ComplaintServiceTest} \ref{lst:complaint_service_test} \\
 		\hline
 		\textbf{Pre-conditions} & There is at least one complaint in \texttt{PENDING\_REVIEW} state. \\
 		\hline
@@ -21,7 +23,7 @@
 		\normallist{
 			\item The supervisor accesses the \texttt{Complaints} dashboard.
 			\item The supervisor clicks on a complaint to review.
-			\item On the right, the following informations are shown: the name of the developer who made the complaint, the complaint's description and the log of the prompts sent to the model.
+			\item On the right, the following information is shown: the name of the developer who made the complaint, the complaint's description and the log of the prompts sent to the model.
 			\item The supervisor chooses one of the following options:
 			\begin{itemize}
 				\item Accept Complaint:

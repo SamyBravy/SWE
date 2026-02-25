@@ -13,6 +13,8 @@
 		\hline
 		\textbf{Actors} & Developer\\
 		\hline
+		\textbf{Unit Test} & \texttt{SessionServiceTest} \ref{lst:session_service_test} \\
+		\hline
 		\textbf{Pre-conditions} & 
 		\begin{itemize}[leftmargin=*, nosep, before=\vspace{-0.6\baselineskip}]
 			\item There is at least one model in \texttt{PUBLISHED} state.
@@ -44,7 +46,7 @@
 			\item The developer sees the message \textit{"There are too many requests at the moment, try again later"}.
 		}
 		
-		\altblock{5.}{Insufficient balance for prompt:}{
+		\altblock{4.}{Insufficient balance for prompt:}{
 			\item If the developer's balance is lower than the cost of the prompt, the system shows an insufficient balance error.
 			\item The system automatically closes the session.
 		}

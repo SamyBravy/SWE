@@ -10,7 +10,7 @@
 \usepackage{subfig}
 \usepackage{booktabs}
 
-\usepackage[backend=biber]{biblatex}
+\usepackage[backend=biber,defernumbers=true]{biblatex}
 \addbibresource{bibliography.bib}
 \defbibheading{paper}{\section*{Printed Books and Manuals}} 
 \defbibheading{web}{\section*{Websites and Online Docs}}    
@@ -107,14 +107,19 @@
     The platform adds a fee to the model's price to cover its hosting costs. 
     Consequently, we added a layer of complexity to our project by designing a system to manage model hosting across multiple GPUs,
     which have a limited memory and a temperature that needs to be regulated. 
-    \section{Architecture}
-    This project was developed using only Java, without any external libraries except for JavaFX used for the mockups. We used GitHub for version control and collaboration, and StarUML for all the diagrams. 
-    We did not implement a real database, but we simulated it using some basic lists.
-    We divided the software into three main parts:
+    \section{Project Setup and Technologies}
+    \label{sec:Architecture}
+    This project was developed using the \texttt{Java 17} programming language, managed through Maven for dependency and build management. 
+	We integrated two external libraries: \texttt{jBCrypt} for password hashing, and \texttt{JUnit 5} for unit testing. 
+	We used GitHub for version control and collaboration, StarUML for the use case diagram and package diagram, PlantUML for the class diagram, and Mermaid for the page navigation diagram.
+    \\ We used AI for the controllers, particularly to generate outputs and menus, and for the creation of mockups.   
+	\\ We did not implement a real database, but we simulated persistence using some basic hashmaps.
+    \\ We divided the software into four main parts:
     
     \begin{itemize}
-        \item \textbf{Domain model:} contains the classes that define the entities involved in the system and their relationships.
-        \item \textbf{Business logic:} contains the classes that define the rules and the logic of the system, regardless of how the data is stored.
+        \item \textbf{Domain Model:} contains the classes that define the entities involved in the system and their relationships.
+		\item \textbf{Controllers:} contains the classes that handle the user input and delegate actions to the business logic.
+        \item \textbf{Business Logic:} contains the classes that define the rules and the logic of the system, regardless of how the data is stored.
         \item \textbf{ORM:} contains the classes that communicate with the database, to make the changes in the domain model persistent.
     \end{itemize}
     
@@ -194,6 +199,16 @@
     \end{figure}
     \vfill
     
+    \clearpage
+    \section{Package Diagram}
+    The following diagram illustrates the organization of the project's packages and the dependencies between them, reflecting the layered architecture introduced in Section~\ref{sec:Architecture}.
+    
+    \begin{figure}[H]
+    	\centering
+    	\includegraphics[width=\textwidth,keepaspectratio]{Images/packagediagram.png}
+    	\label{fig:PackageDiagram}
+    \end{figure}
+    
     \begin{landscape}
     	\vspace*{-4cm}
     	\section{Class Diagram}
@@ -250,8 +265,8 @@
     	
     \end{landscape}
     
-    \subsection{Design Patterns}
-    To ensure high cohesion, low coupling, and overall software maintainability, the system architecture leverages several established design patterns. These patterns provide standardized solutions to recurring architectural challenges, ranging from resource management to component communication.
+    \subsection{Design Specifications}
+    To ensure high cohesion, low coupling, and overall software maintainability, we implemented several design patterns.
     
     \subsubsection{Observer Pattern}
     The Observer pattern establishes a dependency between objects, ensuring that when one object changes state, all its dependents are notified and updated accordingly. In this implementation, it allows the \texttt{LoadBalancerService} to monitor system-wide changes dynamically. Specifically, the service acts as a Concrete Observer to two distinct subjects: the \texttt{Timer} and the \texttt{GPU} classes.
@@ -269,13 +284,13 @@
     	\label{fig:Obspattern}
     \end{figure} 
     
-    \subsubsection{Strategy Patter}
+    \subsubsection{Strategy Pattern}
     The Strategy pattern is employed to define a family of algorithms, encapsulate each one, and make them interchangeable (see Figure~\ref{fig:StrategyGeneral}). This pattern is primarily used within the load balancing mechanism.
     \smallskip
     
     The system utilizes a \texttt{LoadBalancingStrategy} interface (see Figure~\ref{fig:Strategy}) to expose load-balancing capabilities without tying the system to a single implementation.
 
-	Two distinct algorithms are implemented: the \texttt{EvenBalancingStrategy}, which distributes workloads equally across available hardware , and the \texttt{EcoBalancingStrategy}, which focuses on power-saving.
+	Two distinct algorithms are implemented: the \texttt{EvenBalancingStrategy}, which distributes workloads equally across available hardware, and the \texttt{EcoBalancingStrategy}, which focuses on power-saving.
 	
 	This allows the choice of the balancing algorithm to be determined dynamically without modifying the underlying service logic. Furthermore, as the system evolves, new balancing strategies can be added arbitrarily by simply implementing the existing interface.
 	
@@ -329,11 +344,204 @@
     
     \chapter{Implementations}
     In this section we illustrate the implementation of the most important methods in our project, providing a detailed description of every layer.
-    \section{Business Logic}
-    \label{sec:BusinessLogic}
-    The classes in this layer are responsible for implementing the logic of the system, regardless of the interface and how the data is stored.
-    \subsection{Auth Service}
-    This class handles the login and the registration of users. 
+	\section{Domain Model}
+	\label{sec:DomainModel}
+	The domain model contains the classes that define the entities involved in the system and their relationships.
+	\subsection{User}
+	The \texttt{User} class is an abstract class that represents a user of the platform. It's worth noticing 
+	the implementation of the \texttt{login} method and \texttt{setPassword} method that use the \texttt{BCrypt} library to implement the password hashing.
+	\subsubsection{\texttt{setPassword} and \texttt{login}}
+	\begin{lstlisting}[label={lst:userauth}]
+	public final void setPassword(String password) {
+		this.password = BCrypt.hashpw(password, BCrypt.gensalt());
+	}
+	
+	public boolean login(String email, String pwd) {
+		return this.email.equals(email) && BCrypt.checkpw(pwd, this.password);
+	}
+	\end{lstlisting}
+	The method \texttt{BCrypt.checkpw} verifies that the hash of the password provided by the user is equal to the hash stored in the database,
+	whereas \texttt{BCrypt.hashpw} hashes the password.
+	
+	
+	\subsection{Developer, ModelProvider, Supervisor}
+	These three classes extend the abstract \texttt{User} class.
+	They implement the \texttt{getRole()} method to return their specific role as a string. 
+	The \texttt{Developer} class is the only one that accepts a \texttt{Wallet} object in its constructor in order to handle payments for using AI models.
+	
+	\subsection{AiModel}
+	This class represents an AI model published by a Model Provider. 
+	The \texttt{costPerTokenProvider} is the cost per token chosen by the Model Provider, whereas the \texttt{costPerTokenPlatform} is the cost per token for the hosting decided by the Supervisor; the Developer will pay the sum of these two values.
+	We used the static factory method \texttt{submitForReview} for a robust validation of the passed arguments and to make the constructor private, since only the Model Provider can create a new model when he submits it for review.
+	\subsubsection{\texttt{submitForReview}}
+	\begin{lstlisting}[label={lst:aimodelsubmit}]
+	public static AiModel submitForReview(int id, String name, String description, double costPerTokenProvider,
+	                                      String safetensorsFile, String jsonFile, ModelProvider provider) {
+		if (id <= 0) {
+			throw new IllegalArgumentException("Model ID must be positive. Received: " + id);
+		}
+		if (name == null || name.trim().isEmpty()) {
+			throw new IllegalArgumentException("Model name cannot be null or empty");
+		}
+		// ... other validations ...
+		if (safetensorsFile == null || !safetensorsFile.toLowerCase().endsWith(".safetensors")) {
+			throw new IllegalArgumentException("Valid .safetensors file path is required");
+		}
+		if (jsonFile == null || !jsonFile.toLowerCase().endsWith(".json")) {
+			throw new IllegalArgumentException("Valid .json file path is required");
+		}
+		Objects.requireNonNull(provider, "Model provider cannot be null");
+	
+		return new AiModel(id, name, description, costPerTokenProvider, safetensorsFile, jsonFile, provider);
+	}
+	\end{lstlisting}
+	\subsection{Complaint}
+	This class represents a complaint submitted by a Developer against a model. 
+	The \texttt{promptLogs} list is used so that the Supervisor can decide, reading the logs, whether to accept or reject the complaint.
+	Like we did in \texttt{AiModel}, we used a static factory method for the same reasons, since a Developer can create a new complaint only when he submits it through the \texttt{submit} method.
+	
+	\subsubsection{\texttt{submit}}
+	\begin{lstlisting}[label={lst:complaintsubmit}]
+	public static Complaint submit(int id, Developer developer, AiModel model, String description, List<String> promptLogs) {
+		if (id <= 0) {
+			throw new IllegalArgumentException("Complaint ID must be positive");
+		}
+		Objects.requireNonNull(developer, "The developer filing the complaint cannot be null");
+		Objects.requireNonNull(model, "The model being reported cannot be null");
+	
+		if (description == null || description.trim().isEmpty()) {
+			throw new IllegalArgumentException("Complaint description cannot be empty");
+		}
+	
+		Objects.requireNonNull(promptLogs, "Prompt logs cannot be null");
+		if (promptLogs.isEmpty()) {
+			throw new IllegalArgumentException("A complaint must include at least one prompt log as evidence");
+		}
+	
+		return new Complaint(id, developer, model, description, promptLogs);
+	}
+	\end{lstlisting}
+	
+	\subsection{Session}
+	This class acts as a bridge when a Developer interacts with a model. 
+	It maintains a list of GPUs where the associated model is running, allowing load balancing across multiple GPUs. 
+	Furthermore, it keeps a history of sent and received prompts so that, in case of a complaint, the Supervisor can access them as evidence. 
+	Finally, the \texttt{totalTokensUsed} and \texttt{startTimestamp} attributes are used to record statistics.
+	
+	\subsection{Wallet and Transaction}
+	The \texttt{Wallet} class handles the Developer's balance that is used to pay for the used tokens. Every time the balance is modified, a new \texttt{Transaction} is created and added to the \texttt{transactionHistory} list.
+	For the \texttt{Transaction} class we used the static factory method \texttt{create} to ensure a transaction is always created completely and correctly. The \texttt{Transaction} class is immutable, as all its attributes are \texttt{final} and it exposes only getter methods.
+	
+	\subsubsection{\texttt{create}}
+	\begin{lstlisting}[label={lst:transactioncreate}]
+	public static Transaction create(int id, double amount, LocalDateTime timestamp, String reason) {
+		if (id <= 0) {
+			throw new IllegalArgumentException("Transaction ID must be positive...");
+		}
+		if (Double.isNaN(amount) || Double.isInfinite(amount)) {
+			throw new IllegalArgumentException("Invalid amount: " + amount);
+		}
+		Objects.requireNonNull(timestamp, "Timestamp cannot be null");
+		if (reason == null || reason.trim().isEmpty()) {
+			throw new IllegalArgumentException("Transaction reason cannot be null or empty");
+		}
+		return new Transaction(id, amount, timestamp, reason);
+	}
+	\end{lstlisting}
+	
+	The \texttt{Wallet} class uses the \texttt{addFunds} and \texttt{charge} methods to modify the balance. 
+	\subsubsection{\texttt{addFunds}}
+	\begin{lstlisting}[label={lst:walletaddfunds}]
+	public void addFunds(double amount, String... optionalReason) {
+		if (amount <= 0) {
+			throw new IllegalArgumentException("Amount must be positive");
+		}
+		String reason = (optionalReason != null && optionalReason.length > 0)
+				? optionalReason[0]
+				: "TOP-UP";
+	
+		this.balance += amount;
+		transactionHistory.add(Transaction.create(
+				nextTransactionId++, amount, LocalDateTime.now(), reason));
+	}
+	\end{lstlisting}
+	This method is used to add funds to a Developer's wallet. It can be called by the Developer himself or by a Supervisor (for a refund). It supports an optional reason for the transaction, which is set to "TOP-UP" if not provided.
+	
+	\subsubsection{\texttt{charge}}
+	\begin{lstlisting}[label={lst:walletcharge}]
+	public boolean charge(double amount) {
+		if (amount < 0) throw new IllegalArgumentException("Negative amount");
+		if (amount == 0) return true;
+		if (amount > balance) return false;
+	
+		this.balance -= amount;
+		transactionHistory.add(Transaction.create(
+				nextTransactionId++, -amount, LocalDateTime.now(),
+				"CHARGE: -" + String.format("%.2f", amount)));
+		return true;
+	}
+	\end{lstlisting}
+	This method subtracts \texttt{amount} from the balance. If there aren't enough funds, it simply returns \texttt{false}. Otherwise, it records the transaction and returns \texttt{true}.
+	
+	
+	\subsection{GPU}
+	The \texttt{GPU} class simulates a physical GPU running AI models. It implements the \texttt{Subject} (observer design pattern) to notify the \texttt{LoadBalancerService} when the temperature exceeds 90 degrees Celsius. 
+	\\The timer sends a tick every 5 seconds to the GPU, which updates its temperature and load percentage through the \texttt{simulateTick} method.
+	
+	\subsubsection{\texttt{simulateTick}}
+	\begin{lstlisting}[label={lst:gpusimulate}]
+	public void simulateTick() {
+		if (status == GpuStatus.ACTIVE) {
+			double increment = 1.0 + Math.random() * 3.0;
+			setTemperature(temperature + increment);
+			loadPercentage = Math.min(100.0, loadPercentage + Math.random() * 5.0);
+		} else if (status == GpuStatus.INACTIVE) {
+			if (temperature > 30.0) {
+				double decrement = 0.5 + Math.random() * 1.5;
+				this.temperature = Math.max(30.0, temperature - decrement);
+			}
+			loadPercentage = Math.max(0.0, loadPercentage - 5.0);
+		}
+	}
+	\end{lstlisting}
+	If the GPU is active, its temperature and load percentage increase. Otherwise, they decrease.
+
+	\subsubsection{\texttt{setTemperature}}
+	\begin{lstlisting}[label={lst:gputemperature}]
+	public void setTemperature(double temperature) {
+		this.temperature = temperature;
+		if (temperature > TEMPERATURE_THRESHOLD) {
+			this.status = GpuStatus.IDLE;
+			notifyObservers("TEMPERATURE_ALERT");
+		}
+	}
+	\end{lstlisting}
+	This is the method that notifies the \texttt{LoadBalancerService} when in case of a temperature alert.
+
+	\subsection{GpuCluster}
+	This class follows the singleton design pattern and serves as the manager of all the \texttt{GPU}s. It provides a single, globally accessible object for assigning and releasing GPUs across the system.
+	\subsubsection{\texttt{getAvailableGpu}}
+	\begin{lstlisting}[label={lst:gpuclustergetavailable}]
+	public GPU getAvailableGpu() {
+	    List<GPU> all = gpuDao.findAll();
+	    for (GPU gpu : all) {
+	        if (gpu.isAvailable()) {
+	            gpu.setStatus(GpuStatus.ACTIVE);
+	            return gpu;
+	        }
+	    }
+	    return null;
+	}
+	\end{lstlisting}
+	
+	This method returns an available GPU (whose state is set to \texttt{ACTIVE}) that can be assigned to a new session or, in case of load balancing, to an existing one.
+	The \texttt{releaseGpu} method simply sets the state of the given GPU to \texttt{INACTIVE}.
+	
+	\section{Business Logic}
+	\label{sec:BusinessLogic}
+	The classes in this layer are responsible for implementing the logic of the system, regardless of the interface and how the data is stored.
+	\subsection{Auth Service}
+	This class handles the login and the registration of users. 
 
 \subsubsection{\texttt{login} and \texttt{register}}
 \begin{lstlisting}[label={lst:authservice}]
@@ -506,8 +714,6 @@ Then, after checking whether the Developer has enough credit to pay for the prom
     return response;
 }
 \end{lstlisting}
-
-used
 Finally, it uses the \texttt{SessionDao} to update the session and returns the response.
 
 \subsubsection{\texttt{detachGpuFromSession}}
@@ -539,7 +745,7 @@ public void detachGpuFromSession(GPU gpu) {
 
 This method is used to detach a GPU from a session when it is overheated. First it finds the session assigned to the given GPU and removes it from the session. Then it checks if the session still has any GPUs left. If not, it closes the session. If it has GPUs left, it redistributes the load evenly among the remaining GPUs.
 \subsection{Stats Service}
-This class is used to retrieve a Developer's statistics that are shown in the "View Stats \& History" page.
+This class is used to retrieve a Developer's statistics that are shown in the \enquote{View Stats \& History} page.
 
 \subsubsection{\texttt{getDeveloperStats}}
 \begin{lstlisting}[label={lst:getdeveloperstats}]
@@ -556,7 +762,7 @@ public DeveloperStats getDeveloperStats(Developer developer) {
 }
 \end{lstlisting}
 
-This method retrieves all the historical and current data related to a Developer by querying the related services. It also uses the Java Stream API to get the details that are later encapsulated in a \texttt{DeveloperStats} object.
+This method retrieves all the historical and current data related to a Developer by querying the related services. It uses the Java Stream API to get the details that are later encapsulated in a \texttt{DeveloperStats} object.
 
 \subsection{Verification Service}
 This class is responsible for handling a model's verification process conducted by a Supervisor. 
@@ -569,7 +775,7 @@ public GPU loadOnGpu(AiModel model) {
 }
 \end{lstlisting}
 
-This method is used to load the models on an available GPU before the tests are run.
+This method is used to load a model on an available GPU before the tests are run.
 
 \subsubsection{\texttt{runBenchmarks} and \texttt{runAutomatedEthicsTests}}
 \begin{lstlisting}[label={lst:verificationtests}]
@@ -602,7 +808,7 @@ public boolean[] runAutomatedEthicsTests(AiModel model) {
 }
 \end{lstlisting}
 
-In these methods we simply simulated the results of the tests by generating random values and by selecting random prompts from a list.
+In these methods we simulated the results of the tests by simply generating random values and by selecting random prompts from a list.
 To decide whether the model passed or failed the ethics tests, we implemented the toy method \texttt{evaluateEthics} that checks if the response contains certain keywords. 
 \subsubsection{\texttt{evaluateEthics}}
 \begin{lstlisting}[label={lst:evaluateethics}]
@@ -614,7 +820,7 @@ public boolean evaluateEthics(AiModel model, String prompt) {
 }
 \end{lstlisting}
 \subsection{Load Balancer Service}
-This class is responsible for acting as an observer for the \texttt{Timer} and \texttt{GPU} subjects, and it uses the strategy design pattern to balance the load among the active GPUs in the cluster with two different possible algorithms.
+This class is responsible for acting as an observer for the \texttt{Timer} and \texttt{GPU} subjects. It uses the strategy design pattern to balance the load among the active GPUs in the cluster with two different possible algorithms.
 
 \subsubsection{\texttt{update} and \texttt{onTemperatureAlert}}
 \begin{lstlisting}[label={lst:loadbalancerupdate}]
@@ -784,198 +990,99 @@ public void tick() {
 \end{lstlisting}
 This method calls the \texttt{simulateTick} method on all GPUs to simulate the passage of time (which affects the GPU's load and temperature).
 It also notifies the \texttt{LoadBalancerService} observer, to trigger the load balancing.
-\section{Domain Model}
-\label{sec:DomainModel}
-The domain model contains the classes that define the entities involved in the system and their relationships.
-\subsection{User}
-The \texttt{User} class is an abstract class that represents a user of the platform. It's worth noticing 
-the implementation of the \texttt{login} method and \texttt{setPassword} method, that use the \texttt{BCrypt} library to implement the password hashing.
-\subsubsection{\texttt{setPassword} and \texttt{login}}
-\begin{lstlisting}[label={lst:userauth}]
-public final void setPassword(String password) {
-	this.password = BCrypt.hashpw(password, BCrypt.gensalt());
+
+\section{Controllers}
+    Since we didn't implement a view layer in our project, we used the controllers not only to handle user input by calling the appropriate services, but also 
+    to create a CLI to interact with the system. It's for testing purposes only; we would have used a GUI in a real application.
+   \\ We divided the controllers based on the resources they manage, the following table illustrates which CLI pages are managed by each controller:
+    
+    \vspace{0.3cm}
+    \begin{table}[H]
+        \centering
+        \renewcommand{\arraystretch}{1.5}
+        \begin{tabularx}{\textwidth}{|>{\ttfamily}l|X|}
+            \hline
+            \textbf{\textsf{Controller}} & \textbf{\textsf{CLI Pages Responsibility}} \\
+            \hline
+            AuthController & Handles user login and registration. \\
+            \hline
+            ComplaintController & Handles the \enquote{File Complaint Form} page for Developers and the \enquote{Complaints Dashboard} for Supervisors to review them. \\
+            \hline
+            ModelController & Handles the \enquote{Publish Model} page and a page to monitor submitted models. \\
+            \hline
+            NavigationController & Routing controller that manages the main menus for all roles: Developer, Model Provider, and Supervisor. \\
+            \hline
+            SessionController & Handles the AI chat session page and model selection page for Developers. \\
+            \hline
+            StatsController & Responsible for displaying the \enquote{View Stats \& History} page for Developers. \\
+            \hline
+            VerificationController & Manages the Supervisor's \enquote{Verification Dashboard}, which allows them to run tests and to accept or reject models.  \\
+            \hline
+            WalletController & Manages the Developer's \enquote{Fund Wallet} page. \\
+            \hline
+        \end{tabularx}
+    \end{table}
+    Due to their simplicity, we won't illustrate the implementation of the controllers.
+    \section{ORM}
+    The ORM layer contains the DAOs that are used to implement the persistence of the data. The \texttt{GenericDao} is the base interface extended by all the DAOs, providing the most basic operations.
+
+    \subsubsection{\texttt{GenericDao}}
+    \begin{lstlisting}[label={lst:genericdao}]
+public interface GenericDao<T> {
+	void save(T entity);
+	T findById(int id);
+	List<T> findAll();
+	void update(T entity);
+	void delete(int id);
 }
+    \end{lstlisting}
 
-public boolean login(String email, String pwd) {
-	return this.email.equals(email) && BCrypt.checkpw(pwd, this.password);
-}
-\end{lstlisting}
-The method \texttt{BCrypt.checkpw} verifies that the hash of the password provided by the user is equal to the hash stored in the database,
-whereas \texttt{BCrypt.hashpw} hashes the password.
+    Then we created the DAOs for each main entity adding their specific methods, as illustrated in the class diagram.
+    We didn't use a real database, but we simulated one by using hashmaps in the in-memory DAOs. Since their implementation is very similar, we will only illustrate the 
+    \texttt{InMemoryUserDao} class.
+    \subsubsection{\texttt{InMemoryUserDao}}
+    \begin{lstlisting}[label={lst:inmemoryuserdao}]
+public class InMemoryUserDao implements UserDao {
 
+	private final Map<Integer, User> storage = new HashMap<>();
 
-\subsection{Developer, ModelProvider, Supervisor}
-These three classes extend the abstract \texttt{User} class.
-They implement the \texttt{getRole()} method to return their specific role as a string. 
-The \texttt{Developer} class is the only one that accepts a \texttt{Wallet} object in its constructor in order to handle payments for using AI models.
-
-\subsection{AiModel}
-This class represents an AI model published by a Model Provider. 
-The \texttt{costPerTokenProvider} is the cost per token chosen by the Model Provider, whereas the \texttt{costPerTokenPlatform} is the cost per token for the hosting decided by the Supervisor; the Developer will pay the sum of these two values.
-We used a static factory method for a robust validation of the passed arguments and to make the constructor private, since only the Model Provider can create a new model when he submits it for review.
-\subsubsection{\texttt{submitForReview}}
-\begin{lstlisting}[label={lst:aimodelsubmit}]
-public static AiModel submitForReview(int id, String name, String description, double costPerTokenProvider,
-                                      String safetensorsFile, String jsonFile, ModelProvider provider) {
-	if (id <= 0) {
-		throw new IllegalArgumentException("Model ID must be positive. Received: " + id);
-	}
-	if (name == null || name.trim().isEmpty()) {
-		throw new IllegalArgumentException("Model name cannot be null or empty");
-	}
-	// ... other validations ...
-	if (safetensorsFile == null || !safetensorsFile.toLowerCase().endsWith(".safetensors")) {
-		throw new IllegalArgumentException("Valid .safetensors file path is required");
-	}
-	if (jsonFile == null || !jsonFile.toLowerCase().endsWith(".json")) {
-		throw new IllegalArgumentException("Valid .json file path is required");
-	}
-	Objects.requireNonNull(provider, "Model provider cannot be null");
-
-	return new AiModel(id, name, description, costPerTokenProvider, safetensorsFile, jsonFile, provider);
-}
-\end{lstlisting}
-\subsection{Complaint}
-This class represents a complaint submitted by a Developer against a model. 
-The \texttt{promptLogs} list is used so that the Supervisor can decide, reading the logs, whether to accept or reject the complaint.
-Like we did in \texttt{AiModel}, we used a static factory method for the same reasons, since only a Developer can create a new complaint when he submits it.
-
-\subsubsection{\texttt{submit}}
-\begin{lstlisting}[label={lst:complaintsubmit}]
-public static Complaint submit(int id, Developer developer, AiModel model, String description, List<String> promptLogs) {
-	if (id <= 0) {
-		throw new IllegalArgumentException("Complaint ID must be positive");
-	}
-	Objects.requireNonNull(developer, "The developer filing the complaint cannot be null");
-	Objects.requireNonNull(model, "The model being reported cannot be null");
-
-	if (description == null || description.trim().isEmpty()) {
-		throw new IllegalArgumentException("Complaint description cannot be empty");
+	@Override
+	public void save(User user) {
+		storage.put(user.getId(), user);
 	}
 
-	Objects.requireNonNull(promptLogs, "Prompt logs cannot be null");
-	if (promptLogs.isEmpty()) {
-		throw new IllegalArgumentException("A complaint must include at least one prompt log as evidence");
+	@Override
+	public User findById(int id) {
+		return storage.get(id);
 	}
 
-	return new Complaint(id, developer, model, description, promptLogs);
-}
-\end{lstlisting}
-
-\subsection{Session}
-This class acts as a bridge when a Developer interacts with a model. 
-It maintains a list of GPUs where the associated model is running, allowing load balancing across multiple GPUs. 
-Furthermore, it keeps a history of sent and received prompts so that, in case of a complaint, the Supervisor can access them as evidence. 
-Finally, the \texttt{totalTokensUsed} and \texttt{startTimestamp} attributes are used to record statistics.
-
-\subsection{Wallet and Transaction}
-The \texttt{Wallet} class handles the Developer's balance that is used to pay for the used tokens. Every time the balance is modified, a new \texttt{Transaction} is created and added to the \texttt{transactionHistory} list.
-For the \texttt{Transaction} class we used a static factory method to ensure a transaction is always created completely and correctly. The \texttt{Transaction} class is immutable, as all its attributes are \texttt{final} and it exposes only getter methods.
-
-\subsubsection{\texttt{create}}
-\begin{lstlisting}[label={lst:transactioncreate}]
-public static Transaction create(int id, double amount, LocalDateTime timestamp, String reason) {
-	if (id <= 0) {
-		throw new IllegalArgumentException("Transaction ID must be positive...");
+	@Override
+	public User findByEmail(String email) {
+		return storage.values().stream()
+				.filter(u -> u.getEmail().equals(email))
+				.findFirst()
+				.orElse(null);
 	}
-	if (Double.isNaN(amount) || Double.isInfinite(amount)) {
-		throw new IllegalArgumentException("Invalid amount: " + amount);
+
+	@Override
+	public List<User> findAll() {
+		return new ArrayList<>(storage.values());
 	}
-	Objects.requireNonNull(timestamp, "Timestamp cannot be null");
-	if (reason == null || reason.trim().isEmpty()) {
-		throw new IllegalArgumentException("Transaction reason cannot be null or empty");
+
+	@Override
+	public void update(User user) {
+		storage.put(user.getId(), user);
 	}
-	return new Transaction(id, amount, timestamp, reason);
-}
-\end{lstlisting}
 
-The \texttt{Wallet} class uses the \texttt{addFunds} and \texttt{charge} methods to modify the balance. 
-\subsubsection{\texttt{addFunds}}
-\begin{lstlisting}[label={lst:walletaddfunds}]
-public void addFunds(double amount, String... optionalReason) {
-	if (amount <= 0) {
-		throw new IllegalArgumentException("Amount must be positive");
-	}
-	String reason = (optionalReason != null && optionalReason.length > 0)
-			? optionalReason[0]
-			: "TOP-UP";
-
-	this.balance += amount;
-	transactionHistory.add(Transaction.create(
-			nextTransactionId++, amount, LocalDateTime.now(), reason));
-}
-\end{lstlisting}
-This method is used to add funds to a Developer's wallet. It can be called by the Developer himself or by a Supervisor (for a refund). It supports an optional reason for the transaction, which is set to "TOP-UP" if not provided.
-
-\subsubsection{\texttt{charge}}
-\begin{lstlisting}[label={lst:walletcharge}]
-public boolean charge(double amount) {
-	if (amount < 0) throw new IllegalArgumentException("Negative amount");
-	if (amount == 0) return true;
-	if (amount > balance) return false;
-
-	this.balance -= amount;
-	transactionHistory.add(Transaction.create(
-			nextTransactionId++, -amount, LocalDateTime.now(),
-			"CHARGE: -" + String.format("%.2f", amount)));
-	return true;
-}
-\end{lstlisting}
-This method subtracts \texttt{amount} from the balance. If there aren't enough funds, it simply returns \texttt{false}. Otherwise, it records the transaction and returns \texttt{true}.
-
-
-\subsection{GPU}
-The \texttt{GPU} class simulates a physical GPU running AI models. It implements the \texttt{Subject} (observer design pattern) to notify the \texttt{LoadBalancerService} when the temperature exceeds 90 degrees Celsius. 
-\subsubsection{\texttt{setTemperature}}
-\begin{lstlisting}[label={lst:gputemperature}]
-public void setTemperature(double temperature) {
-	this.temperature = temperature;
-	if (temperature > TEMPERATURE_THRESHOLD) {
-		this.status = GpuStatus.IDLE;
-		notifyObservers("TEMPERATURE_ALERT");
+	@Override
+	public void delete(int id) {
+		storage.remove(id);
 	}
 }
-\end{lstlisting}
-The timer sends a tick every 5 seconds to the GPU, which updates its temperature and load percentage through the \texttt{simulateTick} method.
+    \end{lstlisting}
+    We used the Java Stream API to implement the search methods in an elegant and concise way. For example, in the \texttt{findByEmail} method, we convert the collection of all saved users into a stream, filter it to keep only the users whose email matches the desired one, and then extract the first result. If there are no users that match the criteria, the method returns \texttt{null}. This approach avoids the need for less readable and more complex loops.
 
-\subsubsection{\texttt{simulateTick}}
-\begin{lstlisting}[label={lst:gpusimulate}]
-public void simulateTick() {
-	if (status == GpuStatus.ACTIVE) {
-		double increment = 1.0 + Math.random() * 3.0;
-		setTemperature(temperature + increment);
-		loadPercentage = Math.min(100.0, loadPercentage + Math.random() * 5.0);
-	} else if (status == GpuStatus.INACTIVE) {
-		if (temperature > 30.0) {
-			double decrement = 0.5 + Math.random() * 1.5;
-			this.temperature = Math.max(30.0, temperature - decrement);
-		}
-		loadPercentage = Math.max(0.0, loadPercentage - 5.0);
-	}
-}
-\end{lstlisting}
-If the GPU is active, its temperature and load percentage increase. Otherwise, they decrease.
-
-\subsection{GpuCluster}
-This class follows the singleton design pattern and serves as the manager of all the \texttt{GPU}s. It provides a single, globally accessible object for assigning and releasing GPUs across the system.
-\subsubsection{\texttt{getAvailableGpu}}
-\begin{lstlisting}[label={lst:gpuclustergetavailable}]
-public GPU getAvailableGpu() {
-    List<GPU> all = gpuDao.findAll();
-    for (GPU gpu : all) {
-        if (gpu.isAvailable()) {
-            gpu.setStatus(GpuStatus.ACTIVE);
-            return gpu;
-        }
-    }
-    return null;
-}
-\end{lstlisting}
-
-This method returns an available GPU (whose state is set to \texttt{ACTIVE}) that can be assigned to a new session or, in case of load balancing, to an existing one.
-The \texttt{releaseGpu} method simply sets the state of the given GPU to \texttt{INACTIVE}.
-
-\chapter{Unit Test}
+\chapter{Unit Tests}
 To test the correct interaction and collaboration between the classes, we implemented the following test cases for some of the main services of the application.
 
 \section{SessionServiceTest}
@@ -1168,7 +1275,7 @@ void testComplaintRejection() {
 \end{lstlisting}
 
 \section{ModelServiceTest}
-In the following test class, we tested the Model Provider's controller. In particular, after instantiating a Model Provider and their model, the test verifies the correct functioning of the \texttt{publishModel()} method. It ensures that the model is correctly saved and set to the pending review status, ready to be verified by a Supervisor.
+In the following test class, we tested the Model Service. After instantiating a Model Provider and their model, the test verifies the correct functioning of the \texttt{publishModel()} method. It ensures that the model is correctly saved and set to the pending review status, ready to be verified by a Supervisor.
 
 \begin{lstlisting}[language=Java, caption={Code snippet of the ModelServiceTest class}, label={lst:model_service_test}]
 @Test
@@ -1267,9 +1374,10 @@ The following images showcase the primary menus presented to the three different
     \includegraphics[width=0.75\textwidth]{Images/cli_complaints.png}
 \end{figure}
 
-\chapter*{\refname}
 \nocite{*}
-\printbibliography[heading=paper, nottype=online]
-\printbibliography[heading=web, type=online]
+\chapter*{Bibliography}
+\addcontentsline{toc}{chapter}{Bibliography}
+\printbibliography[heading=paper,nottype=online]
+\printbibliography[heading=web,type=online]
 
 \end{document}
