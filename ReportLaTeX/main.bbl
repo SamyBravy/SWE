@@ -1,5 +1,5 @@
 % $ biblatex auxiliary file $
-% $ biblatex bbl format version 3.3 $
+% $ biblatex bbl format version 3.2 $
 % Do not modify the above lines!
 %
 % This is an auxiliary file used by the 'biblatex' package.
@@ -18,8 +18,8 @@
 
 
 \refsection{0}
-  \datalist[entry]{nty/global//global/global/global}
-    \entry{bloch2018effective}{book}{}{}
+  \datalist[entry]{nty/global//global/global}
+    \entry{bloch2018effective}{book}{}
       \name{author}{1}{}{%
         {{hash=577c9b87d02f133dc6423f84705048f8}{%
            family={Bloch},
@@ -35,12 +35,10 @@
       }
       \strng{namehash}{577c9b87d02f133dc6423f84705048f8}
       \strng{fullhash}{577c9b87d02f133dc6423f84705048f8}
-      \strng{fullhashraw}{577c9b87d02f133dc6423f84705048f8}
       \strng{bibnamehash}{577c9b87d02f133dc6423f84705048f8}
       \strng{authorbibnamehash}{577c9b87d02f133dc6423f84705048f8}
       \strng{authornamehash}{577c9b87d02f133dc6423f84705048f8}
       \strng{authorfullhash}{577c9b87d02f133dc6423f84705048f8}
-      \strng{authorfullhashraw}{577c9b87d02f133dc6423f84705048f8}
       \field{sortinit}{B}
       \field{sortinithash}{d7095fff47cda75ca2589920aae98399}
       \field{labelnamesource}{author}
@@ -51,7 +49,7 @@
       \field{year}{2018}
       \true{nocite}
     \endentry
-    \entry{java25docs}{online}{}{}
+    \entry{java25docs}{online}{}
       \name{author}{1}{}{%
         {{hash=d51288dc67d9f5e0330d927a009e208b}{%
            family={{Oracle Corporation}},
@@ -62,12 +60,10 @@
       }
       \strng{namehash}{d51288dc67d9f5e0330d927a009e208b}
       \strng{fullhash}{d51288dc67d9f5e0330d927a009e208b}
-      \strng{fullhashraw}{d51288dc67d9f5e0330d927a009e208b}
       \strng{bibnamehash}{d51288dc67d9f5e0330d927a009e208b}
       \strng{authorbibnamehash}{d51288dc67d9f5e0330d927a009e208b}
       \strng{authornamehash}{d51288dc67d9f5e0330d927a009e208b}
       \strng{authorfullhash}{d51288dc67d9f5e0330d927a009e208b}
-      \strng{authorfullhashraw}{d51288dc67d9f5e0330d927a009e208b}
       \field{sortinit}{O}
       \field{sortinithash}{2cd7140a07aea5341f9e2771efe90aae}
       \field{labelnamesource}{author}
@@ -86,7 +82,7 @@
       \verb https://docs.oracle.com/en/java/javase/25/
       \endverb
     \endentry
-    \entry{vicario2026isw}{misc}{}{}
+    \entry{vicario2026isw}{misc}{}
       \name{author}{1}{}{%
         {{hash=7a0e193b8ee42e718d4e8676e547e255}{%
            family={Vicario},
@@ -99,12 +95,10 @@
       }
       \strng{namehash}{7a0e193b8ee42e718d4e8676e547e255}
       \strng{fullhash}{7a0e193b8ee42e718d4e8676e547e255}
-      \strng{fullhashraw}{7a0e193b8ee42e718d4e8676e547e255}
       \strng{bibnamehash}{7a0e193b8ee42e718d4e8676e547e255}
       \strng{authorbibnamehash}{7a0e193b8ee42e718d4e8676e547e255}
       \strng{authornamehash}{7a0e193b8ee42e718d4e8676e547e255}
       \strng{authorfullhash}{7a0e193b8ee42e718d4e8676e547e255}
-      \strng{authorfullhashraw}{7a0e193b8ee42e718d4e8676e547e255}
       \field{sortinit}{V}
       \field{sortinithash}{afb52128e5b4dc4b843768c0113d673b}
       \field{labelnamesource}{author}
