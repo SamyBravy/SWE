@@ -3,6 +3,7 @@ package it.unifi.ing.business.services;
 import it.unifi.ing.domain.GPU;
 import it.unifi.ing.domain.GpuCluster;
 import it.unifi.ing.domain.Subject;
+import it.unifi.ing.domain.Observer;
 
 public class LoadBalancerService implements Observer {
 

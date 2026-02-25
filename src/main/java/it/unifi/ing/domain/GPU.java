@@ -2,7 +2,6 @@ package it.unifi.ing.domain;
 
 import java.util.ArrayList;
 import java.util.List;
-import it.unifi.ing.business.services.Observer;
 
 public final class GPU implements Subject {
 

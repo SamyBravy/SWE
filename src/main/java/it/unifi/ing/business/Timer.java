@@ -3,7 +3,7 @@ package it.unifi.ing.business;
 import it.unifi.ing.domain.GPU;
 import it.unifi.ing.domain.GpuCluster;
 import it.unifi.ing.domain.Subject;
-import it.unifi.ing.business.services.Observer;
+import it.unifi.ing.domain.Observer;
 import java.util.ArrayList;
 import java.util.List;
 
