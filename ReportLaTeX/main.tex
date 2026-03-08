@@ -3,6 +3,8 @@
 \usepackage[utf8]{inputenc} % lettere accentate da tastiera
 \usepackage[english]{babel, varioref} % lingua del documento
 \usepackage{geometry} %per impostare le proporzioni di pagina
+\geometry{a4paper, top=3cm,bottom=3cm,left=3cm,right=3cm, heightrounded,bindingoffset=5mm}
+
 \usepackage{pdflscape}
 
 \usepackage{indentfirst} 
@@ -23,8 +25,6 @@
 
 \usepackage{graphicx}
 \usepackage{lipsum}
-
-\geometry{a4paper,top=3cm,bottom=3cm,left=3.5cm,right=3.5cm, heightrounded,bindingoffset=5mm}
 
 % Formattazione del titolo del capitolo
 \titleformat{\chapter}[hang]
@@ -58,12 +58,21 @@
 \usepackage{float}
 \usepackage{enumitem}
 \usepackage{booktabs}
+\usepackage[most]{tcolorbox}
+\usepackage{fontawesome5}
 \usepackage{xcolor}
 \usepackage{listings}
 
+\definecolor{javapurple}{rgb}{0.5,0,0.35}
+\definecolor{javagreen}{rgb}{0.25,0.5,0.35}
+\definecolor{javablue}{rgb}{0.16,0.16,1}
+\definecolor{javadocblue}{rgb}{0.25,0.35,0.75}
+\definecolor{githubblue}{RGB}{0, 119, 212}
+
 \lstset{
     language=Java,
-    basicstyle=\ttfamily\small,
+    basicstyle=\ttfamily\footnotesize,
+    lineskip=-1.5pt,
     keywordstyle=\color{blue},
     commentstyle=\color{gray},
     stringstyle=\color{green!50!black},
@@ -195,7 +204,7 @@
     
     \vfill
     \begin{figure}[H]
-        \makebox[\textwidth][c]{\includegraphics[width=1.4\textwidth]{Images/pagediagram.png}}
+        \makebox[\textwidth][c]{\includegraphics[width=1.2\textwidth]{Images/pagediagram.png}}
     \end{figure}
     \vfill
     
@@ -232,7 +241,7 @@
     	
     	\begin{figure}[H]
     		\centering
-    		\includegraphics[width=1.9\textwidth,height=1.9\textheight,keepaspectratio]{Images/UML/services.pdf}
+    		\includegraphics[width=1.7\textwidth,height=1.7\textheight,keepaspectratio]{Images/UML/services.pdf}
     		\caption{Service package class diagram}
     		\label{fig:services}
     	\end{figure}
@@ -279,7 +288,7 @@
     
     \begin{figure}[H]
     	\centering
-    	\includegraphics[width=\textwidth]{Images/ObserverPattern.pdf}
+    	\includegraphics[width=0.85\textwidth]{Images/ObserverPattern.pdf}
     	\caption{Observer Pattern Implementation}
     	\label{fig:Obspattern}
     \end{figure} 
@@ -373,6 +382,7 @@
 	This class represents an AI model published by a Model Provider. 
 	The \texttt{costPerTokenProvider} is the cost per token chosen by the Model Provider, whereas the \texttt{costPerTokenPlatform} is the cost per token for the hosting decided by the Supervisor; the Developer will pay the sum of these two values.
 	We used the static factory method \texttt{submitForReview} for a robust validation of the passed arguments and to make the constructor private, since only the Model Provider can create a new model when he submits it for review.
+	\clearpage
 	\subsubsection{\texttt{submitForReview}}
 	\begin{lstlisting}[label={lst:aimodelsubmit}]
 	public static AiModel submitForReview(int id, String name, String description, double costPerTokenProvider,
@@ -1257,6 +1267,7 @@ void testLoadBalancingGpuShortage() {
 
 \section{ComplaintServiceTest}
 The Supervisor can also resolve complaints against AI models. In the following test class, we verified the methods \texttt{acceptComplaint()} and \texttt{rejectComplaint()}. First, we instantiated multiple complaints filed by a Developer. What the Supervisor has to check is that, when accepting a complaint, the Developer is refunded correctly and the model's status is updated to blocked.
+\clearpage
 
 \begin{lstlisting}[language=Java, caption={Code snippet of the ComplaintServiceTest class}, label={lst:complaint_service_test}]
 @Test
