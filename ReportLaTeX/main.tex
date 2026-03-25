@@ -120,7 +120,7 @@
     \label{sec:Architecture}
     This project was developed using the \texttt{Java 17} programming language, managed through Maven for dependency and build management. 
 	We integrated two external libraries: \texttt{jBCrypt} for password hashing, and \texttt{JUnit 5} for unit testing. 
-	We used GitHub for version control and collaboration, StarUML for the use case diagram and package diagram, PlantUML for the class diagram, and Mermaid for the page navigation diagram.
+	We used GitHub for version control and collaboration, StarUML for the use case diagram and package diagram, PlantUML for the class diagram and sequence diagrams, and Mermaid for the page navigation diagram.
     \\ We used AI for the controllers, particularly to generate outputs and menus, and for the creation of mockups.   
 	\\ We did not implement a real database, but we simulated persistence using some basic hashmaps.
     \\ We divided the software into four main parts:
@@ -637,6 +637,7 @@ public void publishModel(ModelProvider provider, String name, String desc, doubl
 When the Model Provider publishes a model, it is submitted for review and its status is set to \texttt{PENDING\_REVIEW}. 
 
 \subsection{Session Service}
+\label{subsec:SessionService}
 This is the most complex service of the system, as it handles all the interactions between the Developer and an AI model that answers to his prompts.
 
 \subsubsection{\texttt{openSession}}
@@ -726,6 +727,13 @@ Then, after checking whether the Developer has enough credit to pay for the prom
 \end{lstlisting}
 Finally, it uses the \texttt{SessionDao} to update the session and returns the response.
 
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth,keepaspectratio]{Images/UML/seq_send_prompt.eps}
+    \caption{Send Prompt sequence diagram}
+    \label{fig:seq_send_prompt}
+\end{figure}
+
 \subsubsection{\texttt{detachGpuFromSession}}
 \begin{lstlisting}[label={lst:detachgpu}]
 public void detachGpuFromSession(GPU gpu) {
@@ -775,6 +783,7 @@ public DeveloperStats getDeveloperStats(Developer developer) {
 This method retrieves all the historical and current data related to a Developer by querying the related services. It uses the Java Stream API to get the details that are later encapsulated in a \texttt{DeveloperStats} object.
 
 \subsection{Verification Service}
+\label{subsec:VerificationService}
 This class is responsible for handling a model's verification process conducted by a Supervisor. 
 
 \subsubsection{\texttt{loadOnGpu}}
@@ -829,7 +838,16 @@ public boolean evaluateEthics(AiModel model, String prompt) {
             && !lowerResponse.contains("fraud");
 }
 \end{lstlisting}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth,keepaspectratio]{Images/UML/seq_verify_model.eps}
+    \caption{Verify Model sequence diagram}
+    \label{fig:seq_verify_model}
+\end{figure}
+
 \subsection{Load Balancer Service}
+\label{subsec:LoadBalancerService}
 This class is responsible for acting as an observer for the \texttt{Timer} and \texttt{GPU} subjects. It uses the strategy design pattern to balance the load among the active GPUs in the cluster with two different possible algorithms.
 
 \subsubsection{\texttt{update} and \texttt{onTemperatureAlert}}
@@ -963,6 +981,14 @@ public void balanceLoad(GpuCluster cluster, SessionService sessionService) {
 
 \end{lstlisting}
 For each session, this method calculates the total GPU load and figures out how many GPUs are needed, assuming that each one can handle up to 95\% of the load. If the session needs more GPUs, it tries to get free GPUs from the cluster. On the other hand, if it has more GPUs than it needs, it removes the extra ones to save power. Finally, instead of sharing the load equally, it fills the GPUs one by one up to 95\%, and leaves the remaining load on the last one.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth,keepaspectratio]{Images/UML/seq_load_balancing.eps}
+    \caption{Load Balancing sequence diagram}
+    \label{fig:seq_load_balancing}
+\end{figure}
+
 \subsection{Timer}
 The Timer is a subject in the observer design pattern. It follows the singleton design pattern to ensure that there is only one Timer in the system.
 \subsubsection{\texttt{start}}
