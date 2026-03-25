@@ -72,7 +72,7 @@
 \lstset{
     language=Java,
     basicstyle=\ttfamily\footnotesize,
-    lineskip=-1.5pt,
+    lineskip=-2pt,
     keywordstyle=\color{blue},
     commentstyle=\color{gray},
     stringstyle=\color{green!50!black},
@@ -81,6 +81,8 @@
     numbers=left,
     numberstyle=\tiny\color{gray},
     breaklines=true,
+    aboveskip=4pt,
+    belowskip=4pt,
     tabsize=2
 }
 
@@ -726,14 +728,6 @@ Then, after checking whether the Developer has enough credit to pay for the prom
 }
 \end{lstlisting}
 Finally, it uses the \texttt{SessionDao} to update the session and returns the response.
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=\textwidth,keepaspectratio]{Images/UML/seq_send_prompt.eps}
-    \caption{Send Prompt sequence diagram}
-    \label{fig:seq_send_prompt}
-\end{figure}
-
 \subsubsection{\texttt{detachGpuFromSession}}
 \begin{lstlisting}[label={lst:detachgpu}]
 public void detachGpuFromSession(GPU gpu) {
@@ -762,6 +756,14 @@ public void detachGpuFromSession(GPU gpu) {
 \end{lstlisting}
 
 This method is used to detach a GPU from a session when it is overheated. First it finds the session assigned to the given GPU and removes it from the session. Then it checks if the session still has any GPUs left. If not, it closes the session. If it has GPUs left, it redistributes the load evenly among the remaining GPUs.
+
+\begin{figure}[p]
+	\centering
+	\includegraphics[width=1.1\textwidth,keepaspectratio]{Images/UML/seq_send_prompt.eps}
+	\caption{Send Prompt sequence diagram}
+	\label{fig:seq_send_prompt}
+\end{figure}
+
 \subsection{Stats Service}
 This class is used to retrieve a Developer's statistics that are shown in the \enquote{View Stats \& History} page.
 
@@ -839,9 +841,9 @@ public boolean evaluateEthics(AiModel model, String prompt) {
 }
 \end{lstlisting}
 
-\begin{figure}[H]
+\begin{figure}[p]
     \centering
-    \includegraphics[width=\textwidth,keepaspectratio]{Images/UML/seq_verify_model.eps}
+    \includegraphics[width=1.1\textwidth,keepaspectratio]{Images/UML/seq_verify_model.eps}
     \caption{Verify Model sequence diagram}
     \label{fig:seq_verify_model}
 \end{figure}
@@ -984,10 +986,11 @@ For each session, this method calculates the total GPU load and figures out how 
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\textwidth,keepaspectratio]{Images/UML/seq_load_balancing.eps}
+    \includegraphics[width=1.1\textwidth,keepaspectratio]{Images/UML/seq_load_balancing.eps}
     \caption{Load Balancing sequence diagram}
     \label{fig:seq_load_balancing}
 \end{figure}
+\clearpage
 
 \subsection{Timer}
 The Timer is a subject in the observer design pattern. It follows the singleton design pattern to ensure that there is only one Timer in the system.
@@ -1075,6 +1078,8 @@ public interface GenericDao<T> {
 
     Then we created the DAOs for each main entity adding their specific methods, as illustrated in the class diagram.
     We didn't use a real database, but we simulated one by using hashmaps in the in-memory DAOs. Since their implementation is very similar, we will only illustrate the 
+    
+    \clearpage
     \texttt{InMemoryUserDao} class.
     \subsubsection{\texttt{InMemoryUserDao}}
     \begin{lstlisting}[label={lst:inmemoryuserdao}]
@@ -1215,6 +1220,7 @@ void testLoadOnGpuNoAvailable() {
 \section{LoadBalancerServiceTest}
 In the following test class, we tested the correct functioning of the Observer pattern. In particular, an active session running on a GPU is instantiated. The test verifies that when the GPU's temperature exceeds the threshold and an alert is triggered, the \texttt{LoadBalancerService} is correctly notified, automatically detaching the GPU and preserving the system. Furthermore, it tests the load balancing algorithms, including the Alternative Flow where the cluster experiences a GPU shortage.
 
+\clearpage
 \begin{lstlisting}[language=Java, caption={Code snippet of the LoadBalancerServiceTest class}, label={lst:load_balancer_service_test}]
 @Test
 void testTemperatureAlerts() {
@@ -1293,7 +1299,6 @@ void testLoadBalancingGpuShortage() {
 
 \section{ComplaintServiceTest}
 The Supervisor can also resolve complaints against AI models. In the following test class, we verified the methods \texttt{acceptComplaint()} and \texttt{rejectComplaint()}. First, we instantiated multiple complaints filed by a Developer. What the Supervisor has to check is that, when accepting a complaint, the Developer is refunded correctly and the model's status is updated to blocked.
-\clearpage
 
 \begin{lstlisting}[language=Java, caption={Code snippet of the ComplaintServiceTest class}, label={lst:complaint_service_test}]
 @Test
