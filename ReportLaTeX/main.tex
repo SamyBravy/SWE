@@ -123,8 +123,8 @@
     This project was developed using the \texttt{Java 17} programming language, managed through Maven for dependency and build management. 
 	We integrated two external libraries: \texttt{jBCrypt} for password hashing, and \texttt{JUnit 5} for unit testing. 
 	We used GitHub for version control and collaboration, StarUML for the use case diagram and package diagram, PlantUML for the class diagram and sequence diagrams, and Mermaid for the page navigation diagram.
-    \\ We used AI for the controllers, particularly to generate outputs and menus, and for the creation of mockups.   
-	\\ We did not implement a real database, but we simulated persistence using some basic hashmaps.
+    \\ AI-assisted tools were used to support the development of CLI output formatting and menu generation in the controller layer.  
+	\\ Persistence was simulated using in-memory data structures (\textit{HashMap}), as a real database was outside the scope of this project.
     \\ We divided the software into four main parts:
     
     \begin{itemize}
@@ -134,7 +134,7 @@
         \item \textbf{ORM:} contains the classes that communicate with the database, to make the changes in the domain model persistent.
     \end{itemize}
     
-    Due to the exam's scope and the software's complexity, the platform abstracts many details, such as the GPUs and the models, and does not implement a central server to enable 
+    Given the project's scope and the inherent complexity of the system, the platform abstracts many details, such as the GPUs and the models, and does not implement a central server to enable 
     communication between the users and the different parts of the system. Furthermore, for the interface, we used a CLI instead of a GUI, for which we only built a few mockups.
     
     \chapter{Requirements and Design}
@@ -153,6 +153,7 @@
     \clearpage
     
     \section{Use Case Templates}
+    \label{sec:UseCase}
     This section provides a detailed description of the most important use cases of our project, highlighting the interactions between the actors and the system.
     
     \subsection{Publish Model}
@@ -232,7 +233,7 @@
     	\begin{figure}[H]
     		\centering
     		\includegraphics[width=1.25\textwidth,height=1.25\textheight,keepaspectratio]{Images/UML/domain.pdf}
-    		\caption{Domain package class diagram}
+    		\caption{Domain package class diagram, illustrating the core entities and their relationships within the system.}
     		\label{fig:DomainModel}
     	\end{figure}
     	
@@ -244,7 +245,7 @@
     	\begin{figure}[H]
     		\centering
     		\includegraphics[width=1.7\textwidth,height=1.7\textheight,keepaspectratio]{Images/UML/services.pdf}
-    		\caption{Service package class diagram}
+    		\caption{Service package class diagram, illustrating the business logic layer and the relationships between services, including the Observer and Strategy pattern implementations.}
     		\label{fig:services}
     	\end{figure}
     	\clearpage
@@ -354,7 +355,8 @@
     The \texttt{Timer} also follows the singleton pattern to ensure that only one global clock dictates the simulation's tempo, preventing erratic or overlapping tick events. 
     
     \chapter{Implementations}
-    In this section we illustrate the implementation of the most important methods in our project, providing a detailed description of every layer.
+    In this section we illustrate the implementation of the most important methods in our project, providing a detailed description of every layer. The sequence diagrams referenced in Section ~\ref{sec:UseCase} are presented throughout this section alongside the description of the relevant implementation.
+    
 	\section{Domain Model}
 	\label{sec:DomainModel}
 	The domain model contains the classes that define the entities involved in the system and their relationships.
@@ -376,8 +378,7 @@
 	
 	
 	\subsection{Developer, ModelProvider, Supervisor}
-	These three classes extend the abstract \texttt{User} class.
-	They implement the \texttt{getRole()} method to return their specific role as a string. 
+	These three classes extend the abstract User class, each implementing \texttt{getRole()} to allow role-based routing in the navigation layer. 
 	The \texttt{Developer} class is the only one that accepts a \texttt{Wallet} object in its constructor in order to handle payments for using AI models.
 	
 	\subsection{AiModel}
@@ -435,7 +436,7 @@
 	\end{lstlisting}
 	
 	\subsection{Session}
-	This class acts as a bridge when a Developer interacts with a model. 
+	The \texttt{Session} class encapsulates the state of an active interaction between a Developer and an AI model.
 	It maintains a list of GPUs where the associated model is running, allowing load balancing across multiple GPUs. 
 	Furthermore, it keeps a history of sent and received prompts so that, in case of a complaint, the Supervisor can access them as evidence. 
 	Finally, the \texttt{totalTokensUsed} and \texttt{startTimestamp} attributes are used to record statistics.
@@ -760,7 +761,7 @@ This method is used to detach a GPU from a session when it is overheated. First 
 \begin{figure}[p]
 	\centering
 	\includegraphics[width=1.1\textwidth,keepaspectratio]{Images/UML/seq_send_prompt.eps}
-	\caption{Send Prompt sequence diagram}
+	\caption{Send Prompt sequence diagram, detailing the interaction flow between the Developer, the session management components, and the GPU cluster during an active chat session.}
 	\label{fig:seq_send_prompt}
 \end{figure}
 
@@ -844,7 +845,7 @@ public boolean evaluateEthics(AiModel model, String prompt) {
 \begin{figure}[p]
     \centering
     \includegraphics[width=1.1\textwidth,keepaspectratio]{Images/UML/seq_verify_model.eps}
-    \caption{Verify Model sequence diagram}
+    \caption{Verify Model sequence diagram, illustrating the steps performed by the Supervisor to run automated tests and approve or reject a pending model.}
     \label{fig:seq_verify_model}
 \end{figure}
 
@@ -987,7 +988,7 @@ For each session, this method calculates the total GPU load and figures out how 
 \begin{figure}[H]
     \centering
     \includegraphics[width=1.1\textwidth,keepaspectratio]{Images/UML/seq_load_balancing.eps}
-    \caption{Load Balancing sequence diagram}
+    \caption{Load Balancing sequence diagram, showing how the Timer triggers the Load Balancer Service to redistribute workloads across active GPUs according to the configured strategy.}
     \label{fig:seq_load_balancing}
 \end{figure}
 \clearpage
