@@ -120,9 +120,9 @@
     which have a limited memory and a temperature that needs to be regulated. 
     \section{Project Setup and Technologies}
     \label{sec:Architecture}
-    This project was developed using the \texttt{Java 17} programming language, managed through Maven for dependency and build management. 
+    This project was developed using the \texttt{Java 17} programming language, managed through \texttt{Maven} for dependency and build management. 
 	We integrated two external libraries: \texttt{jBCrypt} for password hashing, and \texttt{JUnit 5} for unit testing. 
-	We used GitHub for version control and collaboration, StarUML for the use case diagram and package diagram, PlantUML for the class diagram and sequence diagrams, and Mermaid for the page navigation diagram.
+	We used GitHub for version control and collaboration, \texttt{StarUML} for the use case diagram and package diagram, \texttt{PlantUML} for the class diagram and sequence diagrams, and \texttt{Mermaid} for the page navigation diagram.
     \\ AI-assisted tools were used to support the development of CLI output formatting and menu generation in the controller layer.  
 	\\ Persistence was simulated using in-memory data structures (\textit{HashMap}), as a real database was outside the scope of this project.
     \\ We divided the software into four main parts:
@@ -139,7 +139,7 @@
     
     \chapter{Requirements and Design}
     \section{Use Case Diagram}
-    In our project we identified four main actors: the Model Provider, the Developer, the Supervisor and the Timer.
+    We identified four main actors: the \textbf{Model Provider}, the \textbf{Developer}, the \textbf{Supervisor} and the \textbf{Timer}.
     The Timer is a part of the system that periodically calls a method to balance the
     load between the GPUs.
     
@@ -479,6 +479,7 @@
 	}
 	\end{lstlisting}
 	This method is used to add funds to a Developer's wallet. It can be called by the Developer himself or by a Supervisor (for a refund). It supports an optional reason for the transaction, which is set to "TOP-UP" if not provided.
+	\clearpage
 	
 	\subsubsection{\texttt{charge}}
 	\begin{lstlisting}[label={lst:walletcharge}]
@@ -799,6 +800,7 @@ public GPU loadOnGpu(AiModel model) {
 
 This method is used to load a model on an available GPU before the tests are run.
 
+\clearpage
 \subsubsection{\texttt{runBenchmarks} and \texttt{runAutomatedEthicsTests}}
 \begin{lstlisting}[label={lst:verificationtests}]
 public Map<String, Object> runBenchmarks(AiModel model, GPU gpu) {
@@ -852,6 +854,8 @@ public boolean evaluateEthics(AiModel model, String prompt) {
 \subsection{Load Balancer Service}
 \label{subsec:LoadBalancerService}
 This class is responsible for acting as an observer for the \texttt{Timer} and \texttt{GPU} subjects. It uses the strategy design pattern to balance the load among the active GPUs in the cluster with two different possible algorithms.
+
+\clearpage
 
 \subsubsection{\texttt{update} and \texttt{onTemperatureAlert}}
 \begin{lstlisting}[label={lst:loadbalancerupdate}]
